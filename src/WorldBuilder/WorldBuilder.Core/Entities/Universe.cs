@@ -2,24 +2,19 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Web;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace WorldBuilder.Core.Entities
 {
-    public class World
+    public class Universe
     {
-        public World()
+        public Universe()
         {
             Id = Guid.NewGuid();
         }
         public Guid Id { get; set; }
         [Required]
-        public Universe Universe { get; set; }
-        [Required]
-        public Guid UniverseId { get; set; }
-        [Required]
         public string Name { get; set; }
-
-
     }
 }
