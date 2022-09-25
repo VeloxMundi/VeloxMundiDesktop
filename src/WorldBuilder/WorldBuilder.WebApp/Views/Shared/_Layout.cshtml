@@ -6,9 +6,15 @@
     <title>@ViewBag.Title - World Builder</title>
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/Showdown/js")
+    @*<script src="https://cdn.jsdelivr.net/remarkable/1.7.1/remarkable.min.js"></script>*@
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/13.0.1/markdown-it.min.js"></script>
+
 
 </head>
 <body>
+    <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
     <div class="navbar navbar-inverse navbar-fixed-top">
         <div class="container">
             <div class="navbar-header">
