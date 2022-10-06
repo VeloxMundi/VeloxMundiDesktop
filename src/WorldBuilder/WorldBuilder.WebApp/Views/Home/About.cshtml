@@ -1,34 +1,101 @@
-﻿@{
+﻿@section header
+{
+    <link rel="stylesheet" href="~/Content/WorldBuilderCustomStyles.css" />
+    <script src="https://cdn.jsdelivr.net/lodash/2.4.1/lodash.js"></script>
+    <script src="~/Scripts/showdown.js"></script>
+}
+
+@{
     ViewBag.Title = "About";
 }
-<h2>@ViewBag.Title.</h2>
-<h3>@ViewBag.Message</h3>
 
-<p>Use this area to provide additional information.</p>
+<div class="container full-height">
+    <div class="row full-height">
+        <div class="col-xs-6 full-height">
+            <textarea id="editor" class="full-height source">
+# Related tools
+## Synchronous scrolling
+To roll your own editor and apply synchronous scrolling...
+### Find cursor position in textarea
+```javascript
+var cursorPosition = $('#myTextarea').prop("selectionStart");
+```
+[source](https://stackoverflow.com/a/7745958)
 
-<table style="width:100%;border:1px solid #000000">
-    <tr valign="top">
-        <td style="width:50%">
-<textarea id="editor" style="width:100%;height:100%; min-height:500px"></textarea>
+### Find the location of given text on the page
+```javascript
+$(window).scrollTop($("*:contains('Search Text Goes Here'):last").offset().top);
+```
+[source](https://stackoverflow.com/a/2824928)
 
-            </td>
-        <td style="width:50%">
-        <div id="viewer" style="width:100%; height:100%">
+I think Joplin basically implements this by finding the first fully-visible word in the text editor and finding that same line in the HTML on the right. But it must be using more than the first word, which may repeat many times on the page.
 
+[This is the question I'm asking](https://stackoverflow.com/questions/12719450/get-textarea-scroll-percentage-via-javascript)
+
+I may be able to do this by getting all text from the editor, starting with the first visible word, but I haven't been able to figure it out yet. I was thinking if I could get the visible text in the editor (leaving everything else out), convert that to HTML, and find that HTML substring in the viewer, it might work.
+
+So far, I can't figure out how to select just the visible text in the editor, however...I've been playing around. I can make the scrollTop match, or I can make the percent of scrolling match. Right now, I'm toying with how to select the visible text from the text editor on the left (The text that won't be converted into code) and select a subset of that text to find in the editor on the right.
+
+Here's what I have so far...
+
+
+```javascript
+$(function() {
+    var leftta = $("textarea[id$='ta1']");
+    var rightta = $("div[id$='ta2']");
+    var lh = $("textarea[id$='ta1']").css("line-height").replace("px","");
+    alert(lh);
+
+    
+  leftta.on('scroll', function () {
+    rightta.scrollTop($(this).scrollTop());
+  });
+  leftta.on('scroll', function () {
+    //bmrDetailDiv.scrollTop($(this).scrollTop());
+    //alert(Math.floor(bmrDetailDiv.scrollTop() / lh ));
+    rightta.html(leftta.val()); //If you use .text() instead of .val(), you get the text that was the original value of the textarea when the page loaded, rather than the current value!
+    var lstop = leftta.scrollTop();
+    var lsoh = 0;//document.getElementById('ta1').offsetHeight;
+    var lsh = document.getElementById('ta1').scrollHeight;
+    var lpctleft = (lstop + lsoh) / lsh;
+    //alert('scrolltop: ' + stop + '\noffsetHeight: ' + soh + '\nscrollHeight: ' + sh + '\rpctLeft: ');
+    var rsoh = document.getElementById('ta2').offsetHeight;
+    var rsh = document.getElementById('ta2').scrollHeight;
+    rightta.scrollTop(rsh*lpctleft);
+    var ltachar = leftta.val().length;
+    var ltamin = Math.max(0,Math.floor(ltachar*lpctleft)-100);
+    $('#lpct').text(lstop + '/' + lsh + ' (' + Math.floor(lpctleft*100) + '%) [' + ltamin + '/' + ltachar + ']');
+    $('#rpct').text(rightta.scrollTop() + '/' + rsh + ' (' + Math.floor((rightta.scrollTop()/rsh)*100) + '%)');
+  });
+
+    
+});
+    
+});
+```
+
+### Make HTML portion of page editable
+There is a simple tool that can be used to allow users to directly edit the HTML content on a page.
+        </textarea>
         </div>
-            </td>
-    </tr>
-</table>
-<script type="text/javascript">
-    $(document).ready(function () {
-        //var md = new Remarkable();
-        //var converter = new showdown.Converter();
-        var md = window.markdownit();
-        $("#editor").keyup(function () {
-            //$("#viewer").html(converter.makeHtml($("#editor").val()));
-            $("#viewer").html(md.render($("#editor").val()));
+        <div id="viewer" class="col-xs-6 full-height editable" contenteditable="true" style="border:1px dashed #000000"></div>
+    </div>
+</div>
 
-        })
-    });
+@section Scripts
+{
+    @*<script type="text/javascript">
+            $(document).ready(function () {
+                //var md = new Remarkable();
+                //var converter = new showdown.Converter();
+                var md = window.markdownit();
+                $("#editor").keyup(function () {
+                    //$("#viewer").html(converter.makeHtml($("#editor").val()));
+                    $("#viewer").html(md.render($("#editor").val()));
 
-</script>
+                })
+            });
+
+        </script>*@
+    <script type="text/javascript" src="~/Scripts/WorldBuilderCustomScript.js"></script>
+}

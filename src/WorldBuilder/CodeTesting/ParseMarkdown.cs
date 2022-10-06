@@ -11,7 +11,7 @@ namespace CodeTesting
         [TestMethod]
         public void FindFieldsInMarkdown()
         {
-            string mdSource = GetMarkdownSample2();
+            string mdSource = GetMarkdownSample1();
             Entry myCharacter = GetSingleEntry("Some Person", GetEntryType("Character"));
             string md = Environment.NewLine + "# " + Environment.NewLine + mdSource + Environment.NewLine;
             string[] sections = md.Split(new string[] { Environment.NewLine + "# " }, StringSplitOptions.None);
