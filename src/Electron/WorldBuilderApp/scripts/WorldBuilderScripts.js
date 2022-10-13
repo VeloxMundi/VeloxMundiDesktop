@@ -1,4 +1,6 @@
-﻿
+window.$ = window.jQuery = require('jquery');
+showdown = require('./scripts/showdown.js');
+lodash = require('./scripts/lodash.js');
 //var md = window.markdownit();
 var converter = new showdown.Converter({ tables: true, strikethrough: true });
 

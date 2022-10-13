@@ -1,0 +1,51 @@
+/* styles.css */
+
+/* Add styles here to customize the appearance of your app */
+html,
+body,
+.full-height,
+.body-content 
+{
+    height: 100%;
+}
+
+.body-content
+{
+    padding-top: 10px;
+}
+
+body 
+{
+    overflow-x: hidden;
+    padding-bottom: 70px;
+    background-color: #fbfbfb;
+}
+
+.source {
+    width: 100%;
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+    font-size: 13px;
+    padding: 2px;
+}
+
+textarea {
+    width: 100%;
+    display: block;
+    resize: vertical;
+    overflow-x: scroll;
+    max-width: none;
+}
+
+#editor, #viewer {
+    overflow-x: scroll;
+}
+
+    #viewer table {
+        border: 1px solid #000000;
+        border-collapse: collapse;
+    }
+#viewer table td, #viewer table th
+{
+    padding: 4px;
+    border: 1px solid #000000;
+}

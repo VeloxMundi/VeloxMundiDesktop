@@ -1,18 +1,25 @@
-﻿@section header
-{
-    <link rel="stylesheet" href="~/Content/WorldBuilderCustomStyles.css" />
-    <script src="https://cdn.jsdelivr.net/lodash/2.4.1/lodash.js"></script>
-    <script src="~/Scripts/showdown.js"></script>
-}
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta charset = "UTF-8">
+      <title>Hello World!</title>
 
-@{
-    ViewBag.Title = "About";
-}
 
-<div class="container full-height">
-    <div class="row full-height">
-        <div class="col-xs-6 full-height">
-            <textarea id="editor" class="full-height source">
+
+      <script src="./node_modules/bootstrap/dist/js/bootstrap.min.js" ></script>
+      <script src="./scripts/lodash.js"></script>
+      <link rel="stylesheet" href="./node_modules\bootstrap\dist\css\bootstrap.min.css" />
+
+      <link rel="stylesheet" href="./styles/custom.css" />
+
+   </head>
+   
+   <body>
+       <button class="btn btn-success">Stuff</button>
+    <div class="container full-height">
+        <div class="row full-height">
+            <div class="col-6 full-height">
+                <textarea id="editor" class="full-height source">
 # Jaida Colth
 Jaida was a person who did some things. They were not very nice, but that's really OK.
 
@@ -62,18 +69,19 @@ Jaida decided he didn't like map-making, so he tried his hand at baking delightf
 Mix dry ingredients in bowl. Stir in water until a thick batter forms.
 Pour batter into a pie tin. 
 Bake at 375&deg;F for 30 minutes.
-
-
-
-
-
-        </textarea>
+    
+    
+    
+    
+    
+            </textarea>
+            </div>
+            <div id="viewer" class="col-6 full-height editable" contenteditable="true" style="border:1px dashed #000000"></div>
         </div>
-        <div id="viewer" class="col-xs-6 full-height editable" contenteditable="true" style="border:1px dashed #000000"></div>
     </div>
-</div>
 
-@section Scripts
-{
-    <script type="text/javascript" src="~/Scripts/WorldBuilderCustomScript.js"></script>
-}
+    <script src="./scripts/showdown.js"></script>
+    <script src="./scripts/WorldBuilderScripts.js"></script>
+    <script src = "./view.js" ></script>
+   </body>
+</html>
