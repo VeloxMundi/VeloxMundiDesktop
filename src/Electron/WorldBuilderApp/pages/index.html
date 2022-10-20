@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <meta
+      http-equiv="X-Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <script src="../scripts/bootstrap-4.3.1/js/bootstrap.min.js" ></script>
+
+    <link rel="stylesheet" href="../scripts/bootstrap-4.3.1/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../styles/menu.css">
+    <title>Velox Mundi</title>
+  </head>
+  <body>
+    <div id="menu">
+      <a href="home.html" target="iframe" >Home</a>
+    </div>
+    <iframe id="iframe" name="iframe" src="home.html"></iframe>
+
+  </body>
+  <script src="../scripts/jquery-3.6.1.min.js"></script>
+  <script src="../scripts/menu.js"></script>
+</html>
