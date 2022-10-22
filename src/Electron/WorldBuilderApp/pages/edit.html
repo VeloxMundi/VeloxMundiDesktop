@@ -13,11 +13,8 @@
       content="default-src 'self'; script-src 'self'"
     />
     -->
-    <script src="../scripts/bootstrap-4.3.1/js/bootstrap.min.js" ></script>
 
     <link rel="stylesheet" href="../scripts/bootstrap-4.3.1/css/bootstrap.min.css" />
-
-    <script src="../scripts/lodash.js"></script>
     
 
     <link rel="stylesheet" href="../styles/custom.css" />
@@ -26,11 +23,14 @@
   <body>
  <div class="container full-height">
   <div class="toolbar">
-
-    <button class="btn btn-success float-right" id="SaveButton">Save</button>
+    <div class="float-right">
+      <button class="btn btn-cancel" id="CancelButton">Cancel</button>
+      <button class="btn btn-success" id="SaveButton">Save</button>
+    </div>
   </div>
     <div class="row full-height">
       <div class="col-6 full-height">
+        <input type="hidden" id="pageId" value="1"/>
         <textarea id="editor" class="full-height source">
 # Jaida Colth
 Jaida was a person who did some things. They were not very nice, but that's really OK.
@@ -95,8 +95,11 @@ Bake at 375&deg;F for 30 minutes.
  
  
 </body>
-  <script src="../scripts/jquery-3.6.1.min.js"></script>
- <script src="../scripts/showdown.js"></script>
- <script src="../scripts/WorldBuilderScripts.js"></script>
-  <script src="../renderer.js"></script>
+<script src="../scripts/jquery-3.6.1.min.js"></script>  
+<script src="../scripts/bootstrap-4.3.1/js/bootstrap.min.js" ></script>
+<script src="../scripts/lodash.js"></script>
+<script src="../scripts/showdown.js"></script>
+<script src="../scripts/mdEditorControl.js"></script>
+<script src="../scripts/editPage.js"></script>
+ 
 </html>

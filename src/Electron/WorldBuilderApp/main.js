@@ -14,7 +14,10 @@ const createWindow = () => {
         }
     });
 
-    win.loadFile('./pages/index.html');
+    ipcMain.on('saveChanges', (content) => {
+        saveChanges(content);
+    });
+    win.loadFile('./pages/home.html');
 }
 
 app.whenReady().then(() => {
@@ -35,6 +38,19 @@ app.on('window-all-closed', () => {
     }
 });
 
+
+// Custom functions
+function saveChanges(content) {
+    let retVal = {
+        'result' : 'success',
+        'id' : content[0],
+        'content' : content[1]
+    };
+    console.log("result: " + retVal[0]);
+    console.log("id: " + retVal[1]);
+    console.log("content: " + retVal[2]);
+    return retVal;
+}
 
 
 
