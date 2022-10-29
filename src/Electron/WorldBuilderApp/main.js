@@ -1,6 +1,7 @@
 const {app, BrowserWindow, ipcMain} = require('electron');
 const { fstat } = require('fs');
 const path = require('path');
+let window = null;
 
 const createWindow = () => {
     const win = new BrowserWindow({
@@ -14,10 +15,8 @@ const createWindow = () => {
         }
     });
 
-    ipcMain.on('saveChanges', (content) => {
-        saveChanges(content);
-    });
     win.loadFile('./pages/home.html');
+    window = win;
 }
 
 app.whenReady().then(() => {
@@ -40,16 +39,15 @@ app.on('window-all-closed', () => {
 
 
 // Custom functions
-function saveChanges(content) {
-    let retVal = {
-        'result' : 'success',
-        'id' : content[0],
-        'content' : content[1]
-    };
-    console.log("result: " + retVal[0]);
-    console.log("id: " + retVal[1]);
-    console.log("content: " + retVal[2]);
-    return retVal;
+ipcMain.on('saveChanges', (event, pageContent) => {
+    // console.log(pageContent);
+    const retarr = [0, 'There was a problem saving your changes. But sometimes error messages are too long to read. What do we do then?'];
+    event.sender.send('saveResults', retarr);
+});
+
+
+function saveChanges(event, pageContent) {
+    
 }
 
 

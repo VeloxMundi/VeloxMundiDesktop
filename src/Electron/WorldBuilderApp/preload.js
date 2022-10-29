@@ -1,9 +1,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('actions', {
-  node: () => process.versions.node,
-  chrome: () => process.versions.chrome,
-  electron: () => process.versions.electron,
-  saveChanges: (content) => ipcRenderer.send('saveChanges', content)
+contextBridge.exposeInMainWorld('contextBridge', {
+  saveChanges: (pageContent) => ipcRenderer.send('saveChanges', pageContent),
+  fromMain: (event, data) => {
+    ipcRenderer.on(event, data);
+  }
   // we can also expose variables, not just functions
 });
