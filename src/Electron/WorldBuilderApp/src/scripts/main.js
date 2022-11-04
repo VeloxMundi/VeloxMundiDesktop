@@ -1,6 +1,9 @@
 const {app, BrowserWindow, ipcMain} = require('electron');
 const { fstat } = require('fs');
 const path = require('path');
+const appPath = app.getAppPath();
+const pagePath = path.join(appPath, 'src', 'pages');
+const scriptPath = path.join(appPath, 'src', 'scripts');
 let window = null;
 
 const createWindow = () => {
@@ -8,14 +11,14 @@ const createWindow = () => {
         width: 800, 
         height: 600,
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
+            preload: path.join(scriptPath, 'preload.js'),
             nodeIntegration: false, // is default value after Electron v5
             contextIsolation: true, // protect against prototype pollution
             enableRemoteModule: false, // turn off remote
         }
     });
 
-    win.loadFile('./pages/home.html');
+    win.loadFile(path.join(pagePath, 'index.html'));
     window = win;
 }
 

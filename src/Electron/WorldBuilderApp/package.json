@@ -1,8 +1,8 @@
 {
-  "name": "electron-tutorial---official",
+  "name": "velox-mundi-desktop",
   "version": "1.0.0",
-  "description": "This program was built following the Electron official tutorial.",
-  "main": "main.js",
+  "description": "Velox Mundi: Quick World. This is a fast and easy way to build a world for any type of creacive content.",
+  "main": "./src/scripts/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron ."
