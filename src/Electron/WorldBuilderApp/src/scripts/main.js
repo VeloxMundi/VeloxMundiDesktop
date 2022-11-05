@@ -4,6 +4,10 @@ const path = require('path');
 const appPath = app.getAppPath();
 const pagePath = path.join(appPath, 'src', 'pages');
 const scriptPath = path.join(appPath, 'src', 'scripts');
+const worldPath = path.join(appPath, 'user', 'worlds');
+const FileTree = require('./FileTree');
+
+    
 let window = null;
 
 const createWindow = () => {
@@ -17,6 +21,7 @@ const createWindow = () => {
             enableRemoteModule: false, // turn off remote
         }
     });
+    
 
     win.loadFile(path.join(pagePath, 'index.html'));
     window = win;
@@ -25,6 +30,7 @@ const createWindow = () => {
 app.whenReady().then(() => {
     createWindow();
 
+    
     // for macOS, if the application is activated and no windows are open, create a new window
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
@@ -42,6 +48,22 @@ app.on('window-all-closed', () => {
 
 
 // Custom functions
+ipcMain.on('listWorlds', (event) => {
+    const dirArr = FileTree.ReadSubdirectories(worldPath);
+    return event.sender.send('listWorlds', dirArr);
+    /*(
+        <ul>
+            {dirArr.map((dir, i) => {
+                return (
+                    <li key={i}>
+                        <span>{dir.name}</span>
+                    </li>
+                )
+            })}
+        </ul>
+    )
+    */
+});
 ipcMain.on('saveChanges', (event, pageContent) => {
     // console.log(pageContent);
     const retarr = [0, 'There was a problem saving your changes. But sometimes error messages are too long to read. What do we do then?'];

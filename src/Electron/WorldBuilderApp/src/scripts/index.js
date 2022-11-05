@@ -12,8 +12,7 @@ $(document).ready(function() {
     $('#bodycontent').off();
 
     $('#bodycontent').on('click', '.app-link', function() {
-      $('#bodycontent').load($(this).attr('data-page'));
-      RegisterEvents();
+      loadPage($(this).attr('data-page'));
     });
 
     $('#bodycontent').on('click', '.world-selection', function() {
@@ -39,12 +38,44 @@ $(document).ready(function() {
     }
     $('#world').text(world);
   }
+
+  function loadPage(pageName)
+  {    
+    $('#bodycontent').load(pageName, function() {
+      switch(pageName)
+      {
+        case "selectworld.html":
+          let worlds = window.contextBridge.listWorlds();
+          let x=2;
+      }
+      RegisterEvents();
+    });
+    
+  }
   // END CUSTOM FUNCTIONS
   // ********************
 
+  // ********************
+  // LISTEN FOR MESSAGES FROM MAIN
+  window.contextBridge.fromMain('listWorlds', (event, worlds) => {
+    const list = document.getElementById('WorldList');
+    let newHTML = "";
+    worlds.forEach(world => {
+      for (let key in world)
+      {
+        if (key=="name")
+        {
+        list.innerHTML += `<li><a href="#" class="world-selection" data-world="${world[key]}">${world[key]}</a></li>`;
+        }
+      }
+    });
+
+  });
+  // END LISTEN FOR MESSAGES FROM MAIN
+  // *********************
+
   $('a.nav-link').on('click', function() {
-    $('#bodycontent').load($(this).attr('data-page'));
-    RegisterEvents();
+    loadPage($(this).attr('data-page'));
   });
 
 
