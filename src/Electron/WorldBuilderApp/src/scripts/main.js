@@ -5,7 +5,7 @@ const appPath = app.getAppPath();
 const pagePath = path.join(appPath, 'src', 'pages');
 const scriptPath = path.join(appPath, 'src', 'scripts');
 const worldPath = path.join(appPath, 'user', 'worlds');
-const FileTree = require('./FileTree');
+const FileTree = require('./utilities/filetree');
 
     
 let window = null;

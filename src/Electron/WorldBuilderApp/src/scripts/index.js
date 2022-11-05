@@ -45,8 +45,12 @@ $(document).ready(function() {
       switch(pageName)
       {
         case "selectworld.html":
+          document.getElementById('WorldList').innerHTML = "";
+          let world = document.getElementById('world').innerText;
+          if (world !="") {
+            document.getElementById('WorldList').innerHTML = `<li id="ClearWorld"><a href="#" class="world-selection text-danger" data-world="">[Clear "${world}"]</a></li>`;
+          }
           let worlds = window.contextBridge.listWorlds();
-          let x=2;
       }
       RegisterEvents();
     });
