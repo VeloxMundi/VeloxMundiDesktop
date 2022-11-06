@@ -1,6 +1,6 @@
 $(document).ready(function() {
   // define global variables
-  const world = "";
+  let world = "";
   $('#bodycontent').load('home.html');
   RegisterEvents();
   
@@ -19,12 +19,30 @@ $(document).ready(function() {
       $(this).off();
       SelectWorld($(this).attr('data-world'));
     });
+
+    $('#bodycontent').on('click', '#SelectWorldPath', function(e) {
+      e.preventDefault();
+      let directory = window.contextBridge.toMainSync('selectWorldDirectory');
+      if (directory!='') {
+        $('#WorldPath').text(directory);
+      }
+    });
+
+    $('#bodycontent').on('click', '#btn1', function() {
+      $('#box').val('B1 pressed...');
+      let ret = window.contextBridge.toMainWithReply('B1');
+      $('#box').val(ret);
+    });
+    $('#bodycontent').on('click', '#btn2', function() {
+
+    });
   }
   // Change the selected world
   function SelectWorld(world)
   {
     if (world!="")
     {
+      window.contextBridge.toMain('setWorld', world);
       $(document).prop('title', 'Velox Mundi: ' + world);
       $('#bodycontent').load('worldhome.html', function() {
         let el = document.getElementById('WorldName');
@@ -51,6 +69,17 @@ $(document).ready(function() {
             document.getElementById('WorldList').innerHTML = `<li id="ClearWorld"><a href="#" class="world-selection text-danger" data-world="">[Clear "${world}"]</a></li>`;
           }
           let worlds = window.contextBridge.listWorlds();
+          break;
+        case "config.html":
+          let worldDir = window.contextBridge.toMainSync('getConfigKey', 'WorldDirectory');
+          if (worldDir!='') {
+            
+          }
+          let configData = window.contextBridge.toMainSync('loadConfig');
+          if (configData["WorldDirectory"]) {
+            $('#WorldPath').text(worldDir);
+          }
+          let f=1;
       }
       RegisterEvents();
     });

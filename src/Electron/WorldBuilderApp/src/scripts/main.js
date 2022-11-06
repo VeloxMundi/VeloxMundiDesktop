@@ -1,19 +1,24 @@
-const {app, BrowserWindow, ipcMain} = require('electron');
+const {app, BrowserWindow, ipcMain, dialog} = require('electron');
 const { fstat } = require('fs');
 const path = require('path');
 const appPath = app.getAppPath();
 const pagePath = path.join(appPath, 'src', 'pages');
 const scriptPath = path.join(appPath, 'src', 'scripts');
-const worldPath = path.join(appPath, 'user', 'worlds');
-const FileTree = require('./utilities/filetree');
+const FileManager = require('./utilities/filemanager');
+const ConfigManager = require('./utilities/configmanager');
+ConfigManager.SetPath(path.join(appPath, 'config.json'));
+
+
+let configPage = null;
+
 
     
 let window = null;
 
 const createWindow = () => {
     const win = new BrowserWindow({
-        width: 800, 
-        height: 600,
+        width: 1000, 
+        height: 800,
         webPreferences: {
             preload: path.join(scriptPath, 'preload.js'),
             nodeIntegration: false, // is default value after Electron v5
@@ -46,24 +51,43 @@ app.on('window-all-closed', () => {
     }
 });
 
+//Testing
+ipcMain.on('B1', (event) => {
+    event.returnValue = "Button 1!";
+});
+ipcMain.on('B2', () => {
+    return "Button 2!";
+});
+
 
 // Custom functions
 ipcMain.on('listWorlds', (event) => {
-    const dirArr = FileTree.ReadSubdirectories(worldPath);
+    let worldPath = ConfigManager.ReadKey('WorldDirectory');
+    const dirArr = FileManager.ReadSubdirectories(worldPath);
     return event.sender.send('listWorlds', dirArr);
-    /*(
-        <ul>
-            {dirArr.map((dir, i) => {
-                return (
-                    <li key={i}>
-                        <span>{dir.name}</span>
-                    </li>
-                )
-            })}
-        </ul>
-    )
-    */
 });
+
+ipcMain.on('loadConfig', (event) => {
+    event.returnValue = ConfigManager.ReadAll();
+});
+ipcMain.on('setWorld', (event, world) => {
+    ConfigManager.WriteKey('CurrentWorld', world);
+});
+
+ipcMain.on('selectWorldDirectory', (event) => {
+    var directory = dialog.showOpenDialogSync({ properties: ['openDirectory']});
+    if (directory.length = 1) {
+        ConfigManager.WriteKey('WorldDirectory',directory[0]);
+        event.returnValue = directory[0];
+    }
+    else {
+        event.returnValue = '';
+    }
+});
+ipcMain.on('getConfigKey', (event, key) => {
+    event.returnValue = ConfigManager.ReadKey(key);
+});
+
 ipcMain.on('saveChanges', (event, pageContent) => {
     // console.log(pageContent);
     const retarr = [0, 'There was a problem saving your changes. But sometimes error messages are too long to read. What do we do then?'];
