@@ -6,7 +6,8 @@ body,
 .full-height,
 .body-content 
 {
-    height: 100%;
+    top: 15px;
+    bottom: 0px;
 }
 
 

@@ -1,0 +1,53 @@
+# Jaida Colth
+Jaida was a person who did some things. They were not very nice, but that's really OK.
+
+## |Callout|
+Something very special about Jaida would go here.
+### Picture{X}
+![ALLOSOURCE_amoreng_MThumb.jpg](:/309422322435453d9373a0b3407a1397)
+### Height
+2.2 spans
+### Weight
+62 measures
+### Eyes
+Green
+### Hair
+Brown
+### Magic Class
+Earth
+
+## Early Childhood
+Jaida was born on the 7<sup>th</sup> of Doloc in the 841<sup>st</sup> Turn. His parents were [Eldra Maidar]() and [Sela Maidar](). He was a nuisance of a child.
+
+### Chasing the dog
+When Jaida was 6 turns old, he saw a dog skulking around the chicken coop. He threw a rock at the dog and it growled and ran away. He chased it for nearly a block before returning home.
+
+### Eating a fish
+When Jaida was 11 turns old, he ate a fish.
+
+## Between Years
+Jaida didn't do anything noteworthy in his between years.
+
+## Adult Life
+After growing up, Jaida got a job.
+
+### Cartographer
+Jaida's first job was as a cartographer for the explorer's guild.
+
+### Baker
+Jaida decided he didn't like map-making, so he tried his hand at baking delightful treats to sell to the village children. One of Jaida's favorite recipes is shown below:
+
+#### YumCake
+|Qty||Ingredient|
+|--:|:--|--|
+|1|cup|Flour|
+|4|cups|Sugar|
+|1|cup|Water|
+
+Mix dry ingredients in bowl. Stir in water until a thick batter forms.
+Pour batter into a pie tin. 
+Bake at 375&deg;F for 30 minutes.
+
+
+
+

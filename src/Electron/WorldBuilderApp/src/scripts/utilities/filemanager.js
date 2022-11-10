@@ -41,6 +41,12 @@ module.exports = class FileManager {
     })
   }
 
+  static CreateDirectory(path) {
+    if (!fs.existsSync(path)) {
+      fs.mkdirSync(path);
+    }
+  }
+
 
 }
 

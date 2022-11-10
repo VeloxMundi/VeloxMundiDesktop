@@ -94,6 +94,21 @@ ipcMain.on('saveChanges', (event, pageContent) => {
     event.sender.send('saveResults', retarr);
 });
 
+ipcMain.on('CreateWorld', (event, worldName) => {
+    // Create a new folder named ${data}
+    try
+    {
+        let worldPath = path.join(ConfigManager.ReadKey('WorldDirectory'),worldName);
+        FileManager.CreateDirectory(worldPath);
+        FileManager.CreateDirectory(path.join(worldPath, 'md'));
+        FileManager.CreateDirectory(path.join(worldPath, 'html'));
+        event.returnValue = '';
+    }
+    catch(err)
+    {
+        event.returnValue = err.message;
+    }
+});
 
 function saveChanges(event, pageContent) {
     

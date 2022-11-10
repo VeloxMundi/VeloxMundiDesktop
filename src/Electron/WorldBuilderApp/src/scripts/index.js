@@ -3,13 +3,25 @@ $(document).ready(function() {
   let world = "";
   $('#bodycontent').load('home.html');
   RegisterEvents();
-  
-  
+
+
   // *********************
   // CUSTOM FUNCTIONS
   // Register events when body content changes
   function RegisterEvents() {
     $('#bodycontent').off();
+
+    let pageId = $('#bodycontent #PageId');
+    if (pageId)
+    {
+      switch (pageId.val())
+      {
+        case "Edit":
+          let editor = $('#bodycontent #editor');
+          editor.load("sample.md");
+          break;
+      }
+    }
 
     $('#bodycontent').on('click', '.app-link', function() {
       loadPage($(this).attr('data-page'));
@@ -36,6 +48,32 @@ $(document).ready(function() {
     $('#bodycontent').on('click', '#btn2', function() {
 
     });
+
+    $('#bodycontent').on('click', '#SaveNewWorld', function() {
+      let worldName = $('#NewWorldName').val();
+      let world = window.contextBridge.toMainSync('CreateWorld', worldName);
+      if (world!='') {
+        $('#ErrorMsg').text(world);
+      }
+      else {
+        SelectWorld(worldName);
+      }
+        
+    });
+
+    $('#bodycontent').on('load', function() {
+      let pageId = $('#PageId');
+      if (pageId)
+      {
+        switch (pageId.val())
+        {
+          case "Edit":
+            let editor = $('#bodycontent #editor');
+            editor.load("sample.md");
+            break;
+        }
+      }
+    });
   }
   // Change the selected world
   function SelectWorld(world)
@@ -58,7 +96,7 @@ $(document).ready(function() {
   }
 
   function loadPage(pageName)
-  {    
+  {
     $('#bodycontent').load(pageName, function() {
       switch(pageName)
       {
@@ -71,19 +109,20 @@ $(document).ready(function() {
           let worlds = window.contextBridge.listWorlds();
           break;
         case "config.html":
-          let worldDir = window.contextBridge.toMainSync('getConfigKey', 'WorldDirectory');
-          if (worldDir!='') {
-            
-          }
           let configData = window.contextBridge.toMainSync('loadConfig');
           if (configData["WorldDirectory"]) {
-            $('#WorldPath').text(worldDir);
+            $('#WorldPath').text(configData["WorldDirectory"]);
           }
           let f=1;
+          break;
+        case "edit.html":
+          let params = new URLSearchParams(document.location.search);
+          let pageSource = params.get("source");
+          break;
       }
       RegisterEvents();
     });
-    
+
   }
   // END CUSTOM FUNCTIONS
   // ********************
@@ -138,7 +177,7 @@ $(document).ready(function() {
       $('body').data('fv_open_modals', $('body').data('fv_open_modals' ) + 1 );
       $(this).css('z-index', 1040 + (10 * $('body').data('fv_open_modals' )));
       $('.modal-backdrop').not('.fv-modal-stack').css('z-index', 1039 + (10 * $('body').data('fv_open_modals')));
-      $('.modal-backdrop').not('fv-modal-stack').addClass('fv-modal-stack'); 
+      $('.modal-backdrop').not('fv-modal-stack').addClass('fv-modal-stack');
 
-  });        
+  });
 });
