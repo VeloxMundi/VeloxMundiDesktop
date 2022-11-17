@@ -2,24 +2,91 @@
 
 /* Add styles here to customize the appearance of your app */
 html,
-body,
-.full-height,
-.body-content 
+body
 {
-    top: 15px;
-    bottom: 0px;
+    height: 100%;
+}
+/*
+#bodycontent 
+{
+    
+    position: absolute;
+    top:70px;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    overflow-y: auto;
 }
 
 
-.container {
+.full-height 
+{
+    position: absolute;
+    top:7px;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+}
+
+
+.layout {
+    display: table;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .layout__row {
+    display: table-row;
+  }
+  
+  .layout__cell {
+    display: table-cell;
+    vertical-align: middle;
+  }
+  
+  .layout__cell--last {
+    height: 100%; 
+  }
+  */
+
+/*
+.full-height { 
+    height: 100%;
+}
+*/
+
+html, body 
+{
+    height: 100%;
+    margin: 0;
+}
+
+.box {
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+}
+
+.box .br.header {
+    flex: 0 1 0;
+    width: 100%;
+}
+
+.box .br.content {
+    flex: 1 1 0;
+    width: 100%;
+}
+
+.container, .row {
     max-width: 100% !important;
+    
 }
 
 
 body 
 {
     background-color: #fbfbfb;
-    padding-top:72px;
+    /*padding-top:72px;*/
 }
 
 #world {

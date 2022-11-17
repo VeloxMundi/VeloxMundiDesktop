@@ -1,3 +1,7 @@
+import {LogSomething, LogSomethingElse} from './resources/testimportscript.js';
+
+
+
 $(document).ready(function() {
   // define global variables
   let world = "";
@@ -19,6 +23,7 @@ $(document).ready(function() {
         case "Edit":
           let editor = $('#bodycontent #editor');
           editor.load("sample.md");
+          OnWindowResize();
           break;
       }
     }
@@ -70,11 +75,33 @@ $(document).ready(function() {
           case "Edit":
             let editor = $('#bodycontent #editor');
             editor.load("sample.md");
+            $('#bodycontent #editor').focus();
             break;
         }
       }
     });
   }
+
+  $(window).on('resize', function() {
+    OnWindowResize();
+  })
+
+  function OnWindowResize() {
+    // Run this function any time the application window is resized
+    let pageId = $('#PageId');
+    if (pageId) {
+      switch (pageId.val()) {
+        case "Edit":
+          let tbh = $('#toolbar').height();
+          let nh = $('#nav').height();
+          let bh = $('body').height();
+          let newH = bh-nh-tbh;
+          $('#bodycontent #editor').css({height:(newH)+'px'});
+          break;
+      }
+    }
+  }
+
   // Change the selected world
   function SelectWorld(world)
   {
@@ -86,6 +113,13 @@ $(document).ready(function() {
         let el = document.getElementById('WorldName');
         el.innerText=world;
         RegisterEvents();
+
+        
+
+        $('#bodycontent #button1').on('click', function() {
+          LogSomething();
+          LogSomethingElse();
+        });
       });
     }
     else {
@@ -119,6 +153,7 @@ $(document).ready(function() {
           let params = new URLSearchParams(document.location.search);
           let pageSource = params.get("source");
           break;
+
       }
       RegisterEvents();
     });

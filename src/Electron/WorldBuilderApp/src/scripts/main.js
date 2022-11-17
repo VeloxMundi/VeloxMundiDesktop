@@ -22,8 +22,10 @@ const createWindow = () => {
         webPreferences: {
             preload: path.join(scriptPath, 'preload.js'),
             nodeIntegration: false, // is default value after Electron v5
+            /*
             contextIsolation: true, // protect against prototype pollution
             enableRemoteModule: false, // turn off remote
+            */
         }
     });
     
