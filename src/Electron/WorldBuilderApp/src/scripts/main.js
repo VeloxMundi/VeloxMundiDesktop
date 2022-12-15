@@ -5,6 +5,10 @@ const appPath = app.getAppPath();
 const pagePath = path.join(appPath, 'src', 'pages');
 const scriptPath = path.join(appPath, 'src', 'scripts');
 
+
+// load custom modules
+const config = require(path.join(scriptPath, 'modules', 'configModule.js'));
+
    
 let window = null;
 
@@ -42,3 +46,24 @@ app.on('window-all-closed', () => {
         app.quit();
     }
 });
+
+
+ipcMain.on('toMain', (event, module, method, data) => {
+    CallModuleMethod(event, module, method, data);    
+});
+
+ipcMain.on('toMainAndBack', (event, module, method, data) => {
+    event.returnValue = CallModuleMethod(event, module, method, data);
+});
+
+function CallModuleMethod(event, module, method, data)
+{
+    switch(module)
+    {
+        case 'config':
+            return config.InvokeConfig(event, method, data);
+            break;
+        default:
+            break;
+    }
+}
