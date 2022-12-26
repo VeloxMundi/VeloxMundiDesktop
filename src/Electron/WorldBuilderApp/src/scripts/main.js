@@ -1,6 +1,10 @@
+// Import required modules
 const {app, BrowserWindow, ipcMain, dialog} = require('electron');
 const { fstat } = require('fs');
 const path = require('path');
+const appConfig = require('electron-settings');
+
+// Set default global variables
 const appPath = app.getAppPath();
 const pagePath = path.join(appPath, 'src', 'pages');
 const scriptPath = path.join(appPath, 'src', 'scripts');
@@ -9,24 +13,28 @@ const scriptPath = path.join(appPath, 'src', 'scripts');
 // load custom modules
 const config = require(path.join(scriptPath, 'modules', 'configModule.js'));
 
+
    
 let window = null;
 
 const createWindow = () => {
-    const win = new BrowserWindow({
-        width: 1000, 
-        height: 800,
-        webPreferences: {
-            preload: path.join(scriptPath, 'preload.js'),
-            nodeIntegration: false, // is default value after Electron v5
-            contextIsolation: true, // protect against prototype pollution
-            enableRemoteModule: false, // turn off remote
-        }
-    });
-    
+    const mainWindowStateKeeper = windowStateKeeper('main');
+    const windowOptions = {
+      x: mainWindowStateKeeper.x,
+      y: mainWindowStateKeeper.y,
+      width: mainWindowStateKeeper.width,
+      height: mainWindowStateKeeper.height,
+      webPreferences: {
+        preload: path.join(scriptPath, 'preload.js'),
+        nodeIntegration: false, // is default value after Electron v5
+        contextIsolation: true, // protect against prototype pollution
+        enableRemoteModule: false, // turn off remote
+      }
+    }
+    const mainWindow = new BrowserWindow(windowOptions);
+    mainWindowStateKeeper.track(mainWindow);
 
-    win.loadFile(path.join(pagePath, 'index.html'));
-    window = win;
+    mainWindow.loadFile(path.join(pagePath, 'index.html'));
 }
 
 app.whenReady().then(() => {
@@ -47,12 +55,12 @@ app.on('window-all-closed', () => {
     }
 });
 
-
+// 2022-12-18: Whenever clicking the button, the toMain and toMainSync functions are both called before being invoked by config.js
 ipcMain.on('toMain', (event, module, method, data) => {
     CallModuleMethod(event, module, method, data);    
 });
 
-ipcMain.on('toMainAndBack', (event, module, method, data) => {
+ipcMain.on('toMainSync', (event, module, method, data) => {
     event.returnValue = CallModuleMethod(event, module, method, data);
 });
 
@@ -67,3 +75,49 @@ function CallModuleMethod(event, module, method, data)
             break;
     }
 }
+
+
+
+
+// Window manager
+function windowStateKeeper(windowName) {
+    let window, windowState;
+    function setBounds() {
+      // Restore from appConfig
+      let b = appConfig.getSync();
+      if (appConfig.hasSync(`windowState.${windowName}`)) {
+        windowState = appConfig.getSync(`windowState.${windowName}`);
+        return;
+      }
+      // Default
+      windowState = {
+        x: undefined,
+        y: undefined,
+        width: 1000,
+        height: 800,
+      };
+    }
+    function saveState() {
+      if (!windowState.isMaximized) {
+        windowState = window.getBounds();
+      }
+      windowState.isMaximized = window.isMaximized();
+      appConfig.set(`windowState.${windowName}`, windowState);
+    }
+    function track(win) {
+      console.log('stuff');
+      window = win;
+      ['resize', 'move', 'close'].forEach(event => {
+        win.on(event, saveState);
+      });
+    }
+    setBounds();
+    return({
+      x: windowState.x,
+      y: windowState.y,
+      width: windowState.width,
+      height: windowState.height,
+      isMaximized: windowState.isMaximized,
+      track,
+    });
+  }

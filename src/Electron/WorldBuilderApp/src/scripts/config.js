@@ -1,10 +1,12 @@
 
 $(document).ready(function() {
+  ('#SelectWorldPath').off;
   $('#WorldPath').text('hello there!');
-  $('#SelectWorldPath').on('click', function(e) {
-    e.preventDefault();
+  $('#SelectWorldPath').on('click', function() {
+    let y = 7;
+    //e.preventDefault();
     window.contextBridge.toMain('config', 'One-Way');
-    let x = window.contextBridge.toMainAndBack('config', 'Two-Way');
+    let x = window.contextBridge.toMainSync('config', 'Two-Way');
   });
 
 

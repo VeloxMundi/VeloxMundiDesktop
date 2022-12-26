@@ -1,5 +1,9 @@
 var fs = require('fs');
 let path = require('path');
+const appConfig = require('electron-settings');
+
+// Custom Variables
+let windowState;
 
 module.exports = class ConfigManager {
   constructor() {
@@ -7,6 +11,7 @@ module.exports = class ConfigManager {
   }
 
   static InvokeConfig(event, method, data) {
+    console.log('Method="' + method + '", data="' + data + '"')
     switch(method) {
       case 'One-Way':
         this.GetPath(event);
@@ -28,6 +33,8 @@ module.exports = class ConfigManager {
     return null;
   }
 
+
+  
   static GetPath(event) {
     //event.sender.send('fromMain', 'config', 'GetPath', 'data1');
   }
