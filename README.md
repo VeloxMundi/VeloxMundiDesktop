@@ -4,6 +4,23 @@ Welcome to Velox Mundos (Quick Worlds). This application was designed to be a fa
 ## Electron Application
 The primary application is an Electron app, which allows creators to write pages for anything related to their worlds.
 
+## Installation
+No installers have been created for this application yet, so you will need to download the code and package and run it yourself.
+
+### Development Prerequisites
+The following required assets are not included in this repository, but are needed to develop the application. These third-party resources are not part of this application, but required for proper functionality. 
+
+These prerequisites are only needed to modify the source code. The third-party assets will be included in any installers that are created in the future. 
+
+Instructions on how to acquire and where to update the code to use each prerequisite are included below.
+
+**Bootstrap Icons**
+: Source: [Bootstrap Icons Website](https://icons.getbootstrap.com/) / [Git Repo](https://github.com/twbs/icons/releases/)
+: <br/>
+: _Instructions:_
+: * Download and extract the latest bootstrap icons and related files (fonts and CSS).
+: * Update "`src/Electron/WorldBuilderApp/src/styles/custom.css`" to import the bootstrap icons CSS file and define the "`bootstrap-icons`" font pointed to the correct download location. See [custom.css](src/Electron/WorldBuilderApp/src/styles/custom.css) for example.
+
 ## Current Features
 
 ### Markdown Editor

@@ -1,6 +1,15 @@
 /* styles.css */
 
-/* Add styles here to customize the appearance of your app */
+/* THIRD PARTY ASSETS
+/* Bootstrap Icons are not in the repository. Download them yourself from https://icons.getbootstrap.com/ */
+@import "../assets/bootstrap-icons-1.10.3/bootstrap-icons.css";
+
+@font-face {
+    font-family: bootstrap-icons;
+    src: url(../assets/bootstrap-icons-1.10.3/fonts/bootstrap-icons.woff);
+}
+/* END THIRD PARTY ASSETS */
+
 html,
 body
 {
@@ -85,3 +94,23 @@ textarea {
     border: 1px solid #000000;
 }
 
+
+.breadcrumbs * {
+    font-size: 0.85em !important;
+}
+
+.breadcrumbs {    
+    border-bottom: 1px solid #00000059;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+.nolink {
+    color: #000000;
+    text-decoration: none;
+}
+
+.not-allowed {
+    cursor: not-allowed;
+}

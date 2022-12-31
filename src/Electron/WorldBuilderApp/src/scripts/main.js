@@ -8,10 +8,12 @@ const appConfig = require('electron-settings');
 const appPath = app.getAppPath();
 const pagePath = path.join(appPath, 'src', 'pages');
 const scriptPath = path.join(appPath, 'src', 'scripts');
+const configPath = path.join(appPath, 'config.json');
 
 
 // load custom modules
 const config = require(path.join(scriptPath, 'modules', 'configModule.js'));
+config.InitPath(configPath);
 
 
    
@@ -55,7 +57,6 @@ app.on('window-all-closed', () => {
     }
 });
 
-// 2022-12-18: Whenever clicking the button, the toMain and toMainSync functions are both called before being invoked by config.js
 ipcMain.on('toMain', (event, module, method, data) => {
     CallModuleMethod(event, module, method, data);    
 });
@@ -105,7 +106,6 @@ function windowStateKeeper(windowName) {
       appConfig.set(`windowState.${windowName}`, windowState);
     }
     function track(win) {
-      console.log('stuff');
       window = win;
       ['resize', 'move', 'close'].forEach(event => {
         win.on(event, saveState);
