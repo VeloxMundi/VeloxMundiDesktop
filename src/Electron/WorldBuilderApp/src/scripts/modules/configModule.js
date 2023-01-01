@@ -1,6 +1,7 @@
 const {app, dialog} = require('electron');
-var fs = require('fs');
+var fs = require('fs-extra');
 let path = require('path');
+let mv = require('mv');
 
 // Custom Modules
 const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'fileManagerModule.js'));
@@ -27,6 +28,9 @@ module.exports = class ConfigManager {
         break;
       case 'SelectWorldDirectory':
         return this.SelectWorldDirectory();
+        break;      
+      case 'MoveWorldDirectory':
+        return this.MoveWorldDirectory();
         break;
       default:
         event.sender.send('Invalid');
@@ -43,7 +47,7 @@ module.exports = class ConfigManager {
       let date = Date.now();
       let data = {
         "AppName" : "Velox Mundi",
-        "ConfigCreated" : TimeStamp.GetTimeStamp(),
+        "ConfigCreated" : new Date(Date.now()).toLocaleString(),
         "WorldDirectory" : path.resolve('user/Worlds'),
         "CurrentWorld" : ""
       };
@@ -51,16 +55,6 @@ module.exports = class ConfigManager {
     }
   }
 
-  static SelectWorldDirectory() {
-    var directory = dialog.showOpenDialogSync({ properties: ['openDirectory']});
-    if (directory.length = 1) {
-        this.WriteKey('WorldDirectory',directory[0]);
-        return directory[0];
-    }
-    else {
-        return '';
-    }
-  }
 
   static GetPath() {
     return this.configpath;
@@ -94,6 +88,7 @@ module.exports = class ConfigManager {
       }
     }
     data[key] = value;
+    data['ConfigUpdated'] = new Date(Date.now()).toLocaleString();
     fileManager.WriteFile(this.configpath, JSON.stringify(data, null, 2));
   }
 
@@ -107,4 +102,82 @@ module.exports = class ConfigManager {
       return '';
     }
   }
+
+
+
+
+
+
+  static SelectWorldDirectory() {
+    var directory = dialog.showOpenDialogSync({ properties: ['openDirectory']});
+    if (directory) {
+        this.WriteKey('WorldDirectory',directory[0]);
+        return directory[0];
+    }
+    else {
+        return '';
+    }
+  }
+
+  static MoveWorldDirectory() {
+    let oldDirectory = this.ReadKey('WorldDirectory');
+    if (oldDirectory) {
+        let newDirectory = dialog.showOpenDialogSync({ properties: ['openDirectory']});
+        if (newDirectory) {
+         try {
+          this.copyDir(oldDirectory, newDirectory[0]);
+         }
+         catch(e) {
+          fs.rmSync(newDirectory[0], {recursive: true, force: true});
+          return [false, 'ERROR ' + e];
+        }
+        this.WriteKey('WorldDirectory',newDirectory[0]);
+        fs.rmSync(oldDirectory, {recursive: true, force: true});
+        return [true, newDirectory[0]];
+
+          //return newDirectory[0];
+        }
+        else {
+          return [false,'Unable'];
+        }
+    }
+    else {
+        return [false, 'Can\'t'];
+    }
+  }
+
+
+
+  /* Moving directories */
+  /*
+static mkdir(dir) {
+  // making directory without exception if exists
+  try {
+    fs.mkdirSync(dir, 0755);
+  } catch(e) {
+    if(e.code != "EEXIST") {
+      throw e;
+    }
+  }
+};
+*/
+
+
+static copyDir(src, dest) {
+  //this.mkdir(dest);
+  var files = fs.readdirSync(src);
+  for(var i = 0; i < files.length; i++) {
+    var current = fs.lstatSync(path.join(src, files[i]));
+    if(current.isDirectory()) {
+      this.copyDir(path.join(src, files[i]), path.join(dest, files[i]));
+    } else if(current.isSymbolicLink()) {
+      var symlink = fs.readlinkSync(path.join(src, files[i]));
+      fs.symlinkSync(symlink, path.join(dest, files[i]));
+    } else {
+      fs.copySync(path.join(src, files[i]), path.join(dest, files[i]), {overwrite: true});
+    }
+  }
+};
 }
+
+

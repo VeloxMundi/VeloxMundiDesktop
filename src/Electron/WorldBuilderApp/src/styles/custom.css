@@ -114,3 +114,11 @@ textarea {
 .not-allowed {
     cursor: not-allowed;
 }
+
+
+
+
+/* config.html */
+.configTable tr {
+    border-bottom: 1px dotted #00000059;
+}
