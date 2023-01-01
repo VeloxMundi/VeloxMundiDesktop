@@ -15,7 +15,6 @@ module.exports = class ConfigManager {
   }
 
   static InvokeConfig(event, method, data) {
-    console.log('Method="' + method + '", data="' + data + '"')
     switch(method) {
       case 'SetPage':
         this.SetPage(data);

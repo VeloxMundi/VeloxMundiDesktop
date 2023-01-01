@@ -1,5 +1,5 @@
 // Import required modules
-const {app, BrowserWindow, ipcMain, dialog} = require('electron');
+const {app, BrowserWindow, ipcMain, dialog, Menu, MenuItem, shell} = require('electron');
 const { fstat } = require('fs');
 const path = require('path');
 const appConfig = require('electron-settings');
@@ -9,6 +9,7 @@ const appPath = app.getAppPath();
 const pagePath = path.join(appPath, 'src', 'pages');
 const scriptPath = path.join(appPath, 'src', 'scripts');
 const configPath = path.join(appPath, 'config.json');
+const isMac = process.platform === 'darwin'
 
 
 // load custom modules
@@ -16,8 +17,8 @@ const config = require(path.join(scriptPath, 'modules', 'configModule.js'));
 config.InitPath(configPath);
 
 
-   
-let window = null;
+
+let mainWindow = null;
 
 const createWindow = () => {
     const mainWindowStateKeeper = windowStateKeeper('main');
@@ -33,13 +34,15 @@ const createWindow = () => {
         enableRemoteModule: false, // turn off remote
       }
     }
-    const mainWindow = new BrowserWindow(windowOptions);
+    mainWindow = new BrowserWindow(windowOptions);
     mainWindowStateKeeper.track(mainWindow);
 
     mainWindow.loadFile(path.join(pagePath, config.GetPage()));
 }
 
 app.whenReady().then(() => {
+    const menu = Menu.buildFromTemplate(menuTemplate)
+    Menu.setApplicationMenu(menu)
     createWindow();
 
     // for macOS, if the application is activated and no windows are open, create a new window
@@ -58,7 +61,7 @@ app.on('window-all-closed', () => {
 });
 
 ipcMain.on('toMain', (event, module, method, data) => {
-    CallModuleMethod(event, module, method, data);    
+    CallModuleMethod(event, module, method, data);
 });
 
 ipcMain.on('toMainSync', (event, module, method, data) => {
@@ -76,6 +79,69 @@ function CallModuleMethod(event, module, method, data)
             break;
     }
 }
+
+function loadPage(pageName) {
+  mainWindow.loadFile(path.join(pagePath, pageName));
+}
+
+// Menu
+const menuTemplate = [
+  (isMac ? {
+    label: app.name,
+    submenu: [
+      { role: 'about' },
+      { type: 'separator' },
+      { role: 'services' },
+      { type: 'separator' },
+      { role: 'hide' },
+      { role: 'hideOthers' },
+      { role: 'unhide' },
+      { type: 'separator' },
+      { role: 'quit' }
+    ]
+  } : {role: ''}),
+  {
+    role: 'fileMenu'
+  },
+  {
+     role: 'editMenu'
+  },
+  {
+    label: 'Go',
+    submenu: [
+      {
+        label: 'Home',
+        click: async () => {
+          loadPage('index.html');
+        }
+      },
+      {
+        label: 'Settings',
+        click: async () => {
+          loadPage('config.html');
+        }
+      }
+    ]
+  },
+  {
+     role: 'viewMenu'
+  },
+
+  {
+     role: 'windowMenu'
+  },
+  {
+     role: 'help',
+     submenu: [
+      {
+        label: 'Velox Mundi Online',
+        click: async () => {
+          await shell.openExternal('https://google.com');
+        }
+      }
+     ]
+  }
+]
 
 
 
