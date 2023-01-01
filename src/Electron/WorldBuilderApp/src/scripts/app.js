@@ -1,6 +1,24 @@
 
+function hideToast() {
+  $('#toast').hide();
+  $('#toast').html('');
+}
+
+function showToast(msg, clss) {
+  $('#toast').show();
+  $('#toast').html('<div class="' + clss + '">' + msg + '</div>');
+  setTimeout(hideToast, 3000);
+}
+
 $(document).ready(function() {
-  
+  // Set page
+  let pageName = window.location.pathname.split('/').pop();
+  console.log(pageName);
+  window.contextBridge.toMain('config', 'SetPage', pageName);
+
+
+
+
   // close navbar menu after clicking a link
   $(".navbar-collapse a").on('click', function () {
     $(".navbar-collapse").collapse("hide");

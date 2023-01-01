@@ -36,7 +36,7 @@ const createWindow = () => {
     const mainWindow = new BrowserWindow(windowOptions);
     mainWindowStateKeeper.track(mainWindow);
 
-    mainWindow.loadFile(path.join(pagePath, 'index.html'));
+    mainWindow.loadFile(path.join(pagePath, config.GetPage()));
 }
 
 app.whenReady().then(() => {

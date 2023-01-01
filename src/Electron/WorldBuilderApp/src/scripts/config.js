@@ -1,23 +1,27 @@
-
 $(document).ready(function() {
-  ('#SelectWorldPath').off;
+  ('#SelectWorldPath').off;  
+  ('#MoveWorld').off;
+
   $('#WorldPath').text(window.contextBridge.toMainSync('config', 'ReadKey', 'WorldDirectory'));
+
   $('#SelectWorldPath').on('click', function(e) {
     e.preventDefault();
     $('#WorldPath').text(window.contextBridge.toMainSync('config', 'SelectWorldDirectory'));
   });
+
   $('#MoveWorld').on('click', function(e) {
     e.preventDefault();
     let resp = window.contextBridge.toMainSync('config', 'MoveWorldDirectory');
     if (resp && resp[0]==true) {
       $('#WorldPath').text(resp[1]);
-      $('#MoveWorldText').html('<span class="text-success">Worlds moved successfully!<span>');
+      showToast('Worlds moved successfully!', 'text-success');
     }
     else {
-      $('#MoveWorldText').html('<span class="text-danger">' + resp[1] + '</span>');
+      showToast(resp[1], 'text-danger');
     }
   });
 
+  
 
   /*
   ipcRenderer.on('fromMain', (method, module, data) => {
@@ -26,6 +30,4 @@ $(document).ready(function() {
 */
 
   
-
-  let y = 1;
 });

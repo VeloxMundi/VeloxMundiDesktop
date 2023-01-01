@@ -17,11 +17,8 @@ module.exports = class ConfigManager {
   static InvokeConfig(event, method, data) {
     console.log('Method="' + method + '", data="' + data + '"')
     switch(method) {
-      case 'One-Way':
-        this.GetPath();
-        break;
-      case 'Two-Way':
-        return this.GetPath();
+      case 'SetPage':
+        this.SetPage(data);
         break;
       case 'ReadKey':
         return this.ReadKey(data);
@@ -60,13 +57,27 @@ module.exports = class ConfigManager {
     return this.configpath;
   }
 
+  static GetPage() {
+    let page = this.ReadKey('CurrentPage');
+    if (page && page!='') {
+      return page;
+    }
+    else {
+      return 'index.html';
+    }
+  }
+
+  static SetPage(page) {
+    this.WriteKey('CurrentPage', page);
+  }
+
 
   static ReadKey(key) { 
     let rawdata = fs.readFileSync(this.configpath);
     if (rawdata!='') {
       let data = JSON.parse(rawdata);
-      if (data[key].length==1) {
-      return data[key].toString();
+      if (data[key] && data[key].length==1) {
+        return data[key].toString();
       }
       else {
         return data[key];
@@ -124,25 +135,29 @@ module.exports = class ConfigManager {
     if (oldDirectory) {
         let newDirectory = dialog.showOpenDialogSync({ properties: ['openDirectory']});
         if (newDirectory) {
-         try {
-          this.copyDir(oldDirectory, newDirectory[0]);
-         }
-         catch(e) {
-          fs.rmSync(newDirectory[0], {recursive: true, force: true});
-          return [false, 'ERROR ' + e];
-        }
-        this.WriteKey('WorldDirectory',newDirectory[0]);
-        fs.rmSync(oldDirectory, {recursive: true, force: true});
-        return [true, newDirectory[0]];
-
-          //return newDirectory[0];
+          if (newDirectory[0]!=oldDirectory)
+          {
+            try {
+              this.copyDir(oldDirectory, newDirectory[0]);
+            }
+            catch(e) {
+              fs.rmSync(newDirectory[0], {recursive: true, force: true});
+              return [false, 'ERROR ' + e];
+            }
+            this.WriteKey('WorldDirectory',newDirectory[0]);
+            fs.rmSync(oldDirectory, {recursive: true, force: true});
+            return [true, newDirectory[0]];
+          }
+          else {
+            return [false, 'Source and destination directories cannot be the same'];
+          }
         }
         else {
-          return [false,'Unable'];
+          return [false,'Destination directory was not specified'];
         }
     }
     else {
-        return [false, 'Can\'t'];
+        return [false, 'Source directory was not specified'];
     }
   }
 
