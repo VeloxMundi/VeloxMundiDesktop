@@ -15,6 +15,7 @@ const isMac = process.platform === 'darwin'
 // load custom modules
 const config = require(path.join(scriptPath, 'modules', 'configModule.js'));
 config.InitPath(configPath);
+const world = require(path.join(scriptPath, 'modules', 'worldModule.js'));
 
 
 
@@ -60,6 +61,10 @@ app.on('window-all-closed', () => {
     }
 });
 
+ipcMain.on('Navigate', (event, page) => {
+  loadPage(page);
+})
+
 ipcMain.on('toMain', (event, module, method, data) => {
     CallModuleMethod(event, module, method, data);
 });
@@ -73,10 +78,13 @@ function CallModuleMethod(event, module, method, data)
     switch(module)
     {
         case 'config':
-            return config.InvokeConfig(event, method, data);
-            break;
+          return config.InvokeConfig(event, method, data);
+          break;
+        case 'world':
+          return world.InvokeConfig(event, method, data);
+          break;
         default:
-            break;
+          break;
     }
 }
 
@@ -114,6 +122,15 @@ const menuTemplate = [
         click: async () => {
           loadPage('index.html');
         }
+      },
+      {
+        label: 'Select a World',
+        click: async () => {
+          loadPage('selectWorld.html');
+        }
+      },
+      {
+        type: 'separator'
       },
       {
         label: 'Settings',

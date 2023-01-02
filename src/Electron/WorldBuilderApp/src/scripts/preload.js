@@ -6,5 +6,8 @@ contextBridge.exposeInMainWorld('contextBridge', {
   },
   toMainSync: (module, method, data) => {
     return ipcRenderer.sendSync('toMainSync', module, method, data);
+  },
+  navigate: (page) => {
+    ipcRenderer.send('Navigate', page);
   }
 });

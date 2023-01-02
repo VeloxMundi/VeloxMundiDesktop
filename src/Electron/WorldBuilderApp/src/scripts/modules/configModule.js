@@ -22,6 +22,9 @@ module.exports = class ConfigManager {
       case 'ReadKey':
         return this.ReadKey(data);
         break;
+      case 'WriteKey':
+        this.WriteKey(data[0], data[1]);
+        break;
       case 'SelectWorldDirectory':
         return this.SelectWorldDirectory();
         break;      
