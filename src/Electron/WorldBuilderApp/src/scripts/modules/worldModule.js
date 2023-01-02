@@ -19,6 +19,9 @@ module.exports = class ConfigManager {
       case 'GetWorldLinks':
         return this.GetWorldLinks();
         break;
+      case 'GetWorldPages':
+        return this.GetWorldPages();
+        break;
       case 'CreateWorld':
         return this.CreateWorld(data);
         break;
@@ -41,6 +44,21 @@ module.exports = class ConfigManager {
 
 
     return worldLinks;
+  }
+
+  static GetWorldPages() {
+    let currentWorld=configManager.ReadKey('CurrentWorld');
+    let worldPath = configManager.ReadKey('WorldDirectory');
+    let dir = path.join(worldPath, currentWorld, 'md');
+    let fileArray = [];
+    let files = fs.readdirSync(dir).forEach(file => {
+        var fileInfo = new fileManager(`${path}\\${file}`, file);
+        let ext = fileInfo.name.split('.').pop();
+        if (ext=='md') {
+          fileArray.push(fileInfo);
+        }
+    });
+    return fileArray;
   }
 
   static CreateWorld(worldName) {

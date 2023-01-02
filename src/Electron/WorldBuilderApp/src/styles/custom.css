@@ -10,16 +10,7 @@
 }
 /* END THIRD PARTY ASSETS */
 
-html,
-body
-{
-    height: 100%;
-}
 
-html, body 
-{
-    height: 100%;
-}
 
 body {
     margin: 15px;
@@ -95,7 +86,7 @@ textarea {
 }
 
 
-.breadcrumbs * {
+.breadcrumbs, #SelectWorldLink {
     font-size: 0.85em !important;
 }
 

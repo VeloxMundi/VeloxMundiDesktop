@@ -1,0 +1,139 @@
+/* styles.css */
+
+/* Add styles here to customize the appearance of your app */
+html,
+body
+{
+    height: 100%;
+}
+/*
+#bodycontent 
+{
+    
+    position: absolute;
+    top:70px;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    overflow-y: auto;
+}
+
+
+.full-height 
+{
+    position: absolute;
+    top:7px;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+}
+
+
+.layout {
+    display: table;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .layout__row {
+    display: table-row;
+  }
+  
+  .layout__cell {
+    display: table-cell;
+    vertical-align: middle;
+  }
+  
+  .layout__cell--last {
+    height: 100%; 
+  }
+  */
+
+/*
+.full-height { 
+    height: 100%;
+}
+*/
+
+html, body 
+{
+    height: 100%;
+    margin: 0;
+}
+
+.box {
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+}
+
+.box .br.header {
+    flex: 0 1 0;
+    width: 100%;
+}
+
+.box .br.content {
+    flex: 1 1 0;
+    width: 100%;
+}
+
+.container, .row {
+    max-width: 100% !important;
+    
+}
+
+
+body 
+{
+    background-color: #fbfbfb;
+    /*padding-top:72px;*/
+}
+
+#world {
+    font-size: small;
+    font-weight: 600;
+    color: darkblue;
+    padding-right: 10px;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    cursor: not-allowed;
+}
+
+.source {
+    width: 100%;
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+    font-size: 13px;
+    padding: 2px;
+}
+
+textarea {
+    width: 100%;
+    display: block;
+    resize: vertical;
+    overflow-x: scroll;
+    max-width: none;
+}
+
+#editor, #viewer {
+    overflow-x: scroll;
+}
+
+    #viewer table {
+        border: 1px solid #000000;
+        border-collapse: collapse;
+    }
+#viewer table td, #viewer table th
+{
+    padding: 4px;
+    border: 1px solid #000000;
+}
+
+
+
+pre {
+    background-color: beige;
+    border: 1px solid #000000;
+    padding: 3px;
+}

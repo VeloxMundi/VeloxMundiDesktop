@@ -118,10 +118,19 @@ const menuTemplate = [
     label: 'Go',
     submenu: [
       {
-        label: 'Home',
+        label: 'Velox Mundi Home',
         click: async () => {
           loadPage('index.html');
         }
+      },
+      {
+        label: 'World Home',
+        click: async () => {
+          loadPage('worldHome.html');
+        }
+      },
+      {
+        type: 'separator'
       },
       {
         label: 'Select a World',

@@ -13,9 +13,15 @@ function showToast(msg, clss) {
 $(document).ready(function() {
   // Set page
   let pageName = window.location.pathname.split('/').pop();
-  console.log(pageName);
   window.contextBridge.toMain('config', 'SetPage', pageName);
-
+  
+  let worldName = window.contextBridge.toMainSync('config', 'ReadKey', 'CurrentWorld');
+  if (worldName && worldName!='') {
+  $('body').prepend('<div id="SelectWorldLink" style="float:right"><a href="../pages/worldHome.html" title="\'' + worldName + '.\' Home"><span class="bi-globe"></span>&nbsp;' + worldName + '</a></div>');
+  }
+  if ($('.WorldName').length) {
+    $('.WorldName').text(worldName);
+  }
 
 
 

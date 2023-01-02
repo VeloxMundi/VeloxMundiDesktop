@@ -1,1 +1,38 @@
-<h2>World Home</h2>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline';"
+    />
+
+    <link rel="stylesheet" href="../scripts/resources/bootstrap-4.3.1/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../styles/custom.css" />
+    <title>Velox Mundi</title>
+  </head>
+  <body>
+    <div id="toast"></div>
+    <div class="breadcrumbs">
+      <a href="index.html" class="nolink"><span class="bi-house-fill"></span>&nbsp;Home</a> <span class="bi-arrow-right-short"></span><span class="bi-globe"></span>&nbsp;<i>"<span class="WorldName"></span>" Home</i>
+    </div>
+    <div style="float:right">
+      <a href="selectWorld.html"><span class="bi-globe"></span>&nbsp;Change World</a>
+    </div>
+    <h2><i><span class="WorldName"></span></i>&nbsp;Home</h2>
+    <hr/>
+    <p>
+      <a href="edit.html?new=true"><span class="bi-plus"></span>&nbsp;New Page</a>
+    </p>
+    </ul>
+    <ul id="PageList">
+
+    </ul>
+
+  </body>
+<script src="../scripts/resources/jquery-3.6.1.min.js"></script>  
+<script src="../scripts/resources/bootstrap-4.3.1/js/bootstrap.min.js" ></script>
+<script src="../scripts/app.js"></script>
+<script src="../scripts/worldHome.js"></script>
+</html>
