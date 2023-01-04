@@ -9,6 +9,7 @@
     />
 
     <link rel="stylesheet" href="../scripts/resources/bootstrap-4.3.1/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../styles/custom.css" />
     <link rel="stylesheet" href="../styles/edit.css" />
     <title>Velox Mundi</title>
   </head>
@@ -17,17 +18,15 @@
     <div class="breadcrumbs">
       <a href="index.html" class="nolink"><span class="bi-house-fill"></span>&nbsp;Home</a> <span class="bi-arrow-right-short"></span> <span class="not-allowed"><span class="bi-edit"></span>&nbsp;<i><span id="EditPageName"></span></i></span>
     </div>
-    <div id="toolbar">
-      <table>
-        <tr>
-          <td id="Tools"></td>
-          <td class="text-right">
-            <button class="btn btn-cancel" id="CancelButton">Close</button>
-            <button class="btn btn-success" id="SaveButton">Save</button>
-          </td>
-        </tr>
-      </table>
-    </div>
+    <table  id="toolbar" style="width:100%;">
+      <tr>
+        <td id="Tools" style="max-width:100%;"></td>
+        <td class="text-right">
+          <button class="btn btn-cancel" id="CancelButton">Close</button>
+          <button class="btn btn-success" id="SaveButton">Save</button>
+        </td>
+      </tr>
+    </table>
 
     <div class="row">
       <div class="col-6">

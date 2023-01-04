@@ -14,6 +14,19 @@ module.exports = class fileManager {
 //    this.items = FileTree.readDir(this.path);
 //  }
 
+  static InvokeConfig(event, method, data) {
+    switch(method) {
+      case 'ReadFileToString':
+        return this.ReadFileToString(data);
+        break;
+      default:
+        event.sender.send('Invalid');
+        break;
+    }
+    return null;
+  }
+
+
   static ReadSubdirectories(path) { 
     
     let fileArray = [];
@@ -47,5 +60,10 @@ module.exports = class fileManager {
     }
   }
 
+  static ReadFileToString(path) {
+    let buffer = fs.readFileSync(path);
+    let string = buffer.toString();
+    return string;
+  }
 
 }

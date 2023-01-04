@@ -25,6 +25,9 @@ module.exports = class ConfigManager {
       case 'CreateWorld':
         return this.CreateWorld(data);
         break;
+      case 'SavePage':
+        return this.SavePage(data);
+        break;
       default:
         event.sender.send('Invalid method call: "' + method + '"');
         break;
@@ -52,7 +55,7 @@ module.exports = class ConfigManager {
     let dir = path.join(worldPath, currentWorld, 'md');
     let fileArray = [];
     let files = fs.readdirSync(dir).forEach(file => {
-        var fileInfo = new fileManager(`${path}\\${file}`, file);
+        var fileInfo = new fileManager(`${dir}\\${file}`, file);
         let ext = fileInfo.name.split('.').pop();
         if (ext=='md') {
           fileArray.push(fileInfo);
@@ -81,6 +84,16 @@ module.exports = class ConfigManager {
       return [false, e];
     }
 
+  }
+
+  static SavePage(pageInfo) {
+    try {
+      fs.writeFileSync(pageInfo.pagePath, pageInfo.pageContents);
+      return [true, 'Saved file successfully!'];
+    }
+    catch(e) {
+      return [false, 'Unable to save file: ' + e];
+    }
   }
 
 }

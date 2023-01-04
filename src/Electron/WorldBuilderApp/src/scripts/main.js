@@ -3,6 +3,7 @@ const {app, BrowserWindow, ipcMain, dialog, Menu, MenuItem, shell} = require('el
 const { fstat } = require('fs');
 const path = require('path');
 const appConfig = require('electron-settings');
+const fileManager = require('./modules/fileManagerModule');
 
 // Set default global variables
 const appPath = app.getAppPath();
@@ -82,6 +83,9 @@ function CallModuleMethod(event, module, method, data)
           break;
         case 'world':
           return world.InvokeConfig(event, method, data);
+          break;
+        case 'file':
+          return fileManager.InvokeConfig(event, method, data);
           break;
         default:
           break;

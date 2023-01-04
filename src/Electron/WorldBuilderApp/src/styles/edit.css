@@ -58,7 +58,6 @@ body
 html, body 
 {
     height: 100%;
-    margin: 0;
 }
 
 .box {
@@ -136,4 +135,8 @@ pre {
     background-color: beige;
     border: 1px solid #000000;
     padding: 3px;
+}
+
+#toolbar {
+    background-color: gainsboro;
 }
