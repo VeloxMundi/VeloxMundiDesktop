@@ -1,6 +1,6 @@
 const { triggerAsyncId } = require('async_hooks');
 const { hasSubscribers } = require('diagnostics_channel');
-const {app, dialog} = require('electron');
+const {app, dialog, BrowserWindow} = require('electron');
 const fs = require('fs');
 let path = require('path');
 
@@ -8,6 +8,8 @@ let path = require('path');
 // Custom Modules
 const configManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'configModule.js'));
 const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'fileManagerModule.js'));
+let modal = null;
+let saveAs = '';
 
 module.exports = class ConfigManager {
   constructor() {
@@ -27,6 +29,12 @@ module.exports = class ConfigManager {
         break;
       case 'SavePage':
         return this.SavePage(data);
+        break;
+      case 'GetSaveAsPath':
+        this.GetSaveAsPath();
+        break;
+      case 'SetSaveAsName':
+        this.SetSaveAsName(data);
         break;
       default:
         event.sender.send('Invalid method call: "' + method + '"');
@@ -94,6 +102,28 @@ module.exports = class ConfigManager {
     catch(e) {
       return [false, 'Unable to save file: ' + e];
     }
+  }
+
+  static GetSaveAsPath() {
+    saveAs='';
+    modal = new BrowserWindow({
+      modal: true,
+      width: 275,
+      height: 100,
+      alwaysOnTop: true,
+      //frame: false
+    });
+
+    var theUrl = 'file://' + path.join(app.getAppPath(), 'src', 'pages', 'modals', 'SaveAsPrompt.html');
+    console.log('Modal url', theUrl);
+
+    modal.loadURL(theUrl);
+  }
+
+  static SetSaveAsName(name) {
+    saveAs=path.join(configManager.ReadKey('WorldPath'), configManager.ReadKey('CurrentWorld'), name + '.md');
+    modal.close();
+    return saveAs;
   }
 
 }

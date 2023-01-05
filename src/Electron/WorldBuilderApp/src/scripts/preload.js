@@ -11,6 +11,9 @@ contextBridge.exposeInMainWorld('contextBridge', {
     return ipcRenderer.sendSync('toMainSync', module, method, data);
   },
   navigate: (page) => {
-    ipcRenderer.send('Navigate', page);
+    ipcRenderer.send('navigate', page);
+  },
+  modal: (action, path) => {
+    ipcRenderer.send('modal', action, path);
   }
 });

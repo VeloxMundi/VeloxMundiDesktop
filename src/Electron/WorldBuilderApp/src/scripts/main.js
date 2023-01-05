@@ -8,9 +8,12 @@ const fileManager = require('./modules/fileManagerModule');
 // Set default global variables
 const appPath = app.getAppPath();
 const pagePath = path.join(appPath, 'src', 'pages');
+const modalPath = path.join(pagePath, 'modals');
 const scriptPath = path.join(appPath, 'src', 'scripts');
 const configPath = path.join(appPath, 'config.json');
 const isMac = process.platform === 'darwin'
+
+let modal = null;
 
 
 // load custom modules
@@ -38,7 +41,7 @@ const createWindow = () => {
     }
     mainWindow = new BrowserWindow(windowOptions);
     mainWindowStateKeeper.track(mainWindow);
-
+    console.log(config.GetPage());
     mainWindow.loadFile(path.join(pagePath, config.GetPage()));
 }
 
@@ -62,9 +65,31 @@ app.on('window-all-closed', () => {
     }
 });
 
-ipcMain.on('Navigate', (event, page) => {
+ipcMain.on('modal', (event, action, path) => {
+  if (action.toLowerCase()=='show') {
+    modal = new BrowserWindow({
+      parent: mainWindow,
+      modal: true,
+      width: 375,
+      height: 125,
+      alwaysOnTop: true,
+      frame: false
+    });
+
+    var theUrl = 'file://' + modalPath + '/' + path;
+    console.log('Modal url', theUrl);
+
+    modal.loadURL(theUrl);
+  }
+  else if (action.toLowerCase()=='hide') {
+    
+  }
+});
+
+
+ipcMain.on('navigate', (event, page) => {
   loadPage(page);
-})
+});
 
 ipcMain.on('toMain', (event, module, method, data) => {
     CallModuleMethod(event, module, method, data);

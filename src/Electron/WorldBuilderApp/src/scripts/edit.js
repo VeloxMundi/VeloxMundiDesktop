@@ -33,45 +33,69 @@ $(document).ready(function() {
     $('#CancelButton').text('Cancel');
     $('#CancelButton').removeClass('btn-default');
     $('#CancelButton').addClass('btn-danger');
-    
+
   })
 
   $('#CancelButton').on('click', function() {
-    window.location.href="home.html";
+    window.contextBridge.navigate('worldHome.html');
   });
 
   $("#SaveButton").on('click', function() {
     $('#SaveButton').prop('disabled', 'true');
     $('#SaveButton').text('Saving...');
-    let id = $('#pageId').val();
-    const pageContent = $('#editor').html();
-    let saveResult = window.contextBridge.toMainSync('world', 'SavePage', [{
-      'pagePath': pagePath, 
-      'pageContent': pageContent
-      }]);
-    if (saveResult[0]==1)
+    if (pagePath=='')
     {
-      setMessage(saveResult[1]);
-      $('#CancelButton').text('Close');  
+      window.contextBridge.toMain('world', 'GetSaveAsPath');
+      /*
+      while (pagePath=='') {
+        // wait for modal
+      }
+      */
+    }
+    try {
+      const pageContents = $('#editor').val();
+      let saveResult = window.contextBridge.toMainSync('world', 'SavePage', {
+        'pagePath': pagePath,
+        'pageContents': pageContents
+        });
+      if (saveResult[0])
+      {
+        showToast(saveResult[1], 'text-success');
+        $('#CancelButton').text('Close');
+        $('#CancelButton').removeClass('btn-danger');
+        $('#CancelButton').addClass('btn-default');
+      }
+      else
+      {
+        showToast('There was an error saving changes:\r\n' + saveResult[1], 'text-danger');
+      }
+    }
+    catch (e) {
+      showToast(e, 'text-danger');
+    }
+    finally {
+      $('#CancelButton').text('Close');
       $('#CancelButton').removeClass('btn-danger');
       $('#CancelButton').addClass('btn-default');
-    }
-    else
-    {
-      setMessage('There was an error saving changes:\r\n' + saveResult[1], 'text-danger');
+      $('#SaveButton').prop('disabled' , false);
+      $('#SaveButton').text('Save');
     }
     $('#editor').trigger('focus');
-    
+
   });
 
+  window.contextBridge.fromMain('SaveAsPath', (event, path) => {
+    pagePath = path;
+  });
+
+  /*
   window.contextBridge.fromMain('saveResults', (event, data) => {
-    
-    $('#SaveButton').prop('disabled' , false);
-    $('#SaveButton').text('Save');
+
+
     if (data[0]==1)
     {
       setMessage('Saved successfully!');
-      $('#CancelButton').text('Close');  
+      $('#CancelButton').text('Close');
       $('#CancelButton').removeClass('btn-danger');
       $('#CancelButton').addClass('btn-default');
     }
@@ -81,20 +105,8 @@ $(document).ready(function() {
     }
     $('#editor').trigger('focus');
   });
+  */
 
-
-
-  function setMessage(content, messageClass)
-  {
-    // This is temporary. Need to implement my own dialog boxes
-    // using alert('message') in jquery breaks all input fields on the page until you click on another application and then come back to this one. This bizarre behavior means I have to implement my own messages.
-    $('#Message').removeClass();
-    $('#Message').text(content);
-    if (messageClass!='')
-    {
-      $('#Message').addClass(messageClass);
-    }
-  }
 
   updateResult(); // from mdEditorControl.js
 });

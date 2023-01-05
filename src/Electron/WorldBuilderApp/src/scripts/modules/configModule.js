@@ -70,6 +70,9 @@ module.exports = class ConfigManager {
   }
 
   static SetPage(page) {
+    if (page.toLowerCase()=='edit.html') {
+      page='worldHome.html';
+    }
     this.WriteKey('CurrentPage', page);
   }
 
