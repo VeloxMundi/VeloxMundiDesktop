@@ -62,7 +62,17 @@ module.exports = class ConfigManager {
   static GetPage() {
     let page = this.ReadKey('CurrentPage');
     if (page && page!='') {
-      return page;
+      let pieces = page.split('?');
+      let query = {};
+      if (pieces.length>0)
+      {
+        let params = (decodeURIComponent(pieces[1]).split('&'));
+        for (let i=0; i<params.length; i++) {
+          let param = params[i].split('=');
+          query[param[0]] = param[1];
+        }
+        }
+      return [pieces[0], query];
     }
     else {
       return 'index.html';
@@ -70,7 +80,7 @@ module.exports = class ConfigManager {
   }
 
   static SetPage(page) {
-    if (page.toLowerCase()=='edit.html') {
+    if (page.toLowerCase()=='XXedit.html') {
       page='worldHome.html';
     }
     this.WriteKey('CurrentPage', page);

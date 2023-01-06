@@ -13,11 +13,11 @@ function showToast(msg, clss) {
 $(document).ready(function() {
   // Set page
   let pageName = window.location.pathname.split('/').pop();
-  /*
+  
   if (window.location.search.length>1) {
     pageName += '?' + window.location.search.substring(1);
   }
-  */
+  
   window.contextBridge.toMain('config', 'SetPage', pageName);
   
   let worldName = window.contextBridge.toMainSync('config', 'ReadKey', 'CurrentWorld');

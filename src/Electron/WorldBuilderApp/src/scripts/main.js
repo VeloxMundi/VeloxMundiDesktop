@@ -41,8 +41,9 @@ const createWindow = () => {
     }
     mainWindow = new BrowserWindow(windowOptions);
     mainWindowStateKeeper.track(mainWindow);
-    console.log(config.GetPage());
-    mainWindow.loadFile(path.join(pagePath, config.GetPage()));
+    let openPage = config.GetPage();
+    console.log(openPage);
+    mainWindow.loadFile(path.join(pagePath, openPage[0]), {query: openPage[1]});
 }
 
 app.whenReady().then(() => {

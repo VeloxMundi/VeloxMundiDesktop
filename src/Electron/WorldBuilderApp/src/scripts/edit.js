@@ -7,6 +7,7 @@ $(document).ready(function() {
     let pair = vars[i].split('=');
     if (pair[0].toLowerCase()=='path') {
       pagePath = decodeURIComponent(pair[1]);
+      console.log(pagePath);
       let contents = window.contextBridge.toMainSync('file', 'ReadFileToString', pagePath);
       $('#editor').text(contents);
     }

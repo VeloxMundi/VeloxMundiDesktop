@@ -106,13 +106,19 @@ module.exports = class ConfigManager {
 
   static GetSaveAsPath() {
     saveAs='';
-    modal = new BrowserWindow({
+    let saveAsOptions = {
       modal: true,
       width: 275,
       height: 100,
       alwaysOnTop: true,
-      //frame: false
-    });
+      webPreferences: {
+        preload: path.join(app.getAppPath(), 'src', 'scripts', 'preload.js'),
+        nodeIntegration: false, // is default value after Electron v5
+        contextIsolation: true, // protect against prototype pollution
+        enableRemoteModule: false, // turn off remote
+      }
+    }
+    modal = new BrowserWindow(saveAsOptions);
 
     var theUrl = 'file://' + path.join(app.getAppPath(), 'src', 'pages', 'modals', 'SaveAsPrompt.html');
     console.log('Modal url', theUrl);
@@ -121,7 +127,9 @@ module.exports = class ConfigManager {
   }
 
   static SetSaveAsName(name) {
-    saveAs=path.join(configManager.ReadKey('WorldPath'), configManager.ReadKey('CurrentWorld'), name + '.md');
+    let worldPath = configManager.ReadKey('WorldDirectory');
+    let currentWorld = configManager.ReadKey('CurrentWorld');
+    saveAs=path.join(worldPath, currentWorld, 'md', name + '.md');
     modal.close();
     return saveAs;
   }
