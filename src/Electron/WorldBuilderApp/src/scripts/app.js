@@ -7,7 +7,7 @@ function hideToast() {
 function showToast(msg, clss) {
   $('#toast').show();
   $('#toast').html('<div class="' + clss + '">' + msg + '</div>');
-  setTimeout(hideToast, 3000);
+  setTimeout(hideToast, 5000);
 }
 
 $(document).ready(function() {

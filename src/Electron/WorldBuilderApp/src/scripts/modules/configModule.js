@@ -118,6 +118,19 @@ module.exports = class ConfigManager {
     fileManager.WriteFile(this.configpath, JSON.stringify(data, null, 2));
   }
 
+  static RemoveKey(key) {
+    let data = {};
+    if (fs.existsSync(this.configpath)) {
+      let rawdata = fs.readFileSync(this.configpath);
+      if (rawdata != '') {
+        data = JSON.parse(rawdata);
+      }
+    }
+    delete data[key];
+    data['ConfigUpdated'] = new Date(Date.now()).toLocaleString();
+    fileManager.WriteFile(this.configpath, JSON.stringify(data, null, 2));
+  }
+
   static ReadAll() {
     let rawdata = fs.readFileSync(this.configpath);
     if (rawdata!='') {

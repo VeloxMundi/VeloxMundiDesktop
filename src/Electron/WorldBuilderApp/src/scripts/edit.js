@@ -42,17 +42,18 @@ $(document).ready(function() {
   });
 
   $("#SaveButton").on('click', function() {
-    $('#SaveButton').prop('disabled', 'true');
-    $('#SaveButton').text('Saving...');
-    if (pagePath=='')
-    {
+    if (pagePath=='') {
+      $("body").append('<div id="overlay" style="background-color:rgba(211,211,211,.4);position:absolute;top:0;left:0;height:100%;width:100%;z-index:999"></div>');
       window.contextBridge.toMain('world', 'GetSaveAsPath');
-      /*
-      while (pagePath=='') {
-        // wait for modal
-      }
-      */
     }
+    else {
+      SavePage();
+    }
+  });
+
+  function SavePage() {    
+    $('#SaveButton').prop('disabled', 'true');
+    $('#SaveButton').text('Saving...');    
     try {
       const pageContents = $('#editor').val();
       let saveResult = window.contextBridge.toMainSync('world', 'SavePage', {
@@ -82,12 +83,19 @@ $(document).ready(function() {
       $('#SaveButton').text('Save');
     }
     $('#editor').trigger('focus');
+  }
 
+  window.contextBridge.fromMain('SaveAsPath', (event, data) => {
+    $('#overlay').remove();
+    pagePath = data;
+    if (pagePath!='') {
+      SavePage();
+    }
+    else {
+      showToast('Unable to determine file name. Save was unsuccessful. Please try again.', 'text-danger');
+    }
   });
 
-  window.contextBridge.fromMain('SaveAsPath', (event, path) => {
-    pagePath = path;
-  });
 
   /*
   window.contextBridge.fromMain('saveResults', (event, data) => {

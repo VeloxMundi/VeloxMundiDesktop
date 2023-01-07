@@ -9,7 +9,7 @@ let path = require('path');
 const configManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'configModule.js'));
 const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'fileManagerModule.js'));
 let modal = null;
-let saveAs = '';
+let saveAsEvent = null;
 
 module.exports = class ConfigManager {
   constructor() {
@@ -31,6 +31,7 @@ module.exports = class ConfigManager {
         return this.SavePage(data);
         break;
       case 'GetSaveAsPath':
+        saveAsEvent = event;
         this.GetSaveAsPath();
         break;
       case 'SetSaveAsName':
@@ -105,11 +106,11 @@ module.exports = class ConfigManager {
   }
 
   static GetSaveAsPath() {
-    saveAs='';
     let saveAsOptions = {
       modal: true,
-      width: 275,
-      height: 100,
+      width: 400,
+      height: 125,
+      frame: false,
       alwaysOnTop: true,
       webPreferences: {
         preload: path.join(app.getAppPath(), 'src', 'scripts', 'preload.js'),
@@ -122,16 +123,23 @@ module.exports = class ConfigManager {
 
     var theUrl = 'file://' + path.join(app.getAppPath(), 'src', 'pages', 'modals', 'SaveAsPrompt.html');
     console.log('Modal url', theUrl);
-
     modal.loadURL(theUrl);
+    modal.on('close', function() {
+      saveAsEvent.sender.send('SaveAsPath', '');
+    });
   }
 
   static SetSaveAsName(name) {
     let worldPath = configManager.ReadKey('WorldDirectory');
     let currentWorld = configManager.ReadKey('CurrentWorld');
-    saveAs=path.join(worldPath, currentWorld, 'md', name + '.md');
+    let saveAs = '';
+    if (name!='') {
+      saveAs = path.join(worldPath, currentWorld, 'md', name + '.md');
+    }
     modal.close();
-    return saveAs;
+    //TODO: Return an object with bool success/fail and a string with either a pass or a message
+    saveAsEvent.sender.send('SaveAsPath', saveAs);
+    saveAsEvent = null;
   }
 
 }
