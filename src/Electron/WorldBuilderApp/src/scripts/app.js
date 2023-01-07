@@ -1,13 +1,24 @@
 
+let prefs = window.contextBridge.toMainSync('config', 'ReadKey', 'prefs');
+let world = window.contextBridge.toMainSync('config', 'ReadKey', 'CurrentWorld');
+
 function hideToast() {
+  $('#closeToast').off();
   $('#toast').hide();
   $('#toast').html('');
 }
 
 function showToast(msg, clss) {
   $('#toast').show();
-  $('#toast').html('<div class="' + clss + '">' + msg + '</div>');
-  setTimeout(hideToast, 5000);
+  $('#toast').html('<div class="' + clss + '"><div class="float-right bi-x-circle-fill" id="closeToast">&nbsp</div>' + msg + '</div>');
+  $('#closeToast').on('click', function() {
+    hideToast();
+  });
+  setTimeout(hideToast, prefs.toastTimeout);
+}
+
+function SetCurrentPageInBreadcrumbs(pageName) {
+  $('#breadcrumbs').append(' <span class="bi-arrow-right-short">&nbsp;</span> <span class="nolink not-allowed" id="thisWorld"><i>' + pageName.replace('Velox Mundi: ', '') + '</i></span>');
 }
 
 $(document).ready(function() {
@@ -20,15 +31,19 @@ $(document).ready(function() {
   
   window.contextBridge.toMain('config', 'SetPage', pageName);
   
-  let worldName = window.contextBridge.toMainSync('config', 'ReadKey', 'CurrentWorld');
-  if (worldName && worldName!='') {
-  $('body').prepend('<div id="SelectWorldLink" style="float:right"><a href="../pages/worldHome.html" title="\'' + worldName + '.\' Home"><span class="bi-globe"></span>&nbsp;' + worldName + '</a></div>');
+  if (world && world!='') {
+    $('body').prepend('<div id="SelectWorldLink" style="float:right"><a href="../pages/selectWorld.html" title="Change World"><span class="bi-globe"></span>&nbsp;Change World</a></div>');
   }
   if ($('.WorldName').length) {
-    $('.WorldName').text(worldName);
+    $('.WorldName').text(world);
   }
 
-
+  
+  if (world && world!='') {
+    $('#homeLink').html('<span class="bi-globe"></span>&nbsp;' + world);
+  }
+  
+  
 
   // close navbar menu after clicking a link
   $(".navbar-collapse a").on('click', function () {

@@ -1,6 +1,6 @@
 $(document).ready(function() {
   ('#SelectWorldPath').off;  
-  ('#MoveWorld').off;
+  ('#MoveAllWorlds').off;
 
   $('#WorldPath').text(window.contextBridge.toMainSync('config', 'ReadKey', 'WorldDirectory'));
 
@@ -9,7 +9,7 @@ $(document).ready(function() {
     $('#WorldPath').text(window.contextBridge.toMainSync('config', 'SelectWorldDirectory'));
   });
 
-  $('#MoveWorld').on('click', function(e) {
+  $('#MoveAllWorlds').on('click', function(e) {
     e.preventDefault();
     let resp = window.contextBridge.toMainSync('config', 'MoveWorldDirectory');
     if (resp && resp[0]==true) {

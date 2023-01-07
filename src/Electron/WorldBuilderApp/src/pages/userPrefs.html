@@ -10,24 +10,23 @@
 
     <link rel="stylesheet" href="../scripts/resources/bootstrap-4.3.1/css/bootstrap.min.css" />
     <link rel="stylesheet" href="../styles/custom.css" />
+    <link rel="stylesheet" href="../styles/edit.css" />
     <title>Velox Mundi</title>
   </head>
   <body>
     <div id="toast"></div>
     <div id="breadcrumbs">
-      <span class="not-allowed"><span class="bi-house-fill"></span>&nbsp;<i>Home</i></span>
+      <a href="config.html" class="nolink"><span class="bi-gear"></span>&nbsp;Settings</a> <span class="bi-arrow-right-short"></span> <span class="not-allowed"><span class="bi-person-circle"></span>&nbsp;<i>User Preferences</i></span>
     </div>
-    <ul>
-      <li>
-        <a href="config.html">Config</a>
-      </li>
-      <li>
-        <a href="selectWorld.html">Select World</a>
-      </li>
-    </ul>
+    <h3>User Preferences</h3>
+
+<!--TODO: Set up page to configue all settings in config.json['prefs'], default to data/defaultConfig.json-->
+
+
   </body>
   <script src="../scripts/resources/jquery-3.6.1.min.js"></script>  
   <script src="../scripts/resources/bootstrap-4.3.1/js/bootstrap.min.js" ></script>
+
   <script src="../scripts/app.js"></script>
-  <script src="../scripts/index.js" type="module"></script>
+  <script src="../scripts/userPrefs.js"></script>
 </html>

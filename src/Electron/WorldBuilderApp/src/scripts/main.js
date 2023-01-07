@@ -167,15 +167,6 @@ const menuTemplate = [
         click: async () => {
           loadPage('selectWorld.html');
         }
-      },
-      {
-        type: 'separator'
-      },
-      {
-        label: 'Settings',
-        click: async () => {
-          loadPage('config.html');
-        }
       }
     ]
   },
@@ -185,6 +176,17 @@ const menuTemplate = [
 
   {
      role: 'windowMenu'
+  },
+  {
+    label: 'Tools',
+    submenu: [
+      {
+        label: 'Options',
+        click: async () => {
+          loadPage('config.html');
+        }
+      }
+    ]
   },
   {
      role: 'help',

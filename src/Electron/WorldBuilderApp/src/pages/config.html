@@ -14,38 +14,51 @@
   </head>
   <body>
     <div id="toast"></div>
-    <div class="breadcrumbs">
-      <a href="index.html" class="nolink"><span class="bi-house-fill"></span>&nbsp;Home</a> <span class="bi-arrow-right-short"></span> <span class="not-allowed"><span class="bi-gear"></span>&nbsp;<i>User Configuration</i></span>
+    <div id="breadcrumbs">
+      <a href="worldHome.html" class="nolink" title="Back to world home"><span class="bi-arrow-left-square"></span>&nbsp;<span class="WorldName">World Home</span></a>
+      
     </div>
-    <h3>User Configuration</h3>
+    <h3><span class="bi-gear">&nbsp;</span>User Configuration</h3>
+    <hr/>
       <table width="100%" class="configTable">
         <tr valign="top">
           <th style="width:20%;max-width:250px;">
-            World Directory
+            User Preferences
           </th>
           <td style="width:60%;max-width:100%;">
-            <span></span>
-            
-            <div id="WorldPath"></div>
+            Application and performance settings
           </td>
           <td style="width:20%;max-width:250px;text-align:right;">
+            <a class="btn btn-default" style="width:100%;max-width:200px" href="userPrefs.html"><span class="bi-arrow-right-square float-right">&nbsp;</span>Go to settings</a>
+          </td>
+        </tr>
+        <tr valign="top">
+          <th>
+            World Directory
+          </th>
+          <td>
+            <span></span>
+
+            <div id="WorldPath"></div>
+          </td>
+          <td class="text-right">
             <button class="btn btn-success" id="SelectWorldPath" title="Switch to a different directory. Your current worlds will not be moved." style="width:100%;max-width:200px;"><span class="bi-folder-check"></span>&nbsp;Set Directory</button>
           </td>
         </tr>
         <tr>
           <th>
-            Move World Directory
+            Move All Worlds
           </th>
           <td class="text-center">
-            <div id="MoveWorldText"></div>
+            <div id="MoveWorldText"><i>Copies all worlds to the new location, then deletes them from the current "World Directory" (above).</i></div>
           </td>
           <td style="text-align:right;">
-            <button class="btn btn-success" id="MoveWorld" title="Move all worlds from one directory to another. The destination directory will become the new working directory. The source directory will be DELETED. Please back up your world before using this feature!"  style="width:100%;max-width:200px;"><span  class="bi-folder-symlink"></span>&nbsp;Move World</button>
+            <button class="btn btn-success" id="MoveAllWorlds" title="Move all worlds from one directory to another. The destination directory will become the new working directory. The source directory will be DELETED. Please back up your world before using this feature!"  style="width:100%;max-width:200px;"><span  class="bi-folder-symlink"></span>&nbsp;Move All Worlds</button>
           </td>
         </tr>
       </table>
   </body>
-<script src="../scripts/resources/jquery-3.6.1.min.js"></script>  
+<script src="../scripts/resources/jquery-3.6.1.min.js"></script>
 <script src="../scripts/resources/bootstrap-4.3.1/js/bootstrap.min.js" ></script>
 <script src="../scripts/app.js"></script>
 <script src="../scripts/config.js"></script>

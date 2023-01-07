@@ -1,6 +1,4 @@
-  // define global variables
-  let world = "";
-  
+
   $(document).ready(function() {
     let worldList = window.contextBridge.toMainSync('world', 'GetWorldLinks');
     $('#WorldList').prepend(worldList);
@@ -20,15 +18,16 @@
     });
 });
 
-function SelectWorld(world)
+/*
+function SelectWorld(world) {
+  if (world && world!="")
   {
-    if (world && world!="")
-    {
-      window.contextBridge.toMain('setWorld', world);
-      window.contextBridge.navigate('worldhome.html');
-    }
-    else {
-      $(document).prop('title', 'Velox Mundi');
-    }
-    $('#world').text(world);
+    window.contextBridge.toMain('setWorld', world);
+    window.contextBridge.navigate('worldhome.html');
   }
+  else {
+    $(document).prop('title', 'Velox Mundi');
+  }
+  $('#world').text(world);
+}
+*/

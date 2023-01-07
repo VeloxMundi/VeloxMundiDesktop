@@ -23,10 +23,16 @@
         $('#Save').on('click', function(e) {
           let fileName = $('#fileName').val();
           console.log('Saving file "' + fileName + '"');
-          window.contextBridge.toMain('world', 'SetSaveAsName', fileName);
+          window.contextBridge.toMain('world', 'SetSaveAsName', {
+            'action': 'Save',
+            'fileName': fileName
+          });
         });
         $('#Cancel').on('click', function(e) {
-          window.contextBridge.toMain('world', 'SetSaveAsName', '');
+          window.contextBridge.toMain('world', 'SetSaveAsName', {
+            'action': 'Cancel',
+            'message': ''
+          });
         });
       });
     </script>

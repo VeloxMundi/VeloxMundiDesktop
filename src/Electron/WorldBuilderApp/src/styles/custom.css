@@ -86,11 +86,11 @@ textarea {
 }
 
 
-.breadcrumbs, #SelectWorldLink {
+#breadcrumbs, #SelectWorldLink {
     font-size: 0.85em !important;
 }
 
-.breadcrumbs {    
+#breadcrumbs {    
     border-bottom: 1px solid #00000059;
     width: 100%;
     text-align: left;
@@ -123,4 +123,8 @@ textarea {
 /* config.html */
 .configTable tr {
     border-bottom: 1px dotted #00000059;
+}
+
+.btn.btn-default {
+    border:1px solid #D3D3D3;
 }

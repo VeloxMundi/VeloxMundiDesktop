@@ -98,10 +98,16 @@ module.exports = class ConfigManager {
   static SavePage(pageInfo) {
     try {
       fs.writeFileSync(pageInfo.pagePath, pageInfo.pageContents);
-      return [true, 'Saved file successfully!'];
+      return {
+        'success': true, 
+        'message': 'Saved file successfully!'
+      };
     }
     catch(e) {
-      return [false, 'Unable to save file: ' + e];
+      return {
+        'success': false, 
+        'message': 'Unable to save file: ' + e
+      };
     }
   }
 
@@ -125,21 +131,45 @@ module.exports = class ConfigManager {
     console.log('Modal url', theUrl);
     modal.loadURL(theUrl);
     modal.on('close', function() {
-      saveAsEvent.sender.send('SaveAsPath', '');
+      if (saveAsEvent!=null) {
+        saveAsEvent.sender.send('SaveAsPath', {
+          'success': false,
+          'message': 'File name was not set'
+        });
+      }
     });
   }
 
-  static SetSaveAsName(name) {
+  static SetSaveAsName(data) {
     let worldPath = configManager.ReadKey('WorldDirectory');
     let currentWorld = configManager.ReadKey('CurrentWorld');
     let saveAs = '';
-    if (name!='') {
-      saveAs = path.join(worldPath, currentWorld, 'md', name + '.md');
+    if (data.action=='Save') {
+      if (data.fileName='') {
+        saveAs = {
+          'success': true, 
+          'path': path.join(worldPath, currentWorld, 'md', data.fileName + '.md')
+        };
+      }
+      else {
+        saveAs = {
+          'success': false,
+          'message': 'File name was not specified. File has not been saved.'
+        };
+      }
     }
-    modal.close();
-    //TODO: Return an object with bool success/fail and a string with either a pass or a message
-    saveAsEvent.sender.send('SaveAsPath', saveAs);
+    else {
+      saveAs = {
+        'success': false,
+        'message': ''
+      };
+    }
+    saveAsEvent.sender.send('SaveAsPath', {
+      'success': saveAs.success,
+      'message': saveAs.message
+      });
     saveAsEvent = null;
+    modal .close();
   }
 
 }

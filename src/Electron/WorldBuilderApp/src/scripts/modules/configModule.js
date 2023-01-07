@@ -9,6 +9,10 @@ const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modul
 // Custom Variables
 let windowState;
 
+// Default Preferences (So they will never be returned blank)
+let dPrefs = {};
+
+
 module.exports = class ConfigManager {
   constructor() {
     this.configpath = "";
@@ -25,6 +29,12 @@ module.exports = class ConfigManager {
       case 'WriteKey':
         this.WriteKey(data[0], data[1]);
         break;
+      case 'ReadUserPref':
+        return this.ReadUserPref(data);
+        break;
+      case 'WriteUserPref':
+        this.WriteUserPref(data[0], data[1]);
+        break;
       case 'SelectWorldDirectory':
         return this.SelectWorldDirectory();
         break;      
@@ -40,7 +50,11 @@ module.exports = class ConfigManager {
 
 
   static InitPath(mypath) {
-    this.configpath = mypath;
+    this.configpath = mypath;    
+    let dConfigData = fs.readFileSync(path.join(this.configpath.replace('config.json', ''), 'data','defaultConfig.json'));
+    if (dConfigData!='') {
+      dPrefs = JSON.parse(dConfigData);
+    }
     if (!fs.existsSync(this.configpath))
     {
       let date = Date.now();
@@ -91,6 +105,17 @@ module.exports = class ConfigManager {
     let rawdata = fs.readFileSync(this.configpath);
     if (rawdata!='') {
       let data = JSON.parse(rawdata);
+      if (key.toLowerCase()=='prefs') {
+        for (let i=0; i<Object.keys(dPrefs).length; i++) {
+          let prefKey = Object.keys(dPrefs)[i];
+          if (!data[key]) {
+            data[key] = dPrefs;
+          }
+          if (!data[key][prefKey]) {
+            data[key][prefKey]=dPrefs[prefKey];
+          }
+        }
+      }
       if (data[key] && data[key].length==1) {
         return data[key].toString();
       }
@@ -117,6 +142,43 @@ module.exports = class ConfigManager {
     data['ConfigUpdated'] = new Date(Date.now()).toLocaleString();
     fileManager.WriteFile(this.configpath, JSON.stringify(data, null, 2));
   }
+
+  static WriteUserPref(key, value) {
+    let data = {};
+    if (fs.existsSync(this.configpath)) {
+      let rawdata = fs.readFileSync(this.configpath);
+      if (rawdata != '') {
+        data = JSON.parse(rawdata);
+      }
+    }
+    if (!data['prefs']) {
+      data['prefs'] = {};
+    }
+    data[prefs][key] = value;
+    data['ConfigUpdated'] = new Date(Date.now()).toLocaleString();
+    fileManager.WriteFile(this.configpath, JSON.stringify(data, null, 2));
+  }
+
+  static ReadUserPref(key) {
+    let rawdata = fs.readFileSync(this.configpath);
+    if (rawdata!='') {
+      let data = JSON.parse(rawdata);
+      if (!data['prefs']) {
+        data['prefs'] = dPrefs;
+      }
+      for (let i=0; i<Object.keys(dPrefs).length; i++) {
+        let prefKey = Object.keys(dPrefs)[i];
+        if (!data['prefs'][prefKey]) {
+          data['prefs'][prefKey]=dPrefs[prefKey];
+        }
+      }
+      return data['prefs'][key];
+    }
+    else {
+      return undefined;
+    }
+  }
+
 
   static RemoveKey(key) {
     let data = {};

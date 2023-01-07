@@ -10,6 +10,9 @@ $(document).ready(function() {
       console.log(pagePath);
       let contents = window.contextBridge.toMainSync('file', 'ReadFileToString', pagePath);
       $('#editor').text(contents);
+      let pageName = pagePath.split('\\').pop().replace('.md','');
+      SetCurrentPageInBreadcrumbs(document.title + ' <i>' + pageName + '</i>');
+      document.title += ' ' + pageName;
     }
   }
 
@@ -23,7 +26,7 @@ $(document).ready(function() {
   function OnWindowResize() {
     // Run this function any time the application window is resized
     let tbh = $('#toolbar').height();
-    let brh = $('.breadcrumbs').height();
+    let brh = $('#breadcrumbs').height();
     let bdh = $('body').height();
     let newH = bdh-brh-tbh-50;
     $('#editor').css({height:(newH)+'px'});
@@ -60,16 +63,16 @@ $(document).ready(function() {
         'pagePath': pagePath,
         'pageContents': pageContents
         });
-      if (saveResult[0])
+      if (saveResult.success)
       {
-        showToast(saveResult[1], 'text-success');
+        showToast(saveResult.message, 'text-success');
         $('#CancelButton').text('Close');
         $('#CancelButton').removeClass('btn-danger');
         $('#CancelButton').addClass('btn-default');
       }
       else
       {
-        showToast('There was an error saving changes:\r\n' + saveResult[1], 'text-danger');
+        showToast('There was an error saving changes:\r\n' + saveResult.message, 'text-danger');
       }
     }
     catch (e) {
@@ -87,12 +90,14 @@ $(document).ready(function() {
 
   window.contextBridge.fromMain('SaveAsPath', (event, data) => {
     $('#overlay').remove();
-    pagePath = data;
-    if (pagePath!='') {
+    if (data.success) {
+      pagePath = data.path;
       SavePage();
     }
     else {
-      showToast('Unable to determine file name. Save was unsuccessful. Please try again.', 'text-danger');
+      if (data.message!='') {
+        showToast(data.message, 'text-danger');
+      }    
     }
   });
 
