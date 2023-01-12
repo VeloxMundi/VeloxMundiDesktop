@@ -145,16 +145,17 @@ module.exports = class ConfigManager {
     let currentWorld = configManager.ReadKey('CurrentWorld');
     let saveAs = '';
     if (data.action=='Save') {
-      if (data.fileName='') {
+      if (data.fileName=='') {
         saveAs = {
-          'success': true, 
-          'path': path.join(worldPath, currentWorld, 'md', data.fileName + '.md')
+          'success': false,
+          'message': 'File name was not specified. File has not been saved.'
         };
       }
       else {
         saveAs = {
-          'success': false,
-          'message': 'File name was not specified. File has not been saved.'
+          'success': true, 
+          'path': path.join(worldPath, currentWorld, 'md', data.fileName + '.md'),
+          'message' : ''
         };
       }
     }
@@ -164,10 +165,7 @@ module.exports = class ConfigManager {
         'message': ''
       };
     }
-    saveAsEvent.sender.send('SaveAsPath', {
-      'success': saveAs.success,
-      'message': saveAs.message
-      });
+    saveAsEvent.sender.send('SaveAsPath', saveAs);
     saveAsEvent = null;
     modal .close();
   }

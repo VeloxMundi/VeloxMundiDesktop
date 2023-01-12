@@ -97,6 +97,7 @@ $(document).ready(function() {
     else {
       if (data.message!='') {
         showToast(data.message, 'text-danger');
+        pagePath = ''; // Reset the page name so the user can try again.
       }    
     }
   });
