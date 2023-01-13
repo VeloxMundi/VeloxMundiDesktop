@@ -19,6 +19,9 @@ module.exports = class fileManager {
       case 'ReadFileToString':
         return this.ReadFileToString(data);
         break;
+      case 'CreateDirectory':
+        this.CreateDirectory(data);
+        break;
       default:
         event.sender.send('Invalid');
         break;

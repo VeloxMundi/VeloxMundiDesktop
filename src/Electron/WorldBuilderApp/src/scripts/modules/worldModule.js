@@ -1,8 +1,10 @@
 const { triggerAsyncId } = require('async_hooks');
 const { hasSubscribers } = require('diagnostics_channel');
 const {app, dialog, BrowserWindow} = require('electron');
+const { file } = require('electron-settings');
 const fs = require('fs');
 let path = require('path');
+const { config } = require('process');
 
 
 // Custom Modules
@@ -98,6 +100,22 @@ module.exports = class ConfigManager {
   static SavePage(pageInfo) {
     try {
       fs.writeFileSync(pageInfo.pagePath, pageInfo.pageContents);
+      let pathParts = pageInfo.pagePath.split(path.sep);
+      let htmlPath = pathParts[0];
+      for (let i=1; i<pathParts.length-2; i++) {
+        htmlPath = path.join(htmlPath, pathParts[i]);
+      }
+      let fileName = '';
+      let fileParts = pageInfo.pagePath.split(path.sep).pop().split('.');
+      for (let i=0; i<fileParts.length-1; i++) {
+        fileName += fileParts[0];
+      }
+      htmlPath = path.join(htmlPath, 'html');
+      if (!fs.existsSync(htmlPath)) {
+        fs.mkdirSync(htmlPath);
+      }
+      htmlPath = path.join(htmlPath, fileName + '.html');      
+      fs.writeFileSync(htmlPath, pageInfo.pageHTML);
       return {
         'success': true, 
         'message': 'Saved file successfully!'
@@ -141,6 +159,8 @@ module.exports = class ConfigManager {
   }
 
   static SetSaveAsName(data) {
+    //TODO: Check if file exists. If so, throw error
+    //TODO: Check if file name is acceptable before saving
     let worldPath = configManager.ReadKey('WorldDirectory');
     let currentWorld = configManager.ReadKey('CurrentWorld');
     let saveAs = '';

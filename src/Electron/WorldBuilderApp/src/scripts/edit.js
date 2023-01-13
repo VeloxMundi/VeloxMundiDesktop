@@ -59,9 +59,11 @@ $(document).ready(function() {
     $('#SaveButton').text('Saving...');    
     try {
       const pageContents = $('#editor').val();
+      const pageHTML = $('#viewer').html();
       let saveResult = window.contextBridge.toMainSync('world', 'SavePage', {
         'pagePath': pagePath,
-        'pageContents': pageContents
+        'pageContents': pageContents,
+        'pageHTML': pageHTML
         });
       if (saveResult.success)
       {
