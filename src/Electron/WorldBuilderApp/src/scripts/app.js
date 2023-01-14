@@ -1,6 +1,6 @@
 
-let prefs = window.contextBridge.toMainSync('config', 'ReadKey', 'prefs');
-let world = window.contextBridge.toMainSync('config', 'ReadKey', 'CurrentWorld');
+const prefs = window.contextBridge.toMainSync('config', 'ReadKey', 'prefs');
+const world = window.contextBridge.toMainSync('config', 'ReadKey', 'CurrentWorld');
 let pageDirty = false;
 
 function hideToast() {
@@ -32,9 +32,6 @@ function navigate(pagePath) {
 }
 
 
-function SetCurrentPageInBreadcrumbs(pageName) {
-  $('#breadcrumbs').append(' <span class="bi-arrow-right-short">&nbsp;</span> <span class="nolink not-allowed" id="thisWorld"><i>' + pageName.replace('Velox Mundi: ', '') + '</i></span>');
-}
 
 $(document).ready(function() {
   // Set page
@@ -47,19 +44,20 @@ $(document).ready(function() {
   
   window.contextBridge.toMain('config', 'SetPage', pageName);
   
-  if (world && world!='') {
-    $('body').prepend('<div id="SelectWorldLink" style="float:right"><a href="../pages/selectWorld.html" title="Change World"><span class="bi-globe"></span>&nbsp;Change World</a></div>');
-  }
+  // Display the world name in any element with the class "WorldName"
   if ($('.WorldName').length) {
     $('.WorldName').text(world);
   }
 
-  
+  /*
+  // Display world name in any element with the id "homeLink"
   if (world && world!='') {
     $('#homeLink').html('<span class="bi-globe"></span>&nbsp;' + world);
   }
+  */
   
-  
+  // Add "toast" div to every page
+  $('body').prepend('<div id="toast" style="z-index:1000"></div>\r\n');
 
   // close navbar menu after clicking a link
   $(".navbar-collapse a").on('click', function () {
@@ -90,7 +88,47 @@ $(document).ready(function() {
 
   });
 
+  // Handle menu actions
+  window.contextBridge.fromMain('menu', (event, action, data) => {
+    switch(action) {
+      case 'Home':
+        if (world && world!='') {
+          navigate('worldHome.html');
+        }
+        else {
+          navigate('index.html');
+        }
+        break;
+      case 'Navigate':
+        navigate(data);
+        break;
+      case 'CloseWorld':
+        window.contextBridge.toMainSync('config', 'WriteKey', ['CurrentWorld', '']);
+        navigate('selectWorld.html');
+        break;
+      case 'ExitApp':
+        if (!pageDirty) {
+        window.contextBridge.toMainSync('quit');
+        }
+        else {
+          showToast('Page has been modified.', 'text-danger');
+        }
+        break;
+      case 'NewPage':
+        navigate('edit.html');
+        break;
+      default:
+        break;
+    }
+  });
+
   window.contextBridge.fromMain('navigate', (event, pagePath) => {
     navigate(pagePath);
   });
+
+
+  // Handle errors
+  window.contextBridge.fromMain('error', (event, message) => {
+    showToast(message, 'text-danger');
+  })
 });

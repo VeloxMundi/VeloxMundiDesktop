@@ -108,6 +108,7 @@ ipcMain.on('toMainSync', (event, module, method, data) => {
 
 function CallModuleMethod(event, module, method, data)
 {
+  try {
     switch(module)
     {
       case 'navigate':
@@ -125,9 +126,15 @@ function CallModuleMethod(event, module, method, data)
       case 'ui':
         return uiManager.InvokeConfig(event, method, mainWindow, data);
         break;
+      case 'quit':
+        mainWindow.close();
       default:
         break;
     }
+  }
+  catch(e) {
+    mainWindow.webContents.send('error', 'An error has occurred in the ' + module + ' module.<br/>' + e);
+  }
 }
 
 function loadPage(pageName) {

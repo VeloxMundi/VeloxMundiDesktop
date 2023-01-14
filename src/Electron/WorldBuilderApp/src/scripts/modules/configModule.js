@@ -19,6 +19,9 @@ module.exports = class ConfigManager {
   }
 
   static InvokeConfig(event, method, data) {
+    if (!fs.existsSync(this.configpath)) {
+      throw ('User configuration file is missing from "' + this.configpath + '"');
+    }
     switch(method) {
       case 'SetPage':
         this.SetPage(data);
@@ -62,7 +65,8 @@ module.exports = class ConfigManager {
         "AppName" : "Velox Mundi",
         "ConfigCreated" : new Date(Date.now()).toLocaleString(),
         "WorldDirectory" : path.resolve('user/Worlds'),
-        "CurrentWorld" : ""
+        "CurrentWorld" : "",
+        "CurrentPage" : "index.html"
       };
       let config = fileManager.WriteFile(this.configpath, JSON.stringify(data));
     }

@@ -1,5 +1,5 @@
 const {app, dialog, BrowserWindow, ipcMain, ipcRenderer, Menu, shell} = require('electron');
-const { file } = require('electron-settings');
+const { file, configure } = require('electron-settings');
 const fs = require('fs');
 let path = require('path');
 const config = require('process');
@@ -32,14 +32,25 @@ module.exports = class UIManager {
     let newMenu = this.MenuDefault(win);
     switch(page) { 
       case 'edit.html':
-        for (let i=0; i<newMenu.length; i++) {
-          if (newMenu[i].role=='fileMenu') {
-            newMenu[i] = this.FileMenu_EditPage(event, win);
-          }
-        }
+        newMenu[1] = this.FileMenu_EditPage(win);
+        break;
+      case 'worldHome.html':
+        newMenu[1] = this.FileMenu_WorldHome(win);
         break;
       default:
         break;
+    }
+    let currentWorld = configManager.ReadKey('CurrentWorld');
+    if (currentWorld && currentWorld!='') {
+      newMenu[3].submenu[3].label = 'Close ' + currentWorld;
+      if (currentWorld.length>15) {
+        currentWorld = currentWorld.substring(0,12) + '...';
+      }
+      newMenu[3].label = currentWorld;
+      newMenu[3].submenu[2].label = 'Change World';
+    }
+    else {
+      newMenu[3] = this.WorldMenu_NoWorld(win);
     }
     Menu.setApplicationMenu(Menu.buildFromTemplate(newMenu));
   }
@@ -47,24 +58,104 @@ module.exports = class UIManager {
 
 
 
-  static FileMenu_EditPage(event, win) {
+  static FileMenu_EditPage(win) {
     return {
       label: 'File',
       submenu: [
         {
           label: 'Save', 
           click: async () => {
-            win.webContents.send('menu', 'savePage');
+            win.webContents.send('menu', 'SavePage');
+          }
+        },
+        {
+          label: 'Save and Close',
+          click: async () => {
+            win.webContents.send('menu', 'SaveAndClose');
           }
         },
         {
           label: 'Close',
           click: async() => {
-            win.webContents.send('menu', 'closePage');
+            win.webContents.send('menu', 'ClosePage');
+          }
+        },
+        {
+          type: 'separator'
+        },
+        {
+          label: 'Delete',
+          click: async () => {
+            win.webContents.send('menu', 'DeletePage');
+          }
+        },
+        {
+          type: 'separator'
+        },
+        {
+          label: 'Home',
+          click: async() => {
+            win.webContents.send('menu', 'Home');
+          }
+        },
+        {
+          type: 'separator'
+        },
+        {
+          label: 'Exit',
+          click: async() => {
+            win.webContents.send('menu', 'ExitApp');
           }
         }
       ]
     };
+  }
+
+  static FileMenu_WorldHome(win) {
+    return {
+      label: 'File',
+      submenu: [
+        {
+          label: 'New Page',
+          click: async () => {
+            win.webContents.send('menu', 'NewPage');
+          }
+        },
+        {
+          type: 'separator'
+        },
+        {
+          label: 'Home',
+          click: async() => {
+            win.webContents.send('menu', 'Home');
+          }
+        },
+        {
+          type: 'separator'
+        },
+        {
+          label: 'Exit',
+          click: async() => {
+            win.webContents.send('menu', 'ExitApp');
+          }
+        }
+      ]
+    };
+  }
+
+  static WorldMenu_NoWorld(win) {
+    return {
+      label: 'World',
+      enabled: false,
+      submenu: [
+        {
+          label: 'Select a World',
+          click: async () => {
+            win.webContents.send('menu', 'Navigate', 'selectWorld.html');
+          }
+        }
+      ]
+    }
   }
 
   static MenuDefault(win) {
@@ -84,24 +175,35 @@ module.exports = class UIManager {
         ]
       } : {role: ''}),
       {
-        role: 'fileMenu'
+        label: 'File',
+        submenu: [
+          {
+            label: 'Home',
+            click: async() => {
+              win.webContents.send('menu', 'Home');
+            }
+          },
+          {
+            type: 'separator'
+          },
+          {
+            label: 'Exit',
+            click: async() => {
+              win.webContents.send('menu', 'ExitApp');
+            }
+          }
+        ]
       },
       {
          role: 'editMenu'
       },
       {
-        label: 'Go',
+        label: 'World',
         submenu: [
-          {
-            label: 'Velox Mundi Home',
-            click: async () => {
-              win.webContents.send('navigate', 'index.html');
-            }
-          },
           {
             label: 'World Home',
             click: async () => {
-              win.webContents.send('navigate', 'worldHome.html');
+              win.webContents.send('menu', 'Navigate', 'worldHome.html');
             }
           },
           {
@@ -110,7 +212,13 @@ module.exports = class UIManager {
           {
             label: 'Select a World',
             click: async () => {
-              win.webContents.send('navigate', 'selectWorld.html');
+              win.webContents.send('menu', 'Navigate', 'selectWorld.html');
+            }
+          },
+          {
+            label: 'Close World',
+            click: async () => {
+              win.webContents.send('menu', 'CloseWorld');
             }
           }
         ]
@@ -128,7 +236,7 @@ module.exports = class UIManager {
           {
             label: 'Options',
             click: async () => {
-              win.webContents.send('navigate', 'config.html');
+              win.webContents.send('menu', 'Navigate', 'config.html');
             }
           }
         ]
@@ -136,6 +244,12 @@ module.exports = class UIManager {
       {
          role: 'help',
          submenu: [
+          {
+            label: 'About Velox Mundi',
+            click: async () => {
+              win.webContents.send('menu', 'Navigate', 'index.html');
+            }
+          },
           {
             label: 'Velox Mundi Online',
             click: async () => {

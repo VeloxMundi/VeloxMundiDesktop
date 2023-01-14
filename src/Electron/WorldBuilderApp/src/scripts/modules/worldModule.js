@@ -1,3 +1,4 @@
+const { deepStrictEqual } = require('assert');
 const { triggerAsyncId } = require('async_hooks');
 const { hasSubscribers } = require('diagnostics_channel');
 const {app, dialog, BrowserWindow} = require('electron');
@@ -38,6 +39,9 @@ module.exports = class ConfigManager {
         break;
       case 'SetSaveAsName':
         this.SetSaveAsName(data);
+        break;
+      case 'DeletePage':
+        return this.DeletePage(data);
         break;
       default:
         event.sender.send('Invalid method call: "' + method + '"');
@@ -159,10 +163,10 @@ module.exports = class ConfigManager {
   }
 
   static SetSaveAsName(data) {
-    //TODO: Check if file exists. If so, throw error
     //TODO: Check if file name is acceptable before saving
     let worldPath = configManager.ReadKey('WorldDirectory');
     let currentWorld = configManager.ReadKey('CurrentWorld');
+    let savePath = path.join(worldPath, currentWorld, 'md', data.fileName + '.md');
     let saveAs = '';
     if (data.action=='Save') {
       if (data.fileName=='') {
@@ -172,11 +176,19 @@ module.exports = class ConfigManager {
         };
       }
       else {
-        saveAs = {
-          'success': true, 
-          'path': path.join(worldPath, currentWorld, 'md', data.fileName + '.md'),
-          'message' : ''
-        };
+        if (fs.existsSync(savePath)) {
+          SaveAs = {
+            'success': false,
+            'message': 'File already exists. File has not been saved.'
+          };
+        }
+        else {
+          saveAs = {
+            'success': true, 
+            'path': savePath,
+            'message' : ''
+          };
+        }
       }
     }
     else {
@@ -188,6 +200,37 @@ module.exports = class ConfigManager {
     saveAsEvent.sender.send('SaveAsPath', saveAs);
     saveAsEvent = null;
     modal .close();
+  }
+
+  static DeletePage(pageName) {    
+    let worldPath = configManager.ReadKey('WorldDirectory');
+    let currentWorld = configManager.ReadKey('CurrentWorld');
+    let mdPagePath = path.join(worldPath, currentWorld, 'md', pageName + '.md');
+    let htmlPagePath = path.join(worldPath, currentWorld, 'html', pageName + '.html');
+    try {
+      if (fs.existsSync(mdPagePath)) {
+        fs.unlinkSync(mdPagePath);
+        // We only delete the HTML page if the MD page is deleted because the MD is the master file(??)
+        if (fs.existsSync(htmlPagePath)) {
+          fs.unlinkSync(htmlPagePath);
+        }
+        return {
+          'success': true
+        };
+      }
+      else {
+        return {
+          'success': false,
+          'message': 'File "' + mdPagePath + '" was not found.'
+        };
+      }
+    }
+    catch(e) {
+      return {
+        'success': false, 
+        'message': 'There was a problem deleting the file.<br/>' + e
+      };
+    }
   }
 
 }

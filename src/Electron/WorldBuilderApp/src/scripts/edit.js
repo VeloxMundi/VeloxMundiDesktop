@@ -1,3 +1,5 @@
+let mdFileName = '';
+
 $(document).ready(function() {
   // load page contents in editor
   let pagePath = '';
@@ -10,9 +12,8 @@ $(document).ready(function() {
       console.log(pagePath);
       let contents = window.contextBridge.toMainSync('file', 'ReadFileToString', pagePath);
       $('#editor').text(contents);
-      let pageName = pagePath.split('\\').pop().replace('.md','');
-      SetCurrentPageInBreadcrumbs(document.title + ' <i>' + pageName + '</i>');
-      document.title += ' ' + pageName;
+      mdFileName = pagePath.split('\\').pop().replace('.md','');
+      document.title += ' ' + mdFileName;
     }
   }
 
@@ -23,13 +24,11 @@ $(document).ready(function() {
     OnWindowResize();
   });
 
-
   function OnWindowResize() {
     // Run this function any time the application window is resized
     let tbh = $('#toolbar').height();
-    let brh = $('#breadcrumbs').height();
     let bdh = $('body').height();
-    let newH = bdh-brh-tbh-50;
+    let newH = bdh-tbh-30;
     $('#editor').css({height:(newH)+'px'});
     $('#viewer').css({height:(newH)+'px'});
   }
@@ -39,7 +38,12 @@ $(document).ready(function() {
     $('#CancelButton').removeClass('btn-default');
     $('#CancelButton').addClass('btn-danger');
     pageDirty = true;
-  })
+  });
+
+
+
+  // local variables
+  let closeAfterSave=false;
 
   $('#CancelButton').on('click', function() {
     window.contextBridge.navigate('worldHome.html');
@@ -47,19 +51,41 @@ $(document).ready(function() {
 
   window.contextBridge.fromMain('menu', (event, action) =>  {
     switch(action) {
-      case 'savePage':
-        if (pagePath=='') {
-          $("body").append('<div id="overlay" style="background-color:rgba(211,211,211,.4);position:absolute;top:0;left:0;height:100%;width:100%;z-index:999"></div>');
-          window.contextBridge.toMain('world', 'GetSaveAsPath');
+      case 'SavePage':
+        closeAfterSave = false;
+        CheckPathAndSave();
+        break;
+      case 'ClosePage':
+        navigate('worldHome.html');
+        break;
+      case 'SaveAndClose':
+        closeAfterSave=true;
+        CheckPathAndSave();
+        break;
+      case 'DeletePage':
+        // Prompt for confirmation
+        let delResult = window.contextBridge.toMainSync('world', 'DeletePage', mdFileName);
+        if (delResult.success) {
+          navigate('worldHome.html');
         }
         else {
-          SavePage();
+          showToast(delResult.message, 'text-danger');
         }
         break;
-      case 'closePage':
-        navigate('worldHome.html');
+      default:
+        break;
     }
   });
+
+  function CheckPathAndSave() {
+    if (pagePath=='') {
+      $("body").append('<div id="overlay" style="background-color:rgba(211,211,211,.4);position:absolute;top:0;left:0;height:100%;width:100%;z-index:999"></div>');
+      window.contextBridge.toMain('world', 'GetSaveAsPath');
+    }
+    else {
+      SavePage();
+    }
+  }
 
   function SavePage() {    
     $('#SaveButton').prop('disabled', 'true');
@@ -95,13 +121,20 @@ $(document).ready(function() {
       $('#SaveButton').prop('disabled' , false);
       $('#SaveButton').text('Save');
     }
-    $('#editor').trigger('focus');
+    if (closeAfterSave) {
+      navigate('worldHome.html');
+    }
+    else {
+      $('#editor').trigger('focus');
+    }
   }
 
   window.contextBridge.fromMain('SaveAsPath', (event, data) => {
     $('#overlay').remove();
     if (data.success) {
       pagePath = data.path;
+      window.contextBridge.toMain('config', 'WriteKey', ['CurrentPage', 'edit.html?path=' + encodeURIComponent(data.path)]);
+      mdFileName = pagePath.split('\\').pop().replace('.md','');
       SavePage();
     }
     else {
