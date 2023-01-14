@@ -21,7 +21,8 @@ $(document).ready(function() {
 
   $(window).on('resize', function() {
     OnWindowResize();
-  })
+  });
+
 
   function OnWindowResize() {
     // Run this function any time the application window is resized
@@ -37,20 +38,26 @@ $(document).ready(function() {
     $('#CancelButton').text('Cancel');
     $('#CancelButton').removeClass('btn-default');
     $('#CancelButton').addClass('btn-danger');
-
+    pageDirty = true;
   })
 
   $('#CancelButton').on('click', function() {
     window.contextBridge.navigate('worldHome.html');
   });
 
-  $("#SaveButton").on('click', function() {
-    if (pagePath=='') {
-      $("body").append('<div id="overlay" style="background-color:rgba(211,211,211,.4);position:absolute;top:0;left:0;height:100%;width:100%;z-index:999"></div>');
-      window.contextBridge.toMain('world', 'GetSaveAsPath');
-    }
-    else {
-      SavePage();
+  window.contextBridge.fromMain('menu', (event, action) =>  {
+    switch(action) {
+      case 'savePage':
+        if (pagePath=='') {
+          $("body").append('<div id="overlay" style="background-color:rgba(211,211,211,.4);position:absolute;top:0;left:0;height:100%;width:100%;z-index:999"></div>');
+          window.contextBridge.toMain('world', 'GetSaveAsPath');
+        }
+        else {
+          SavePage();
+        }
+        break;
+      case 'closePage':
+        navigate('worldHome.html');
     }
   });
 
@@ -71,6 +78,7 @@ $(document).ready(function() {
         $('#CancelButton').text('Close');
         $('#CancelButton').removeClass('btn-danger');
         $('#CancelButton').addClass('btn-default');
+        pageDirty = false;
       }
       else
       {
@@ -103,6 +111,8 @@ $(document).ready(function() {
       }    
     }
   });
+
+
 
 
   /*

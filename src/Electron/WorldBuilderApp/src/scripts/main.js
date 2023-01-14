@@ -2,8 +2,11 @@
 const {app, BrowserWindow, ipcMain, dialog, Menu, MenuItem, shell} = require('electron');
 const { fstat } = require('fs');
 const path = require('path');
+
+// register modules
 const appConfig = require('electron-settings');
 const fileManager = require('./modules/fileManagerModule');
+const uiManager = require('./modules/uiModule');
 
 // Set default global variables
 const appPath = app.getAppPath();
@@ -14,6 +17,7 @@ const configPath = path.join(appPath, 'config.json');
 const isMac = process.platform === 'darwin'
 
 let modal = null;
+let menu = null;
 
 
 // load custom modules
@@ -47,7 +51,7 @@ const createWindow = () => {
 }
 
 app.whenReady().then(() => {
-    const menu = Menu.buildFromTemplate(menuTemplate)
+    menu = Menu.buildFromTemplate(menuTemplate)
     Menu.setApplicationMenu(menu)
     createWindow();
 
@@ -92,6 +96,8 @@ ipcMain.on('navigate', (event, page) => {
   loadPage(page);
 });
 
+
+
 ipcMain.on('toMain', (event, module, method, data) => {
     CallModuleMethod(event, module, method, data);
 });
@@ -104,17 +110,23 @@ function CallModuleMethod(event, module, method, data)
 {
     switch(module)
     {
-        case 'config':
-          return config.InvokeConfig(event, method, data);
-          break;
-        case 'world':
-          return world.InvokeConfig(event, method, data);
-          break;
-        case 'file':
-          return fileManager.InvokeConfig(event, method, data);
-          break;
-        default:
-          break;
+      case 'navigate':
+        loadPage(method);
+        break;
+      case 'config':
+        return config.InvokeConfig(event, method, data);
+        break;
+      case 'world':
+        return world.InvokeConfig(event, method, data);
+        break;
+      case 'file':
+        return fileManager.InvokeConfig(event, method, data);
+        break;
+      case 'ui':
+        return uiManager.InvokeConfig(event, method, mainWindow, data);
+        break;
+      default:
+        break;
     }
 }
 

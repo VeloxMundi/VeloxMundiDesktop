@@ -1,6 +1,7 @@
 
 let prefs = window.contextBridge.toMainSync('config', 'ReadKey', 'prefs');
 let world = window.contextBridge.toMainSync('config', 'ReadKey', 'CurrentWorld');
+let pageDirty = false;
 
 function hideToast() {
   $('#closeToast').off();
@@ -17,6 +18,20 @@ function showToast(msg, clss) {
   setTimeout(hideToast, prefs.toastTimeout);
 }
 
+function setPageDirty(isDirty) {
+  pageDirty = isDirty;
+}
+
+function navigate(pagePath) {
+  if (!pageDirty) {
+    window.contextBridge.toMain('navigate', pagePath);
+  }
+  else {
+    showToast('Page not saved', 'text-danger');
+  }
+}
+
+
 function SetCurrentPageInBreadcrumbs(pageName) {
   $('#breadcrumbs').append(' <span class="bi-arrow-right-short">&nbsp;</span> <span class="nolink not-allowed" id="thisWorld"><i>' + pageName.replace('Velox Mundi: ', '') + '</i></span>');
 }
@@ -24,6 +39,7 @@ function SetCurrentPageInBreadcrumbs(pageName) {
 $(document).ready(function() {
   // Set page
   let pageName = window.location.pathname.split('/').pop();
+  window.contextBridge.toMain('ui', 'SetMenu', pageName);
   
   if (window.location.search.length>1) {
     pageName += '?' + window.location.search.substring(1);
@@ -72,5 +88,9 @@ $(document).ready(function() {
       $('.modal-backdrop').not('.fv-modal-stack').css('z-index', 1039 + (10 * $('body').data('fv_open_modals')));
       $('.modal-backdrop').not('fv-modal-stack').addClass('fv-modal-stack');
 
+  });
+
+  window.contextBridge.fromMain('navigate', (event, pagePath) => {
+    navigate(pagePath);
   });
 });
