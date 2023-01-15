@@ -281,7 +281,9 @@ module.exports = class ConfigManager {
                 return retVal;
               }
             }
-          });  
+          }); 
+          retVal.success=true; 
+          return retVal;
         }
         catch(e) {
           retVal.success=true,
@@ -295,7 +297,6 @@ module.exports = class ConfigManager {
         retVal.saveOnReturn = false;
         return retVal;
       }
-      return retVal;
     }
   }
 

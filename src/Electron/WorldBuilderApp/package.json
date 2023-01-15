@@ -1,8 +1,9 @@
 {
   "name": "velox-mundi-desktop",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Velox Mundi: Quick World. This is a fast and easy way to build a world for any type of creacive content.",
   "main": "./src/scripts/main.js",
+  "productName": "Velox Mundi Desktop",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron ."
@@ -19,6 +20,7 @@
   "dependencies": {
     "bootstrap": "^5.2.2",
     "electron-settings": "^4.0.2",
+    "fs-extra": "^11.1.0",
     "jquery": "^3.6.1",
     "mv": "^2.1.1"
   }
