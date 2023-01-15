@@ -1,5 +1,5 @@
-# Velox Mundos
-Welcome to Velox Mundos (Quick Worlds). This application was designed to be a fast world-building tool to allow creators to quickly and easily build wiki pages for as many worlds as they want to build.
+# Velox Mundi
+Welcome to Velox Mundi (Quick World). This application was designed to be a fast world-building tool to allow creators to quickly and easily build wiki pages for as many worlds as they want to build.
 
 ## Electron Application
 The primary application is an Electron app, which allows creators to write pages for anything related to their worlds.
@@ -15,11 +15,9 @@ These prerequisites are only needed to modify the source code. The third-party a
 Instructions on how to acquire and where to update the code to use each prerequisite are included below.
 
 **Bootstrap Icons**
-: Source: [Bootstrap Icons Website](https://icons.getbootstrap.com/) / [Git Repo](https://github.com/twbs/icons/releases/)
-: <br/>
-: _Instructions:_
-: * Download and extract the latest bootstrap icons and related files (fonts and CSS).
-: * Update "`src/Electron/WorldBuilderApp/src/styles/custom.css`" to import the bootstrap icons CSS file and define the "`bootstrap-icons`" font pointed to the correct download location. See [custom.css](src/Electron/WorldBuilderApp/src/styles/custom.css) for example.
+Source: [Bootstrap Icons Website](https://icons.getbootstrap.com/) / [Git Repo](https://github.com/twbs/icons/releases/)
+* Download and extract the latest bootstrap icons and related files (fonts and CSS).
+* Update "`src/Electron/WorldBuilderApp/src/styles/custom.css`" to import the bootstrap icons CSS file and define the "`bootstrap-icons`" font pointed to the correct download location. See [custom.css](src/Electron/WorldBuilderApp/src/styles/custom.css) for example.
 
 ## Current Features
 
