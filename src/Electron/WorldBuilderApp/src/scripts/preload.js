@@ -1,22 +1,19 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('contextBridge', {
-  saveChanges: (pageContent) => ipcRenderer.send('saveChanges', pageContent),
-  fromMain: (event, data) => {
-    ipcRenderer.on(event, data);
+  fromMain: (channel, data) => {
+    ipcRenderer.on(channel, data);
   },
-  toMain: (method, data) => {
-    ipcRenderer.send(method, data);
+  toMain: (module, method, data) => {
+    ipcRenderer.send('toMain', module, method, data);
   },
-  selectDirectory: () => {
-    ipcRenderer.sendSync('selectDirectory');
+  toMainSync: (module, method, data) => {
+    return ipcRenderer.sendSync('toMainSync', module, method, data);
   },
-  toMainSync: (method, data) => {
-    return ipcRenderer.sendSync(method, data);
+  navigate: (page) => {
+    ipcRenderer.send('navigate', page);
   },
-  listWorlds: () => ipcRenderer.send('listWorlds'),
-  ai: async (event, data) => {
-    return await ipcRenderer.invoke(event, data);
+  modal: (action, path) => {
+    ipcRenderer.send('modal', action, path);
   }
-  // we can also expose variables, not just functions
 });

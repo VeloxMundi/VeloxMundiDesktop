@@ -18,6 +18,8 @@
   },
   "dependencies": {
     "bootstrap": "^5.2.2",
-    "jquery": "^3.6.1"
+    "electron-settings": "^4.0.2",
+    "jquery": "^3.6.1",
+    "mv": "^2.1.1"
   }
 }

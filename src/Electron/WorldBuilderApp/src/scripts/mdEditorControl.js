@@ -4,6 +4,7 @@ var converter = new showdown.Converter({ tables: true, strikethrough: true });
 
 
 
+
 // THIS SECTION CONTROLS SYNCHRONOUS SCROLLING
 const debounce = (func, delay) => {
     let debounceTimer
@@ -196,9 +197,8 @@ var syncSrcScroll = _.debounce((function () {
 
 
 updateResult();
-
+pageDirty=false; // We just loaded the page, which triggers the update and sets pageDirty
 
 // END SYNCHRONOUS SCROLLING
-
 
 

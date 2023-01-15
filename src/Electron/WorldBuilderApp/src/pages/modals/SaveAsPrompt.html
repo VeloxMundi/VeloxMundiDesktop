@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+
+
+    <link rel="stylesheet" href="../../scripts/resources/bootstrap-4.3.1/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../../styles/custom.css" />
+    <title>Velox Mundi</title>
+  </head>
+  <body>
+    <h4 class="text-center">Save as:</h4>
+    <div class="text-center">
+      <input type="text" size="20" id="fileName"/><button id="Save" class="btn btn-success">Save</button><button id="Cancel" class="btn btn-default">Cancel</button>
+    </div>
+    
+  <script src="../../scripts/resources/jquery-3.6.1.min.js"></script>  
+  <script src="../../scripts/resources/bootstrap-4.3.1/js/bootstrap.min.js" ></script>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        $('#fileName').focus();
+        $('#Save').on('click', function(e) {
+          let fileName = $('#fileName').val();
+          console.log('Saving file "' + fileName + '"');
+          window.contextBridge.toMain('world', 'SetSaveAsName', {
+            'action': 'Save',
+            'fileName': fileName
+          });
+        });
+        $('#Cancel').on('click', function(e) {
+          window.contextBridge.toMain('world', 'SetSaveAsName', {
+            'action': 'Cancel',
+            'message': ''
+          });
+        });
+      });
+    </script>
+  </body>
+
+</html>
