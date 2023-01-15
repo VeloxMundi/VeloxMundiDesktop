@@ -1,4 +1,5 @@
 let mdFileName = '';
+let docBaseTitle = '';
 
 $(document).ready(function() {
   // load page contents in editor
@@ -13,7 +14,7 @@ $(document).ready(function() {
       let contents = window.contextBridge.toMainSync('file', 'ReadFileToString', pagePath);
       $('#editor').text(contents);
       mdFileName = pagePath.split('\\').pop().replace('.md','');
-      document.title += ' ' + mdFileName;
+      document.title = docBaseTitle + ' ' + mdFileName;
     }
   }
 
@@ -73,6 +74,50 @@ $(document).ready(function() {
           window.contextBridge.toMain('return', 'ConfirmDelete');
         });
         break;
+      case 'RenamePage':        
+        if (pageDirty || pagePath=='') {
+          showToast('Please save your changes before renaming the page.', 'text-danger');
+          hideModal();
+        }
+        else {
+          showModal('Rename ' + mdFileName, '<div id="RenameError" class="text-danger"></div><p>New name:</p><p><input type="text" id="NewPageName" length="25"/></p>','<button id="CancelRename" class="btn btn-default">Cancel</button><button id="RenamePage" class="btn btn-success">Rename</button>','#NewPageName');
+          $('#CancelRename').on('click', function() {
+            hideModal();
+          });
+          $('#RenamePage').on('click', function() {
+            let newPageName = $('#NewPageName').val();
+            if (newPageName && newPageName!='') {
+              let result = window.contextBridge.toMainSync('world', 'RenamePage', {
+                'oldPageName': mdFileName,
+                'newPageName': newPageName
+              });
+              if (result.success) {
+                mdFileName = newPageName;
+                document.title = docBaseTitle + ' ' + newPageName;
+                pagePath = result.newPagePath;
+                hideModal();
+                if (result.saveOnReturn) {
+                  SavePage();
+                }                
+                else if (result.message && result.message!='') {
+                  showToast(result.message, 'text-warning');
+                }
+                else {
+                  showToast('File renamed successfully!', 'text-success');
+                }
+                window.contextBridge.toMain('config', 'WriteKey', ['CurrentPage', 'edit.html?path=' + encodeURIComponent(pagePath)]);
+              }
+              else {
+                hideModal();
+                showToast('There was a problem renaming the file.<br/>' + result.message, 'text-error');
+              }
+            }
+            else {
+              $('#RenameError').text('Please enter a new name');
+            }
+          });
+        }
+        break;
       default:
         break;
     }
@@ -81,7 +126,7 @@ $(document).ready(function() {
   function CheckPathAndSave() {
     
     if (pagePath=='') {
-        showModal('Save as...','<input type="text" length="25" id="SaveAsName"/>', '<button class="btn btn-default" id="CancelSaveAs">Cancel</button><button class="btn btn-danger" id="SetSaveAs">Save</button>');
+        showModal('Save as...','<input type="text" length="25" id="SaveAsName"/>', '<button class="btn btn-default" id="CancelSaveAs">Cancel</button><button class="btn btn-danger" id="SetSaveAs">Save</button>','#SaveAsName');
         $('#CancelSaveAs').on('click', function(e) {
           modalLock(false);
           hideModal();

@@ -131,12 +131,6 @@ module.exports = class UIManager {
           type: 'separator'
         },
         {
-          label: 'Home',
-          click: async() => {
-            win.webContents.send('menu', 'Home');
-          }
-        },
-        {
           type: 'separator'
         },
         {

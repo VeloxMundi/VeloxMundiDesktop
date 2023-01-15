@@ -53,7 +53,7 @@ function navigate(pagePath) {
   }
 }
 
-function showModal(title, body, footer) {
+function showModal(title, body, footer, focus) {
   modalLock(modalLocked);
   if (!title || title=='') {
     $('#appModalTitle').hide();
@@ -68,6 +68,9 @@ function showModal(title, body, footer) {
   $('#appModalTitle').text(title);
   $('#appModalBody').html(body);
   $('#appModalShow').trigger('click');
+  if (focus && focus!='') {
+    $('#appModal').data('focus',focus);
+  }
 }
 
 function hideModal() {
@@ -96,6 +99,11 @@ function modalLock(locked) {
     $('#appModalClose').prop('disabled',false);
     $('#appmodalClose').show();
   }
+}
+
+function modalOnEnter(elementToMonitor,defaultButton) {
+  // Write a function that will monitor "elementToMonitor" for pressing [Enter] and will trigger a click on the defaultButton object
+  
 }
 
 
@@ -129,9 +137,15 @@ $(document).ready(function() {
 
 
   // Monitor modal status
-  $(document).on('show.bs.modal', '#appModal', function () {
+  $(document).on('shown.bs.modal', '#appModal', function () {
       // run your validation... ( or shown.bs.modal )
       modalVisible = true;
+      let focus = $('#appModal').data('focus');
+      if (focus && focus!='') {
+        let focalItem = $(focus);
+        //$(focus).focus();
+        $(focus).trigger('focus');
+      }
   });
   $(document).on('hide.bs.modal', '#appModal', function () {
     // run your validation... ( or shown.bs.modal )

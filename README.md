@@ -31,6 +31,12 @@ Use [markdown](https://markdownguide.com) to easily write content for any page w
 
 When a file is saved, it will be saved in both markdown and HTML formats. By saving the HTML directly, we make it easy for users to publish static HTML pages to their own website, and ensure pages load quickly, without requiring conversion from markdown to HTML during page loading.
 
+### World and Page Creation
+
+Users can create new worlds (limited functionality) and create, edit, rename, and delete pages within their world using the built-in markdown editor.
+
+## Future Features
+
 ### Image and Video Support
 
 Images and videos can be embedded directly into any page, and played within the page.
@@ -43,7 +49,6 @@ Indexes may be generated as a single file, listing all content grouped by page t
 
 Additional options for automatic indexes may also be provided.
 
-## Future Features
 
 ### Custom CSS Support
 

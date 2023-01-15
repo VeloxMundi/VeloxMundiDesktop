@@ -45,6 +45,9 @@ module.exports = class ConfigManager {
       case 'DeletePage':
         return this.DeletePage(data);
         break;
+      case 'RenamePage':
+        return this.RenamePage(data);
+        break;
       default:
         event.sender.send('Invalid method call: "' + method + '"');
         break;
@@ -230,6 +233,69 @@ module.exports = class ConfigManager {
         'success': false, 
         'message': 'There was a problem deleting the file.<br/>' + e
       };
+    }
+  }
+
+  static RenamePage(pageData) {
+    let worldPath = configManager.ReadKey('WorldDirectory');
+    let currentWorld = configManager.ReadKey('CurrentWorld');
+    let oldMdPagePath = path.join(worldPath, currentWorld, 'md', pageData.oldPageName + '.md');
+    let oldHtmlPagePath = path.join(worldPath, currentWorld, 'html', pageData.oldPageName + '.html');
+    let newMdPagePath = path.join(worldPath, currentWorld, 'md', pageData.newPageName + '.md');
+    let newHtmlPagePath = path.join(worldPath, currentWorld, 'html', pageData.newPageName + '.html');
+    if (fs.existsSync(newMdPagePath)) {
+      return {
+        'success': false,
+        'message': 'File "' + pageData.newPageName + '" already exists. Page was not renamed.'
+      };
+    }
+    else {
+      let retVal = {
+        'success': false,
+        'message': '',
+        'saveOnReturn': false,
+        'newPagePath': newMdPagePath
+      };
+      try {
+        fs.renameSync(oldMdPagePath, newMdPagePath, function(err) {
+          if (err) {
+            retVal.success = false;
+            retVal.message = 'Unable to rename ' + pageData.oldPageName + '.<br/>' + err;
+            return retVal;
+          }
+        });
+        try {
+          fs.renameSync(oldHtmlPagePath, newHtmlPagePath, function(err) {
+            let x = 1;
+            if (err) {
+              retVal.message += 'The main page was renamed successfully, but there was a problem renaming the output page. ';
+              try {
+                fs.unlinSynck(oldHtmlPagePath);
+                fs.unlinkSync(newHtmlPagePath);
+                retVal.message += 'Removed output pages for both old and new output files.';
+                return retVal;
+              }
+              catch(e) {
+                retVal.message += 'Try re-saving this page to generate a new output page.';
+                retVal.saveOnReturn = true;
+                return retVal;
+              }
+            }
+          });  
+        }
+        catch(e) {
+          retVal.success=true,
+          retVal.saveOnReturn = true;
+          return retVal;
+        }      
+      }
+      catch(e) {
+        retVal.success = false;
+        retVal.message += 'Unable to save file.<br/>' + e;
+        retVal.saveOnReturn = false;
+        return retVal;
+      }
+      return retVal;
     }
   }
 

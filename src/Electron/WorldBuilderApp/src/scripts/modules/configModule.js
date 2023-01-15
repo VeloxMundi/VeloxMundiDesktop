@@ -64,7 +64,7 @@ module.exports = class ConfigManager {
       let data = {
         "AppName" : "Velox Mundi",
         "ConfigCreated" : new Date(Date.now()).toLocaleString(),
-        "WorldDirectory" : path.resolve('user/Worlds'),
+        "WorldDirectory" : path.resolve('user/Worlds'), //TODO Make this blank and trigger setup if it is blank somehow
         "CurrentWorld" : "",
         "CurrentPage" : "index.html"
       };
@@ -82,14 +82,14 @@ module.exports = class ConfigManager {
     if (page && page!='') {
       let pieces = page.split('?');
       let query = {};
-      if (pieces.length>0)
+      if (pieces.length>1)
       {
         let params = (decodeURIComponent(pieces[1]).split('&'));
         for (let i=0; i<params.length; i++) {
           let param = params[i].split('=');
           query[param[0]] = param[1];
         }
-        }
+      }
       return [pieces[0], query];
     }
     else {
