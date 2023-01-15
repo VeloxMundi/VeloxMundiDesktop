@@ -84,6 +84,12 @@ module.exports = class UIManager {
           type: 'separator'
         },
         {
+          label: 'Rename',
+          click: async () => {
+            win.webContents.send('menu', 'RenamePage');
+          }
+        },
+        {
           label: 'Delete',
           click: async () => {
             win.webContents.send('menu', 'DeletePage');

@@ -128,6 +128,9 @@ function CallModuleMethod(event, module, method, data)
         break;
       case 'quit':
         mainWindow.close();
+        break;
+      case 'return':
+        event.sender.send('return', method, data);
       default:
         break;
     }

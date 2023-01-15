@@ -33,12 +33,14 @@ module.exports = class ConfigManager {
       case 'SavePage':
         return this.SavePage(data);
         break;
+      /*
       case 'GetSaveAsPath':
         saveAsEvent = event;
         this.GetSaveAsPath();
         break;
+      */
       case 'SetSaveAsName':
-        this.SetSaveAsName(data);
+        this.SetSaveAsName(event, data);
         break;
       case 'DeletePage':
         return this.DeletePage(data);
@@ -162,7 +164,7 @@ module.exports = class ConfigManager {
     });
   }
 
-  static SetSaveAsName(data) {
+  static SetSaveAsName(event, data) {
     //TODO: Check if file name is acceptable before saving
     let worldPath = configManager.ReadKey('WorldDirectory');
     let currentWorld = configManager.ReadKey('CurrentWorld');
@@ -197,9 +199,7 @@ module.exports = class ConfigManager {
         'message': ''
       };
     }
-    saveAsEvent.sender.send('SaveAsPath', saveAs);
-    saveAsEvent = null;
-    modal .close();
+    event.sender.send('SaveAsPath', saveAs);
   }
 
   static DeletePage(pageName) {    

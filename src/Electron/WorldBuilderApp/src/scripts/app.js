@@ -2,6 +2,8 @@
 const prefs = window.contextBridge.toMainSync('config', 'ReadKey', 'prefs');
 const world = window.contextBridge.toMainSync('config', 'ReadKey', 'CurrentWorld');
 let pageDirty = false;
+let modalLocked = false;
+let modalVisible = false;
 
 function hideToast() {
   $('#closeToast').off();
@@ -24,13 +26,77 @@ function setPageDirty(isDirty) {
 
 function navigate(pagePath) {
   if (!pageDirty) {
-    window.contextBridge.toMain('navigate', pagePath);
+    if (!modalVisible) {
+      window.contextBridge.toMain('navigate', pagePath);
+    }
+    else {
+      $('#appModalError').text('There are unsaved changes.');
+    }
   }
   else {
-    showToast('Page not saved', 'text-danger');
+    modalLock(false);
+    showModal('Unsaved changes', '<p>Would you like to save your changes before leaving this page?', '<button id="CancelNavigation" class="btn btn-default">Cancel</button><button id="CancelAndNavigate" class="btn btn-danger">Don\'t Save</button><button id="SaveAndNavigate" class="btn btn-success">Save</button>');
+    $('#CancelNavigation').on('click', function() {
+      modalLock(false);
+      hideModal();
+    });
+    $('#CancelAndNavigate').on('click', function() {
+      modalLock(false);
+      pageDirty=false;
+      hideModal();
+      navigate(pagePath);
+    });
+    $('#SaveAndNavigate').on('click', function() {
+      modalLock(true);
+      window.contextBridge.toMain('return', 'SaveAndNavigate', pagePath);
+    });
   }
 }
 
+function showModal(title, body, footer) {
+  modalLock(modalLocked);
+  if (!title || title=='') {
+    $('#appModalTitle').hide();
+  }
+  if (!footer || footer=='') {
+    $('#appModalFooter').hide();
+  }
+  else {
+    $('#appModalFooter').show();
+    $('#appModalFooter').html(footer);
+  }
+  $('#appModalTitle').text(title);
+  $('#appModalBody').html(body);
+  $('#appModalShow').trigger('click');
+}
+
+function hideModal() {
+  $('#appModalClose').prop('disabled',modalLocked);
+  if (modalLocked) {
+    $('#appmodalClose').hide();
+  }
+  else {
+    $('#appmodalClose').show();
+  }
+  // Remove on-click event handlers for all buttons
+  $('#appModalFooter button').each(function() {
+    $(this).off();
+  });
+  $('#appModalClose').trigger('click');
+  let isvis = $('#appModal').is(':visible');
+}
+
+function modalLock(locked) {
+  modalLocked = locked;
+  if (modalLocked) {
+    $('#appModalClose').prop('disabled',true);
+    $('#appModalClose').hide();
+  }
+  else {
+    $('#appModalClose').prop('disabled',false);
+    $('#appmodalClose').show();
+  }
+}
 
 
 $(document).ready(function() {
@@ -56,8 +122,21 @@ $(document).ready(function() {
   }
   */
   
+  // Add modal div to every page
+  $('body').prepend('<div class="modal fade" id="appModal" tabindex="-1" role="dialog" aria-labelledby="appModalTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false"><div class="modal-dialog modal-dialog-centered modal-sm" role="document"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="appModalTitle"></h5><button id="appModalClose" type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body"><div id="appModalError" class="text-danger"></div><div id="appModalBody">' + '' + '</div></div><div class="modal-footer" id="appModalFooter"></div></div></div></div><button id="appModalShow" data-toggle="modal" data-target="#appModal" style="display:none"></button>');
   // Add "toast" div to every page
   $('body').prepend('<div id="toast" style="z-index:1000"></div>\r\n');
+
+
+  // Monitor modal status
+  $(document).on('show.bs.modal', '#appModal', function () {
+      // run your validation... ( or shown.bs.modal )
+      modalVisible = true;
+  });
+  $(document).on('hide.bs.modal', '#appModal', function () {
+    // run your validation... ( or shown.bs.modal )
+    modalVisible = false;
+});
 
   // close navbar menu after clicking a link
   $(".navbar-collapse a").on('click', function () {

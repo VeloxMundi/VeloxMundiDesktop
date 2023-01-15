@@ -26,9 +26,8 @@ $(document).ready(function() {
 
   function OnWindowResize() {
     // Run this function any time the application window is resized
-    let tbh = $('#toolbar').height();
     let bdh = $('body').height();
-    let newH = bdh-tbh-30;
+    let newH = bdh-30;
     $('#editor').css({height:(newH)+'px'});
     $('#viewer').css({height:(newH)+'px'});
   }
@@ -44,6 +43,7 @@ $(document).ready(function() {
 
   // local variables
   let closeAfterSave=false;
+  let navAfterSave='';
 
   $('#CancelButton').on('click', function() {
     window.contextBridge.navigate('worldHome.html');
@@ -64,13 +64,14 @@ $(document).ready(function() {
         break;
       case 'DeletePage':
         // Prompt for confirmation
-        let delResult = window.contextBridge.toMainSync('world', 'DeletePage', mdFileName);
-        if (delResult.success) {
-          navigate('worldHome.html');
-        }
-        else {
-          showToast(delResult.message, 'text-danger');
-        }
+        showModal('Confirm delete', '<p>Are you sure you want to delete this page?</p><p><b>This cannot be undone!</b></p>','<button id="CancelDelete" class="btn btn-default">Cancel</button><button id="ConfirmDelete" class="btn btn-success">Delete</button>');
+        $('#CancelDelete').on('click', function() {
+          hideModal();
+        });
+        $('#ConfirmDelete').on('click', function() {
+          modalLock(true);
+          window.contextBridge.toMain('return', 'ConfirmDelete');
+        });
         break;
       default:
         break;
@@ -78,18 +79,38 @@ $(document).ready(function() {
   });
 
   function CheckPathAndSave() {
+    
     if (pagePath=='') {
-      $("body").append('<div id="overlay" style="background-color:rgba(211,211,211,.4);position:absolute;top:0;left:0;height:100%;width:100%;z-index:999"></div>');
-      window.contextBridge.toMain('world', 'GetSaveAsPath');
+        showModal('Save as...','<input type="text" length="25" id="SaveAsName"/>', '<button class="btn btn-default" id="CancelSaveAs">Cancel</button><button class="btn btn-danger" id="SetSaveAs">Save</button>');
+        $('#CancelSaveAs').on('click', function(e) {
+          modalLock(false);
+          hideModal();
+        });
+        $('#SetSaveAs').on('click', function(e) {
+          modalLock(true);
+          let saveAsName = $('#SaveAsName').val();
+          if (saveAsName && saveAsName!='') {
+            $('#CancelSaveAs').prop('disabled',true);
+            $('#SetSaveAs').prop('disabled', true);
+          
+            window.contextBridge.toMain('world', 'SetSaveAsName', {
+              'action': 'Save',
+              'fileName': saveAsName
+            });
+          }
+        });
+
+      //$("body").append('<div id="overlay" style="background-color:rgba(211,211,211,.4);position:absolute;top:0;left:0;height:100%;width:100%;z-index:999"></div>');
+      //window.contextBridge.toMain('world', 'GetSaveAsPath');
     }
     else {
       SavePage();
     }
   }
 
-  function SavePage() {    
+  function SavePage() {
     $('#SaveButton').prop('disabled', 'true');
-    $('#SaveButton').text('Saving...');    
+    $('#SaveButton').text('Saving...');
     try {
       const pageContents = $('#editor').val();
       const pageHTML = $('#viewer').html();
@@ -124,28 +145,66 @@ $(document).ready(function() {
     if (closeAfterSave) {
       navigate('worldHome.html');
     }
+    else if (navAfterSave!='') {
+      navigate(navAfterSave);
+    }
     else {
       $('#editor').trigger('focus');
     }
   }
 
   window.contextBridge.fromMain('SaveAsPath', (event, data) => {
-    $('#overlay').remove();
+    //$('#overlay').remove();
     if (data.success) {
+      pageDirty=false;
       pagePath = data.path;
       window.contextBridge.toMain('config', 'WriteKey', ['CurrentPage', 'edit.html?path=' + encodeURIComponent(data.path)]);
       mdFileName = pagePath.split('\\').pop().replace('.md','');
+      modalLock(false);
+      hideModal();
       SavePage();
     }
     else {
       if (data.message!='') {
         showToast(data.message, 'text-danger');
         pagePath = ''; // Reset the page name so the user can try again.
-      }    
+      }
     }
   });
 
+  window.contextBridge.fromMain('return', (event, method, data) => {
+    switch(method) {
+      case 'SaveAndNavigate':
+        modalLock(false);
+        hideModal();
+        CheckPathAndSave();
+        navAfterSave = data;
+        break;
+      case 'ConfirmDelete':
+        let delResult = window.contextBridge.toMainSync('world', 'DeletePage', mdFileName);
+        if (delResult.success) {
+          pageDirty = false;
+          modalLock(false);
+          hideModal();
+          navigate('worldHome.html');
+        }
+        else {
+          showToast(delResult.message, 'text-danger');
+        }
+        break;
+      default:
+        break;
+    }
+  });
 
+  /*
+  function tempFx() {
+    modalLock(false);
+    hideModal();
+    $('#CancelSaveAs').prop('disabled',false);
+    $('#SetSaveAs').prop('disabled', false);
+  }
+  */
 
 
   /*
