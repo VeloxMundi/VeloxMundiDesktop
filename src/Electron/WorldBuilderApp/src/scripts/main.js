@@ -13,7 +13,8 @@ const appPath = app.getAppPath();
 const pagePath = path.join(appPath, 'src', 'pages');
 const modalPath = path.join(pagePath, 'modals');
 const scriptPath = path.join(appPath, 'src', 'scripts');
-const configPath = path.join(appPath, 'config.json');
+const configPath = path.join(appPath, 'user', 'config.json');
+const dataPath = path.join(appPath, 'data');
 const isMac = process.platform === 'darwin'
 
 let modal = null;
@@ -22,7 +23,7 @@ let menu = null;
 
 // load custom modules
 const config = require(path.join(scriptPath, 'modules', 'configModule.js'));
-config.InitPath(configPath);
+config.InitPath(configPath, dataPath);
 const world = require(path.join(scriptPath, 'modules', 'worldModule.js'));
 
 

@@ -94,14 +94,23 @@ module.exports = class ConfigManager {
         fs.mkdirSync(path.join(dir, 'md'));
         fs.mkdirSync(path.join(dir, 'html'));
         configManager.WriteKey('CurrentWorld', worldName);
-        return [true, 'World created successfully'];
+        return {
+          'success': true,
+          'message': 'World created successfully'
+        };
       }
       else {
-        return [false, 'World already exists'];
+        return {
+          'success': false,
+          'message': 'World already exists'
+        };
       }
     }
     catch(e) {
-      return [false, e];
+      return {
+        'success': false,
+        'message': 'Unable to create world.<br/>' + e
+      };
     }
 
   }

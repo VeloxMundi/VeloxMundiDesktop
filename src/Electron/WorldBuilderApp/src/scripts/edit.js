@@ -57,6 +57,7 @@ $(document).ready(function() {
         CheckPathAndSave();
         break;
       case 'ClosePage':
+        closeAfterSave = true;
         navigate('worldHome.html');
         break;
       case 'SaveAndClose':
@@ -222,8 +223,8 @@ $(document).ready(function() {
       case 'SaveAndNavigate':
         modalLock(false);
         hideModal();
-        CheckPathAndSave();
         navAfterSave = data;
+        CheckPathAndSave();
         break;
       case 'ConfirmDelete':
         let delResult = window.contextBridge.toMainSync('world', 'DeletePage', mdFileName);

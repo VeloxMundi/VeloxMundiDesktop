@@ -37,6 +37,9 @@ module.exports = class UIManager {
       case 'worldHome.html':
         newMenu[1] = this.FileMenu_WorldHome(win);
         break;
+      case 'selectWorld.html':
+        newMenu[1] = this.FileMenu_SelectWorld(win);
+        break;
       default:
         break;
     }
@@ -125,6 +128,32 @@ module.exports = class UIManager {
           label: 'New Page',
           click: async () => {
             win.webContents.send('menu', 'NewPage');
+          }
+        },
+        {
+          type: 'separator'
+        },
+        {
+          type: 'separator'
+        },
+        {
+          label: 'Exit',
+          click: async() => {
+            win.webContents.send('menu', 'ExitApp');
+          }
+        }
+      ]
+    };
+  }
+
+  static FileMenu_SelectWorld(win) {
+    return {
+      label: 'File',
+      submenu: [
+        {
+          label: 'New World',
+          click: async () => {
+            win.webContents.send('menu', 'NewWorld');
           }
         },
         {
