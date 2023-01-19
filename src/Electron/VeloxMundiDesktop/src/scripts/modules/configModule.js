@@ -36,6 +36,30 @@ module.exports = class ConfigManager {
       case 'ReadUserPref':
         return this.ReadUserPref(data);
         break;
+      case 'GetAllUserPrefs':
+        try {
+          let uprefs = fs.readFileSync(path.join(this.dataPath, 'defaultConfig.json'));
+          if (uprefs!='') {
+            uprefs = JSON.parse(uprefs);
+            return {
+              'success': true,
+              'prefs': uprefs
+            };
+          }
+          else {
+            return {
+              'success': false,
+              'message': 'No preferences were found.'
+            };
+          }
+        }
+        catch(e) {
+          return {
+            'success': false,
+            'message': e
+          };
+        }
+        break;
       case 'WriteUserPref':
         this.WriteUserPref(data[0], data[1]);
         break;

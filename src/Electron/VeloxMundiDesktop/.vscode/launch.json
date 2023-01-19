@@ -9,13 +9,6 @@
     ],
     "configurations": [
       {
-        "name": "Renderer",
-        "port": 9222,
-        "request": "attach",
-        "type": "chrome",
-        "webRoot": "${workspaceFolder}"
-      },
-      {
         "name": "Main",
         "type": "node",
         "request": "launch",

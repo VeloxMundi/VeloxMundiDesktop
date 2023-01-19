@@ -17,9 +17,13 @@ Instructions on how to acquire and where to update the code to use each prerequi
 **Bootstrap Icons**
 Source: [Bootstrap Icons Website](https://icons.getbootstrap.com/) / [Git Repo](https://github.com/twbs/icons/releases/)
 * Download and extract the latest bootstrap icons and related files (fonts and CSS).
-* Update "`src/Electron/WorldBuilderApp/src/styles/custom.css`" to import the bootstrap icons CSS file and define the "`bootstrap-icons`" font pointed to the correct download location. See [custom.css](src/Electron/WorldBuilderApp/src/styles/custom.css) for example.
+* Update "`src/Electron/VeloxMundiDesktop/src/styles/custom.css`" to import the bootstrap icons CSS file and define the "`bootstrap-icons`" font pointed to the correct download location. See [custom.css](src/Electron/VeloxMundiDesktop/src/styles/custom.css) for example.
 
 ## Current Features
+
+### Unlimited World and Page Creation
+
+Users can create new worlds (limited functionality) and create, edit, rename, and delete pages within their world using the built-in markdown editor.
 
 ### Markdown Editor
 
@@ -29,9 +33,6 @@ Use [markdown](https://markdownguide.com) to easily write content for any page w
 
 When a file is saved, it will be saved in both markdown and HTML formats. By saving the HTML directly, we make it easy for users to publish static HTML pages to their own website, and ensure pages load quickly, without requiring conversion from markdown to HTML during page loading.
 
-### World and Page Creation
-
-Users can create new worlds (limited functionality) and create, edit, rename, and delete pages within their world using the built-in markdown editor.
 
 ## Future Features
 
@@ -91,6 +92,10 @@ Timelines are an integral part of world building. The application will allow use
 Timelines will support zooming in and out and show or hide events based on their relative importance at different zoom levels.
 
 Timelines can be embedded in pages at specific zoom levels. Users should be able to interact with embedded timelines without leaving the page (Either through the use of modals that display the timeline on top of the page's contents, or by scrolling through the embedded timeline in-place).
+
+### Weights and Measures
+
+Support for custom measurements and weights used in your world.
 
 ### Custom Date Support
 

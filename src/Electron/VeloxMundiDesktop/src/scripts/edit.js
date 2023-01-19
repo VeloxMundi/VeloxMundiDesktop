@@ -18,6 +18,8 @@ $(document).ready(function() {
     }
   }
 
+  $('#editor').trigger('focus');
+
   // set editor height
   OnWindowResize();
 
