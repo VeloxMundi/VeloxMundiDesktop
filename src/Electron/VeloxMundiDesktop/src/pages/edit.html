@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline';"
+    />
+
+    <link rel="stylesheet" href="../scripts/resources/bootstrap-4.3.1/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../styles/custom.css" />
+    <link rel="stylesheet" href="../styles/edit.css" />
+    <title>Velox Mundi: Edit</title>
+  </head>
+  <body>
+    <div class="row">
+      <div class="col-6">
+        <textarea id="editor" class=""></textarea>
+          </div>
+          <div id="viewer" class="col-6 full-height editable" contenteditable="true"></div>
+    </div>
+  </body>
+  <script src="../scripts/resources/jquery-3.6.1.min.js"></script>  
+  <script src="../scripts/resources/bootstrap-4.3.1/js/bootstrap.bundle.js" ></script>
+  <script src="../scripts/resources/lodash.js"></script>
+  <script src="../scripts/resources/showdown.js"></script>
+
+  <script src="../scripts/mdEditorControl.js"></script>
+  <script src="../scripts/app.js"></script>
+  <script src="../scripts/edit.js"></script>
+  </html>

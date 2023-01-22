@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline';"
+    />
+
+    <link rel="stylesheet" href="../scripts/resources/bootstrap-4.3.1/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../styles/custom.css" />
+    <link rel="stylesheet" href="../styles/edit.css" />
+    <title>Velox Mundi</title>
+  </head>
+  <body>
+    <div>
+      <a class="navLink nolink" href="#" data-page="config.html"><span class="bi-gear"></span>&nbsp;Back to Options</a>
+    </div>
+    <hr/>
+    <h3>Settings</h3>
+    <table width="100%" class="configTable">
+      <tr valign="top">
+        <th style="width:20%;max-width:250px;">
+          Editor Style
+        </th>
+        <td style="width:60%;max-width:100%;">
+          Choose whether to use a rich-text editor or markdown
+        </td>
+        <td style="width:20%;max-width:250px;text-align:right;">
+          <select id="EditorStyle">
+            <option value="RTE">Rich Text</option>
+            <option value="MD">Markdown</option>
+          </select>
+        </td>
+      </tr>
+    </table>
+
+<!--TODO: Set up page to configue all settings in config.json['prefs'], default to data/defaultConfig.json-->
+
+
+  </body>
+  <script src="../scripts/resources/jquery-3.6.1.min.js"></script>  
+  <script src="../scripts/resources/bootstrap-4.3.1/js/bootstrap.bundle.js" ></script>
+
+  <script src="../scripts/app.js"></script>
+  <script src="../scripts/userPrefs.js"></script>
+</html>
