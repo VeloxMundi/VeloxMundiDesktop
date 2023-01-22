@@ -1,6 +1,8 @@
 # Custom
 user
 src/assets/bootstrap-icons-1.10.3
+src/assets/summernote
+src/assets/popper.min.js
 
 # Logs
 logs

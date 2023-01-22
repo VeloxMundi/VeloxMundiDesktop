@@ -10,6 +10,7 @@ const { config } = require('process');
 
 // Custom Modules
 const configManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'configModule.js'));
+//configManager.InitPath(path.join(app.getAppPath(), 'user', 'config.json'), path.join(app.getAppPath(), 'data'));
 const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'fileManagerModule.js'));
 let modal = null;
 let saveAsEvent = null;
@@ -33,12 +34,9 @@ module.exports = class ConfigManager {
       case 'SavePage':
         return this.SavePage(data);
         break;
-      /*
-      case 'GetSaveAsPath':
-        saveAsEvent = event;
-        this.GetSaveAsPath();
+      case 'GetPagePath':
+        return this.GetPagePath(data);
         break;
-      */
       case 'SetSaveAsName':
         this.SetSaveAsName(event, data);
         break;
@@ -306,6 +304,36 @@ module.exports = class ConfigManager {
         retVal.saveOnReturn = false;
         return retVal;
       }
+    }
+  }
+
+  static GetPagePath(pageName) {
+    let baseDir = configManager.ReadKey('WorldDirectory');
+    let worldDir = path.join(baseDir, configManager.ReadKey('CurrentWorld'));
+    let pagePath = '';
+    let editor = configManager.ReadUserPref('editorStyle');
+    switch(editor) {
+      case 'RTE':
+        pagePath = path.join(worldDir, 'html', pageName + '.html');
+        break;
+      case 'MD':
+        pagePath = path.join(worldDir, 'md', pageName + '.md');
+        break;
+      default:
+        pagePath = path.join(worldDir, pageName);
+        break;
+    }
+    if (fs.existsSync(pagePath)) {
+      return {
+        success: true,
+        path: pagePath
+      };
+    }
+    else {
+      return {
+        success: false,
+        message: "Unable to find page \"" + pagePath + "\"."
+      };
     }
   }
 

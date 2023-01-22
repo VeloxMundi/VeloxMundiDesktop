@@ -15,9 +15,21 @@ These prerequisites are only needed to modify the source code. The third-party a
 Instructions on how to acquire and where to update the code to use each prerequisite are included below.
 
 **Bootstrap Icons**
+
 Source: [Bootstrap Icons Website](https://icons.getbootstrap.com/) / [Git Repo](https://github.com/twbs/icons/releases/)
+
 * Download and extract the latest bootstrap icons and related files (fonts and CSS).
+
 * Update "`src/Electron/VeloxMundiDesktop/src/styles/custom.css`" to import the bootstrap icons CSS file and define the "`bootstrap-icons`" font pointed to the correct download location. See [custom.css](src/Electron/VeloxMundiDesktop/src/styles/custom.css) for example.
+
+
+**Summernote**
+
+Source: [Summernote Website](https://summernote.org/) / [Git Repo](https://github.com/summernote/summernote)
+
+* Download and extract the latest summernote files (fonts, css, javascript, plugins, etc.).
+
+* Update script and stylesheet references to summernote in "`src/Electron/VeloxMundiDestkot/src/pages/RTEedit.html`".
 
 ## Current Features
 
@@ -25,9 +37,8 @@ Source: [Bootstrap Icons Website](https://icons.getbootstrap.com/) / [Git Repo](
 
 Users can create new worlds (limited functionality) and create, edit, rename, and delete pages within their world using the built-in markdown editor.
 
-### Markdown Editor
-
-Use [markdown](https://markdownguide.com) to easily write content for any page without using HTML (althought HTML is supported).
+### Rich-Text and Markdown Editors
+Users can choose to edit files using a rich-text editor (default), or to use [markdown](https://markdownguide.com) to edit pages.
 
 ### Native HTML Support
 

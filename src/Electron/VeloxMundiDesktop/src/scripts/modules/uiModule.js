@@ -33,6 +33,9 @@ module.exports = class UIManager {
     switch(page) { 
       case 'edit.html':
         newMenu[1] = this.FileMenu_EditPage(win);
+        break;      
+      case 'rteEdit.html':
+        newMenu[1] = this.FileMenu_EditPage(win);
         break;
       case 'worldHome.html':
         newMenu[1] = this.FileMenu_WorldHome(win);

@@ -15,20 +15,23 @@
   </head>
   <body>
     <div>
-      <a href="config.html" class="nolink"><span class="bi-gear"></span>&nbsp;Back to Options</a>
+      <a class="navLink nolink" href="#" data-page="config.html"><span class="bi-gear"></span>&nbsp;Back to Options</a>
     </div>
     <hr/>
     <h3>Settings</h3>
     <table width="100%" class="configTable">
       <tr valign="top">
         <th style="width:20%;max-width:250px;">
-          
+          Editor Style
         </th>
         <td style="width:60%;max-width:100%;">
-          
+          Choose whether to use a rich-text editor or markdown
         </td>
         <td style="width:20%;max-width:250px;text-align:right;">
-          <a class="btn btn-success" style="width:100%;max-width:200px" href="#">&nbsp;</a>
+          <select id="EditorStyle">
+            <option value="RTE">Rich Text</option>
+            <option value="MD">Markdown</option>
+          </select>
         </td>
       </tr>
     </table>
@@ -38,7 +41,7 @@
 
   </body>
   <script src="../scripts/resources/jquery-3.6.1.min.js"></script>  
-  <script src="../scripts/resources/bootstrap-4.3.1/js/bootstrap.min.js" ></script>
+  <script src="../scripts/resources/bootstrap-4.3.1/js/bootstrap.bundle.js" ></script>
 
   <script src="../scripts/app.js"></script>
   <script src="../scripts/userPrefs.js"></script>

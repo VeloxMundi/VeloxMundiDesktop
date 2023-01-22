@@ -1,4 +1,8 @@
-//let prefs = window.contextBridge.toMainSync('config', 'ReadKey', 'prefs');
+
 $(document).ready(function() {
-  let x = prefs;
+  $('#EditorStyle').val(window.contextBridge.toMainSync('config', 'ReadUserPref', 'editorStyle'));
+
+  $('#EditorStyle').on('change', function() {
+    window.contextBridge.toMain('config', 'WriteUserPref', ['editorStyle', $('#EditorStyle').val()]);
+  });
 });

@@ -53,7 +53,7 @@ function navigate(pagePath) {
   }
 }
 
-function showModal(title, body, footer, focus) {
+function showModal(title, body, footer, focus, defaultButton) {
   modalLock(modalLocked);
   if (!title || title=='') {
     $('#appModalTitle').hide();
@@ -70,6 +70,24 @@ function showModal(title, body, footer, focus) {
   $('#appModalShow').trigger('click');
   if (focus && focus!='') {
     $('#appModal').data('focus',focus);
+    if (defaultButton && defaultButton!='') {
+      $(focus).on('keypress', function(event){
+        var keycode = (event.keyCode ? event.keyCode : event.which);
+        if(keycode == '13'){
+            $(defaultButton).trigger('click');
+        }
+      });
+    }
+  }
+  else {
+    if (defaultButton && defaultButton!='') {
+      $(document).on('keypress', function(event){
+        var keycode = (event.keyCode ? event.keyCode : event.which);
+        if(keycode == '13'){
+            $(defaultButton).trigger('click');
+        }
+      });
+    }
   }
 }
 
@@ -106,6 +124,13 @@ function modalOnEnter(elementToMonitor,defaultButton) {
   
 }
 
+function HandleNavLinks() {
+  $('a.navLink').on('click', function() {
+    let page = $(this).data('page');
+    let query = $(this).data('query');
+    window.contextBridge.toMain('navigate', page, query);
+  });
+}
 
 $(document).ready(function() {
   // Set page
@@ -123,12 +148,7 @@ $(document).ready(function() {
     $('.WorldName').text(world);
   }
 
-  /*
-  // Display world name in any element with the id "homeLink"
-  if (world && world!='') {
-    $('#homeLink').html('<span class="bi-globe"></span>&nbsp;' + world);
-  }
-  */
+  HandleNavLinks();
   
   // Add modal div to every page
   $('body').prepend('<div class="modal fade" id="appModal" tabindex="-1" role="dialog" aria-labelledby="appModalTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false"><div class="modal-dialog modal-dialog-centered modal-sm" role="document"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="appModalTitle"></h5><button id="appModalClose" type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body"><div id="appModalError" class="text-danger"></div><div id="appModalBody">' + '' + '</div></div><div class="modal-footer" id="appModalFooter"></div></div></div></div><button id="appModalShow" data-toggle="modal" data-target="#appModal" style="display:none"></button>');
@@ -150,7 +170,7 @@ $(document).ready(function() {
   $(document).on('hide.bs.modal', '#appModal', function () {
     // run your validation... ( or shown.bs.modal )
     modalVisible = false;
-});
+  });
 
   // close navbar menu after clicking a link
   $(".navbar-collapse a").on('click', function () {

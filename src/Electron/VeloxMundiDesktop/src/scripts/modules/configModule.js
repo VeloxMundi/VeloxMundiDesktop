@@ -8,6 +8,8 @@ const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modul
 
 // Custom Variables
 let windowState;
+let configPath = path.join(app.getAppPath(), 'user', 'config.json');
+let dataPath = path.join(app.getAppPath(), 'data');
 
 // Default Preferences (So they will never be returned blank)
 let dPrefs = {};
@@ -15,13 +17,11 @@ let dPrefs = {};
 
 module.exports = class ConfigManager {
   constructor() {
-    this.configPath = "";
-    this.dataPath = "";
   }
 
   static InvokeConfig(event, method, data) {
-    if (!fs.existsSync(this.configPath)) {
-      throw ('User configuration file is missing from "' + this.configPath + '"');
+    if (!fs.existsSync(configPath)) {
+      throw ('User configuration file is missing from "' + configPath + '"');
     }
     switch(method) {
       case 'SetPage':
@@ -78,13 +78,13 @@ module.exports = class ConfigManager {
 
 
   static InitPath(config, data) {
-    this.configPath = config;    
+    configPath = config;    
     this.dataPath = data;
     let dConfigData = fs.readFileSync(path.join(this.dataPath, 'defaultConfig.json'));
     if (dConfigData!='') {
       dPrefs = JSON.parse(dConfigData);
     }
-    if (!fs.existsSync(this.configPath))
+    if (!fs.existsSync(configPath))
     {
       let date = Date.now();
       let data = {
@@ -94,13 +94,13 @@ module.exports = class ConfigManager {
         "CurrentWorld" : "",
         "CurrentPage" : "index.html"
       };
-      let config = fileManager.WriteFile(this.configPath, JSON.stringify(data));
+      let config = fileManager.WriteFile(configPath, JSON.stringify(data));
     }
   }
 
 
   static GetPath() {
-    return this.configPath;
+    return configPath;
   }
 
   static GetPage() {
@@ -132,7 +132,7 @@ module.exports = class ConfigManager {
 
 
   static ReadKey(key) { 
-    let rawdata = fs.readFileSync(this.configPath);
+    let rawdata = fs.readFileSync(configPath);
     if (rawdata!='') {
       let data = JSON.parse(rawdata);
       if (key.toLowerCase()=='prefs') {
@@ -162,21 +162,21 @@ module.exports = class ConfigManager {
 
   static WriteKey(key, value) {
     let data = {};
-    if (fs.existsSync(this.configPath)) {
-      let rawdata = fs.readFileSync(this.configPath);
+    if (fs.existsSync(configPath)) {
+      let rawdata = fs.readFileSync(configPath);
       if (rawdata != '') {
         data = JSON.parse(rawdata);
       }
     }
     data[key] = value;
     data['ConfigUpdated'] = new Date(Date.now()).toLocaleString();
-    fileManager.WriteFile(this.configPath, JSON.stringify(data, null, 2));
+    fileManager.WriteFile(configPath, JSON.stringify(data, null, 2));
   }
 
   static WriteUserPref(key, value) {
     let data = {};
     if (fs.existsSync(this.dataPath)) {
-      let rawdata = fs.readFileSync(this.configPath);
+      let rawdata = fs.readFileSync(configPath);
       if (rawdata != '') {
         data = JSON.parse(rawdata);
       }
@@ -184,13 +184,17 @@ module.exports = class ConfigManager {
     if (!data['prefs']) {
       data['prefs'] = {};
     }
-    data[prefs][key] = value;
+    for (var pref in data.prefs) {
+      if (pref==key) {
+        data.prefs[key]=value;
+      }
+    }
     data['ConfigUpdated'] = new Date(Date.now()).toLocaleString();
-    fileManager.WriteFile(this.configpath, JSON.stringify(data, null, 2));
+    fileManager.WriteFile(configPath, JSON.stringify(data, null, 2));
   }
 
   static ReadUserPref(key) {
-    let rawdata = fs.readFileSync(this.configpath);
+    let rawdata = fs.readFileSync(configPath);
     if (rawdata!='') {
       let data = JSON.parse(rawdata);
       if (!data['prefs']) {
@@ -212,19 +216,19 @@ module.exports = class ConfigManager {
 
   static RemoveKey(key) {
     let data = {};
-    if (fs.existsSync(this.configpath)) {
-      let rawdata = fs.readFileSync(this.configpath);
+    if (fs.existsSync(configPath)) {
+      let rawdata = fs.readFileSync(configPath);
       if (rawdata != '') {
         data = JSON.parse(rawdata);
       }
     }
     delete data[key];
     data['ConfigUpdated'] = new Date(Date.now()).toLocaleString();
-    fileManager.WriteFile(this.configpath, JSON.stringify(data, null, 2));
+    fileManager.WriteFile(configPath, JSON.stringify(data, null, 2));
   }
 
   static ReadAll() {
-    let rawdata = fs.readFileSync(this.configpath);
+    let rawdata = fs.readFileSync(configPath);
     if (rawdata!='') {
       let data = JSON.parse(rawdata);
       return data;

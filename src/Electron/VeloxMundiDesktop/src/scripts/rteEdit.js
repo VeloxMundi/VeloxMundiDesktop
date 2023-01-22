@@ -1,8 +1,10 @@
-let mdFileName = '';
+let htmlFileName = '';
 let docBaseTitle = '';
 
 $(document).ready(function() {
-  // load page contents in editor
+  $('#editor').summernote();
+  $('.note-resizebar').hide();
+
   let pagePath = '';
   docBaseTitle = document.title;
   let query = window.location.search.substring(1);
@@ -15,9 +17,9 @@ $(document).ready(function() {
         pagePath = getPage.path;
         console.log(pagePath);
         let contents = window.contextBridge.toMainSync('file', 'ReadFileToString', pagePath);
-        $('#editor').text(contents);
-        mdFileName = pagePath.split('\\').pop().replace('.md','');
-        document.title = docBaseTitle + ' ' + mdFileName;
+        $('#editor').summernote('code',contents);
+        htmlFileName = pagePath.split('\\').pop().replace('.html','');
+        document.title = docBaseTitle + ' ' + htmlFileName;
       }
       else {
         showToast(getPage.message, 'text-danger');
@@ -26,6 +28,8 @@ $(document).ready(function() {
   }
 
   $('#editor').trigger('focus');
+
+  var converter = new showdown.Converter({ tables: true, strikethrough: true });
 
   // set editor height
   OnWindowResize();
@@ -36,28 +40,21 @@ $(document).ready(function() {
 
   function OnWindowResize() {
     // Run this function any time the application window is resized
-    let bdh = $('body').height();
-    let newH = bdh-30;
-    $('#editor').css({height:(newH)+'px'});
-    $('#viewer').css({height:(newH)+'px'});
+    let bdh = $(window).height();
+    let newH = bdh-90;
+    $('.note-editable.card-block').each(function() {
+          $(this).css({height:(newH)+'px'});
+          $(this).css({'max-height':(newH)+'px'});
+        }
+    );
+
   }
 
-  $('#editor').on('input propertychange', function() {
-    $('#CancelButton').text('Cancel');
-    $('#CancelButton').removeClass('btn-default');
-    $('#CancelButton').addClass('btn-danger');
-    pageDirty = true;
-  });
 
 
 
-  // local variables
-  let closeAfterSave=false;
-  let navAfterSave='';
 
-  $('#CancelButton').on('click', function() {
-    window.contextBridge.navigate('worldHome.html');
-  });
+
 
   window.contextBridge.fromMain('menu', (event, action) =>  {
     switch(action) {
@@ -75,7 +72,7 @@ $(document).ready(function() {
         break;
       case 'DeletePage':
         // Prompt for confirmation
-        showModal('Confirm delete', '<p>Are you sure you want to delete this page?</p><p><b>This cannot be undone!</b></p>','<button id="CancelDelete" class="btn btn-default">Cancel</button><button id="ConfirmDelete" class="btn btn-success">Delete</button>');
+        showModal('Confirm delete', '<p>Are you sure you want to delete this page?</p><p><b>This cannot be undone!</b></p>','<button id="CancelDelete" class="btn btn-default">Cancel</button><button id="ConfirmDelete" class="btn btn-success">Delete</button>', '#ConfirmDelete');
         $('#CancelDelete').on('click', function() {
           hideModal();
         });
@@ -90,7 +87,7 @@ $(document).ready(function() {
           hideModal();
         }
         else {
-          showModal('Rename ' + mdFileName, '<div id="RenameError" class="text-danger"></div><p>New name:</p><p><input type="text" id="NewPageName" length="25"/></p>','<button id="CancelRename" class="btn btn-default">Cancel</button><button id="RenamePage" class="btn btn-success">Rename</button>','#NewPageName', '#RenamePage');
+          showModal('Rename ' + htmlFileName, '<div id="RenameError" class="text-danger"></div><p>New name:</p><p><input type="text" id="NewPageName" length="25"/></p>','<button id="CancelRename" class="btn btn-default">Cancel</button><button id="RenamePage" class="btn btn-success">Rename</button>','#NewPageName', '#RenamePage');
           $('#CancelRename').on('click', function() {
             hideModal();
           });
@@ -98,11 +95,11 @@ $(document).ready(function() {
             let newPageName = $('#NewPageName').val();
             if (newPageName && newPageName!='') {
               let result = window.contextBridge.toMainSync('world', 'RenamePage', {
-                'oldPageName': mdFileName,
+                'oldPageName': htmlFileName,
                 'newPageName': newPageName
               });
               if (result.success) {
-                mdFileName = newPageName;
+                htmlFileName = newPageName;
                 document.title = docBaseTitle + ' ' + newPageName;
                 pagePath = result.newPagePath;
                 hideModal();
@@ -136,7 +133,7 @@ $(document).ready(function() {
   function CheckPathAndSave() {
     
     if (pagePath=='') {
-        showModal('Save as...','<input type="text" length="25" id="SaveAsName"/>', '<button class="btn btn-default" id="CancelSaveAs">Cancel</button><button class="btn btn-danger" id="SetSaveAs">Save</button>','#SaveAsName','#SetSaveAs');
+        showModal('Save as...','<input type="text" length="25" id="SaveAsName"/>', '<button class="btn btn-default" id="CancelSaveAs">Cancel</button><button class="btn btn-danger" id="SetSaveAs">Save</button>','#SaveAsName', '#SetSaveAs');
         $('#CancelSaveAs').on('click', function(e) {
           modalLock(false);
           hideModal();
@@ -167,8 +164,8 @@ $(document).ready(function() {
     $('#SaveButton').prop('disabled', 'true');
     $('#SaveButton').text('Saving...');
     try {
-      const pageContents = $('#editor').val();
-      const pageHTML = $('#viewer').html();
+      let pageHTML = $('#editor').summernote('code');
+      let pageContents = converter.makeMarkdown(pageHTML);
       let saveResult = window.contextBridge.toMainSync('world', 'SavePage', {
         'pagePath': pagePath,
         'pageContents': pageContents,
@@ -214,7 +211,7 @@ $(document).ready(function() {
       pageDirty=false;
       pagePath = data.path;
       window.contextBridge.toMain('config', 'WriteKey', ['CurrentPage', 'edit.html?path=' + encodeURIComponent(data.path)]);
-      mdFileName = pagePath.split('\\').pop().replace('.md','');
+      htmlFileName = pagePath.split('\\').pop().replace('.md','');
       modalLock(false);
       hideModal();
       SavePage();
@@ -236,7 +233,7 @@ $(document).ready(function() {
         CheckPathAndSave();
         break;
       case 'ConfirmDelete':
-        let delResult = window.contextBridge.toMainSync('world', 'DeletePage', mdFileName);
+        let delResult = window.contextBridge.toMainSync('world', 'DeletePage', htmlFileName);
         if (delResult.success) {
           pageDirty = false;
           modalLock(false);
@@ -252,35 +249,10 @@ $(document).ready(function() {
     }
   });
 
-  /*
-  function tempFx() {
-    modalLock(false);
-    hideModal();
-    $('#CancelSaveAs').prop('disabled',false);
-    $('#SetSaveAs').prop('disabled', false);
-  }
-  */
 
 
-  /*
-  window.contextBridge.fromMain('saveResults', (event, data) => {
 
 
-    if (data[0]==1)
-    {
-      setMessage('Saved successfully!');
-      $('#CancelButton').text('Close');
-      $('#CancelButton').removeClass('btn-danger');
-      $('#CancelButton').addClass('btn-default');
-    }
-    else
-    {
-      setMessage('There was an error saving changes:\r\n' + data[1], 'text-danger');
-    }
-    $('#editor').trigger('focus');
-  });
-  */
 
 
-  updateResult(); // from mdEditorControl.js
 });

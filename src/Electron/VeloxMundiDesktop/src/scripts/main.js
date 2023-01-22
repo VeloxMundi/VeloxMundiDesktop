@@ -93,8 +93,8 @@ ipcMain.on('modal', (event, action, path) => {
 });
 
 
-ipcMain.on('navigate', (event, page) => {
-  loadPage(page);
+ipcMain.on('navigate', (event, page, query) => {
+  loadPage(page, query);  
 });
 
 
@@ -113,7 +113,7 @@ function CallModuleMethod(event, module, method, data)
     switch(module)
     {
       case 'navigate':
-        loadPage(method);
+        loadPage(method, data);
         break;
       case 'config':
         return config.InvokeConfig(event, method, data);
@@ -141,8 +141,29 @@ function CallModuleMethod(event, module, method, data)
   }
 }
 
-function loadPage(pageName) {
-  mainWindow.loadFile(path.join(pagePath, pageName));
+function loadPage(pageName, qry) {
+  switch(pageName) {
+    case 'edit.html':
+      let editor = config.ReadUserPref('editorStyle');
+      switch(editor) {
+        case 'MD':
+          pageName='edit.html';
+          break;
+        default:
+          pageName='rteEdit.html';
+          break;
+      }
+      break;
+  }
+  let pathQuery = {};
+  if (qry && qry!='') {
+    let params = (decodeURIComponent(qry).split('&'));
+    for (let i=0; i<params.length; i++) {
+      let param = params[i].split('=');
+      pathQuery[param[0]] = param[1];
+    }
+  }
+  mainWindow.loadFile(path.join(pagePath, pageName), {query: pathQuery});
 }
 
 // Menu
