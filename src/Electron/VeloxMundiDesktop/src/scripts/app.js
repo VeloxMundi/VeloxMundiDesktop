@@ -4,6 +4,7 @@ const world = window.contextBridge.toMainSync('config', 'ReadKey', 'CurrentWorld
 let pageDirty = false;
 let modalLocked = false;
 let modalVisible = false;
+let setPageInConfig = true;
 
 function hideToast() {
   $('#closeToast').off();
@@ -141,7 +142,9 @@ $(document).ready(function() {
     pageName += '?' + window.location.search.substring(1);
   }
   
-  window.contextBridge.toMain('config', 'SetPage', pageName);
+  if (setPageInConfig) {
+    window.contextBridge.toMain('config', 'SetPage', pageName);
+  }
   
   // Display the world name in any element with the class "WorldName"
   if ($('.WorldName').length) {

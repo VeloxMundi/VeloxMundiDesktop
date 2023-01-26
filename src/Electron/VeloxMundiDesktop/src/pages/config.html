@@ -13,45 +13,47 @@
     <title>Velox Mundi: Options</title>
   </head>
   <body>
-    <h3><span class="bi-gear">&nbsp;</span>Options</h3>
-    <hr/>
-      <table width="100%" class="configTable">
-        <tr valign="top">
-          <th style="width:20%;max-width:250px;">
-            User Preferences
-          </th>
-          <td style="width:60%;max-width:100%;">
-            Application and performance settings
-          </td>
-          <td style="width:20%;max-width:250px;text-align:right;">
-            <a class="btn btn-default navLink" style="width:100%;max-width:200px" href="#" data-page="userPrefs.html"><span class="bi-arrow-right-square float-right">&nbsp;</span>Go to settings</a>
-          </td>
-        </tr>
-        <tr valign="top">
-          <th>
-            World Directory
-          </th>
-          <td>
-            <span></span>
+    <button class="btn btn-danger windowCloser bi-x" id="CloseOptions" title="Close">&nbsp;</button>
+    <div class="titlebar">
+      <h3><span class="bi-gear">&nbsp;</span>Options</h3>
+      <hr/>    </div>
+    <table width="100%" class="configTable">
+      <tr valign="top">
+        <th style="width:20%;max-width:250px;">
+          User Preferences
+        </th>
+        <td style="width:60%;max-width:100%;">
+          Application and performance settings
+        </td>
+        <td style="width:20%;max-width:250px;text-align:right;">
+          <a class="btn btn-default navLink" style="width:100%;max-width:200px" href="#" data-page="userPrefs.html"><span class="bi-arrow-right-square float-right">&nbsp;</span>Go to settings</a>
+        </td>
+      </tr>
+      <tr valign="top">
+        <th>
+          World Directory
+        </th>
+        <td>
+          <span></span>
 
-            <div id="WorldPath"></div>
-          </td>
-          <td class="text-right">
-            <button class="btn btn-success" id="SelectWorldPath" title="Switch to a different directory. Your current worlds will not be moved." style="width:100%;max-width:200px;"><span class="bi-folder-check"></span>&nbsp;Set Directory</button>
-          </td>
-        </tr>
-        <tr>
-          <th>
-            Move All Worlds
-          </th>
-          <td class="text-center">
-            <div id="MoveWorldText"><i>Copies all worlds to the new location, then deletes them from the current "World Directory" (above).</i></div>
-          </td>
-          <td style="text-align:right;">
-            <button class="btn btn-success" id="MoveAllWorlds" title="Move all worlds from one directory to another. The destination directory will become the new working directory. The source directory will be DELETED. Please back up your world before using this feature!"  style="width:100%;max-width:200px;"><span  class="bi-folder-symlink"></span>&nbsp;Move All Worlds</button>
-          </td>
-        </tr>
-      </table>
+          <div id="WorldPath"></div>
+        </td>
+        <td class="text-right">
+          <button class="btn btn-success" id="SelectWorldPath" title="Switch to a different directory. Your current worlds will not be moved." style="width:100%;max-width:200px;"><span class="bi-folder-check"></span>&nbsp;Set Directory</button>
+        </td>
+      </tr>
+      <tr>
+        <th>
+          Move All Worlds
+        </th>
+        <td class="text-center">
+          <div id="MoveWorldText"><i>Copies all worlds to the new location, then deletes them from the current "World Directory" (above).</i></div>
+        </td>
+        <td style="text-align:right;">
+          <button class="btn btn-success" id="MoveAllWorlds" title="Move all worlds from one directory to another. The destination directory will become the new working directory. The source directory will be DELETED. Please back up your world before using this feature!"  style="width:100%;max-width:200px;"><span  class="bi-folder-symlink"></span>&nbsp;Move All Worlds</button>
+        </td>
+      </tr>
+    </table>
   </body>
 <script src="../scripts/resources/jquery-3.6.1.min.js"></script>
 <script src="../scripts/resources/bootstrap-4.3.1/js/bootstrap.bundle.js" ></script>

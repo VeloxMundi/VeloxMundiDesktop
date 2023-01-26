@@ -29,9 +29,11 @@ const world = require(path.join(scriptPath, 'modules', 'worldModule.js'));
 
 
 let mainWindow = null;
+let optionsWindow = null;
+let mainWindowStateKeeper = null;
 
 const createWindow = () => {
-    const mainWindowStateKeeper = windowStateKeeper('main');
+    mainWindowStateKeeper = windowStateKeeper('main');
     const windowOptions = {
       x: mainWindowStateKeeper.x,
       y: mainWindowStateKeeper.y,
@@ -52,8 +54,8 @@ const createWindow = () => {
 }
 
 app.whenReady().then(() => {
-    menu = Menu.buildFromTemplate(menuTemplate)
-    Menu.setApplicationMenu(menu)
+    //menu = Menu.buildFromTemplate(menuTemplate)
+    //Menu.setApplicationMenu(menu)
     createWindow();
 
     // for macOS, if the application is activated and no windows are open, create a new window
@@ -130,6 +132,16 @@ function CallModuleMethod(event, module, method, data)
       case 'quit':
         mainWindow.close();
         break;
+      case 'closeWindow':
+        switch(method) {
+          case 'Options':
+            optionsWindow.close();
+            optionsWindow = null;
+            break;
+          default:
+            break;
+        }
+        break;
       case 'return':
         event.sender.send('return', method, data);
       default:
@@ -142,6 +154,7 @@ function CallModuleMethod(event, module, method, data)
 }
 
 function loadPage(pageName, qry) {
+  let doNav=true;
   switch(pageName) {
     case 'edit.html':
       let editor = config.ReadUserPref('editorStyle');
@@ -154,18 +167,55 @@ function loadPage(pageName, qry) {
           break;
       }
       break;
+      case 'config.html':
+        let mwPos = mainWindow.getPosition();
+        if (!optionsWindow) {
+          let optionsWindowOpts = {
+            x: mainWindow.getPosition()[0] + 50,
+            y: mainWindow.getPosition()[1] + 50,
+            width: 800,
+            height: 600,
+            frame: false,
+            webPreferences: {
+              preload: path.join(scriptPath, 'preload.js'),
+              nodeIntegration: false, // is default value after Electron v5
+              contextIsolation: true, // protect against prototype pollution
+              enableRemoteModule: false, // turn off remote
+            }
+          }
+          optionsWindow = new BrowserWindow(optionsWindowOpts);
+          optionsWindow.loadFile(path.join(pagePath, pageName));
+        }
+        else {
+          optionsWindow.focus();
+          optionsWindow.loadFile(path.join(pagePath, pageName));
+        }
+        doNav=false;
+      break;
+      case 'userPrefs.html':
+        if (optionsWindow) {
+          optionsWindow.loadFile(path.join(pagePath, pageName));
+        }
+        else {
+          throw new Error("Options window is not open");
+        }
+        doNav = false;
+        break;
   }
-  let pathQuery = {};
-  if (qry && qry!='') {
-    let params = (decodeURIComponent(qry).split('&'));
-    for (let i=0; i<params.length; i++) {
-      let param = params[i].split('=');
-      pathQuery[param[0]] = param[1];
+  if (doNav) {
+    let pathQuery = {};
+    if (qry && qry!='') {
+      let params = (decodeURIComponent(qry).split('&'));
+      for (let i=0; i<params.length; i++) {
+        let param = params[i].split('=');
+        pathQuery[param[0]] = param[1];
+      }
     }
+    mainWindow.loadFile(path.join(pagePath, pageName), {query: pathQuery});
   }
-  mainWindow.loadFile(path.join(pagePath, pageName), {query: pathQuery});
 }
 
+/*
 // Menu
 const menuTemplate = [
   (isMac ? {
@@ -244,7 +294,7 @@ const menuTemplate = [
      ]
   }
 ]
-
+*/
 
 
 
