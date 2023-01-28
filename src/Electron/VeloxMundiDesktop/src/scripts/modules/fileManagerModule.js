@@ -1,5 +1,7 @@
 var fs = require('fs');
+const fse = require('fs-extra');
 const path = require('path');
+
 
 module.exports = class fileManager {
   constructor(path, name = null) {
@@ -64,9 +66,15 @@ module.exports = class fileManager {
   }
 
   static ReadFileToString(path) {
-    let buffer = fs.readFileSync(path);
-    let string = buffer.toString();
-    return string;
+    try {
+      let buffer = fs.readFileSync(path);
+      let string = buffer.toString();
+      return string;
+    }
+    catch(e) {
+      return '';
+    }
   }
+
 
 }

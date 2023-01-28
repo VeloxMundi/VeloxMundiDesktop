@@ -1,11 +1,29 @@
 let htmlFileName = '';
 let docBaseTitle = '';
+  let pagePath = '';
 
 $(document).ready(function() {
-  $('#editor').summernote();
+  $('#editor').summernote(
+    {
+      callbacks: {
+        onImageUpload: function (files, editor, welEditable) {
+          let saveImg = window.contextBridge.toMainSync('world', 'SaveAsset', files[0].path);
+          if (saveImg.success) {
+            $img = $('<img>').attr({src: saveImg.path});
+            $('#editor').summernote('insertNode', $img[0]);
+          }
+        },
+        onImageLinkInsert: function (url) {
+          let imgURL = window.contextBridge.toMainSync('world', 'SaveAssetFromURL', url);
+        },
+        onChange: function(contents, $editable) {
+          pageDirty = true;
+        }
+      }
+    }
+  );
   $('.note-resizebar').hide();
 
-  let pagePath = '';
   docBaseTitle = document.title;
   let query = window.location.search.substring(1);
   let vars = query.split('&');
@@ -16,7 +34,7 @@ $(document).ready(function() {
       if (getPage.success) {
         pagePath = getPage.path;
         console.log(pagePath);
-        let contents = window.contextBridge.toMainSync('file', 'ReadFileToString', pagePath);
+        let contents = window.contextBridge.toMainSync('world', 'ReadPage', pagePath);
         $('#editor').summernote('code',contents);
         htmlFileName = pagePath.split('\\').pop().replace('.html','');
         document.title = docBaseTitle + ' ' + htmlFileName;
@@ -30,6 +48,11 @@ $(document).ready(function() {
   $('#editor').trigger('focus');
 
   var converter = new showdown.Converter({ tables: true, strikethrough: true });
+
+  
+  // local variables
+  let closeAfterSave=false;
+  let navAfterSave='';
 
   // set editor height
   OnWindowResize();

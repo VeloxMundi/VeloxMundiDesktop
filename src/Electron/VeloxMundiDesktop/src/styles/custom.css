@@ -1,5 +1,5 @@
 /* styles.css */
-
+@import "../styles/default.css";
 /* THIRD PARTY ASSETS
 /* Bootstrap Icons are not in the repository. Download them yourself from https://icons.getbootstrap.com/ */
 @import "../assets/bootstrap-icons-1.10.3/bootstrap-icons.css";
@@ -129,57 +129,7 @@ textarea {
     border:1px solid #D3D3D3;
 }
 
-#callout {
-    display: none;
-}
 
-#callout + table {
-    float: right;
-    border: 1px solid #000000;
-    background-color: #FBFBFB;
-    border-radius: 5px;
-	margin-top:2em;
-}
-
-
-#callout + table td {
-    border: none !important;
-}
-
-#callout + table th {
-    border-bottom: 1px solid #000000;
-    border-top: none !important;
-    border-right: none !important;
-    border-left: none !important;
-    background-color: #DEDEDE;
-}
-
-#callout + table td:first-child {
-    font-weight: bold;
-}
-#callout + table td:first-child::after {
-    content: ":";
-}
-
-h1 {
-    font-size: 1.5em;
-}
-
-h2 {
-    font-size: 1.375em;
-}
-h3 {
-    font-size: 1.25em;
-}
-h4 {
-    font-size: 1.125em;
-}
-h5, h6, h7 {
-    font-size: 1em;
-}
-h1, h2, h3, h4, h5, h6, h7 {
-    border-bottom: 1px solid #000000;
-}
 
 .windowCloser {
     position: absolute;
