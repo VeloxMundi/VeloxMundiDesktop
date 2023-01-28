@@ -10,7 +10,7 @@ $(document).ready(function() {
   for (var i=0; i<vars.length; i++) {
     let pair = vars[i].split('=');
     if (pair[0].toLowerCase()=='page') {
-      let getPage = window.contextBridge.toMainSync('world', 'GetPagePath', decodeURIComponent(pair[1]));
+      let getPage = window.contextBridge.toMainSync('page', 'GetPagePath', decodeURIComponent(pair[1]));
       if (getPage.success) {
         pagePath = getPage.path;
         console.log(pagePath);
@@ -36,8 +36,13 @@ $(document).ready(function() {
 
   function OnWindowResize() {
     // Run this function any time the application window is resized
+    $('body').height($('body').height()-30);
     let bdh = $('body').height();
-    let newH = bdh-30;
+    let tbh = $('#md-edit-toolbar').height();
+    if (!tbh) {
+      tbh=0;
+    }
+    let newH = bdh-tbh-15;
     $('#editor').css({height:(newH)+'px'});
     $('#viewer').css({height:(newH)+'px'});
   }
@@ -169,7 +174,7 @@ $(document).ready(function() {
     try {
       const pageContents = $('#editor').val();
       const pageHTML = $('#viewer').html();
-      let saveResult = window.contextBridge.toMainSync('world', 'SavePage', {
+      let saveResult = window.contextBridge.toMainSync('page', 'SavePage', {
         'pagePath': pagePath,
         'pageContents': pageContents,
         'pageHTML': pageHTML

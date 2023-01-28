@@ -133,6 +133,9 @@ pre {
     padding: 3px;
 }
 
-#toolbar {
-    background-color: gainsboro;
+#md-edit-toolbar {
+    background-color:whitesmoke;
+    margin-right:15px;
+    margin-left:0px;
+    width: auto !important;
 }

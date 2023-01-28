@@ -36,32 +36,14 @@ module.exports = class ConfigManager {
       case 'ReadUserPref':
         return this.ReadUserPref(data);
         break;
-      case 'GetAllUserPrefs':
-        try {
-          let uprefs = fs.readFileSync(path.join(this.dataPath, 'defaultConfig.json'));
-          if (uprefs!='') {
-            uprefs = JSON.parse(uprefs);
-            return {
-              'success': true,
-              'prefs': uprefs
-            };
-          }
-          else {
-            return {
-              'success': false,
-              'message': 'No preferences were found.'
-            };
-          }
-        }
-        catch(e) {
-          return {
-            'success': false,
-            'message': e
-          };
-        }
+      case 'ReadAllUserPrefs':
+        return this.ReadAllUserPrefs();
         break;
       case 'WriteUserPref':
-        this.WriteUserPref(data[0], data[1]);
+        return this.WriteUserPref(data[0], data[1]);
+        break;
+      case 'WriteAllUserPrefs':
+        return this.WriteAllUserPrefs(data);
         break;
       case 'SelectWorldDirectory':
         return this.SelectWorldDirectory();
@@ -174,23 +156,76 @@ module.exports = class ConfigManager {
   }
 
   static WriteUserPref(key, value) {
-    let data = {};
-    if (fs.existsSync(this.dataPath)) {
+    try {
+      let data = {};
+      if (fs.existsSync(this.dataPath)) {
+        let rawdata = fs.readFileSync(configPath);
+        if (rawdata != '') {
+          data = JSON.parse(rawdata);
+        }
+      }
+      if (!data['prefs']) {
+        data['prefs'] = {};
+      }
+      for (var pref in data.prefs) {
+        if (pref==key) {
+          data.prefs[key]=value;
+        }
+      }
+      data['ConfigUpdated'] = new Date(Date.now()).toLocaleString();
+      fileManager.WriteFile(configPath, JSON.stringify(data, null, 2));
+      return {
+        success: true
+      };
+    }
+    catch(e) {
+      return {
+        success: false,
+        message: 'Unable to save preference.<br/>' + e
+      };
+    }
+  }
+
+  static WriteAllUserPrefs(newPrefs) {
+    try {
+      // Read existing prefs
       let rawdata = fs.readFileSync(configPath);
-      if (rawdata != '') {
-        data = JSON.parse(rawdata);
+      if (rawdata!='') {
+        let data = JSON.parse(rawdata);
+        if (!data['prefs']) {
+          data['prefs'] = dPrefs;
+        }
+        for (let i=0; i<Object.keys(dPrefs).length; i++) {
+          let prefKey = Object.keys(dPrefs)[i];
+          if (!data['prefs'][prefKey]) {
+            data['prefs'][prefKey]=dPrefs[prefKey];
+          }
+        }
+        // Write new prefs over existing prefs
+        for (let i=0; i<Object.keys(newPrefs).length; i++) {
+          let prefKey = Object.keys(newPrefs)[i];
+          data.prefs[prefKey]=newPrefs[prefKey];
+        }
+        data['ConfigUpdated'] = new Date(Date.now()).toLocaleString();
+        fileManager.WriteFile(configPath, JSON.stringify(data, null, 2));
+        return {
+          success: true
+        };
       }
-    }
-    if (!data['prefs']) {
-      data['prefs'] = {};
-    }
-    for (var pref in data.prefs) {
-      if (pref==key) {
-        data.prefs[key]=value;
+      else {
+        return {
+          success: false,
+          message: 'Unable to read configuration to get user preferences.'
+        };
       }
+
     }
-    data['ConfigUpdated'] = new Date(Date.now()).toLocaleString();
-    fileManager.WriteFile(configPath, JSON.stringify(data, null, 2));
+    catch(e) {
+      return {
+        success: false,
+        message: 'Unable to save preference.<br/>' + e
+      };
+    }
   }
 
   static ReadUserPref(key) {
@@ -210,6 +245,40 @@ module.exports = class ConfigManager {
     }
     else {
       return undefined;
+    }
+  }
+
+  static ReadAllUserPrefs() {
+    try {
+      let rawdata = fs.readFileSync(configPath);
+      if (rawdata!='') {
+        let data = JSON.parse(rawdata);
+        if (!data['prefs']) {
+          data['prefs'] = dPrefs;
+        }
+        for (let i=0; i<Object.keys(dPrefs).length; i++) {
+          let prefKey = Object.keys(dPrefs)[i];
+          if (!data['prefs'][prefKey]) {
+            data['prefs'][prefKey]=dPrefs[prefKey];
+          }
+        }
+        return {
+          success: true,
+          prefs: data.prefs
+        };
+      }
+      else {
+        return {
+          success: false,
+          message: 'Unable to read configuration to get user preferences.'
+        };
+      }
+    }
+    catch(e) {
+      return {
+        'success': false,
+        'message': e
+      };
     }
   }
 

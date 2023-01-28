@@ -7,6 +7,7 @@ const path = require('path');
 const appConfig = require('electron-settings');
 const fileManager = require('./modules/fileManagerModule');
 const uiManager = require('./modules/uiModule');
+const pageManager = require('./modules/pageModule');
 
 // Set default global variables
 const appPath = app.getAppPath();
@@ -124,7 +125,7 @@ function CallModuleMethod(event, module, method, data)
         return world.Invoke(event, method, data);
         break;
       case 'page':
-        return page.Invoke(event, method, data);
+        return pageManager.Invoke(event, method, data);
         break;
       case 'file':
         return fileManager.Invoke(event, method, data);

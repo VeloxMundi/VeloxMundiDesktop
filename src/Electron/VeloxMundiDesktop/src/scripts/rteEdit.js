@@ -31,11 +31,11 @@ $(document).ready(function() {
   for (var i=0; i<vars.length; i++) {
     let pair = vars[i].split('=');
     if (pair[0].toLowerCase()=='page') {
-      let getPage = window.contextBridge.toMainSync('world', 'GetPagePath', decodeURIComponent(pair[1]));
+      let getPage = window.contextBridge.toMainSync('page', 'GetPagePath', decodeURIComponent(pair[1]));
       if (getPage.success) {
         pagePath = getPage.path;
         console.log(pagePath);
-        let contents = window.contextBridge.toMainSync('world', 'ReadPage', pagePath);
+        let contents = window.contextBridge.toMainSync('page', 'ReadPage', pagePath);
         $('#editor').summernote('code',contents);
         pageDirty = false;
         htmlFileName = pagePath.split('\\').pop().replace('.html','');
@@ -194,7 +194,7 @@ $(document).ready(function() {
     try {
       let pageHTML = $('#editor').summernote('code');
       let pageContents = converter.makeMarkdown(pageHTML);
-      let saveResult = window.contextBridge.toMainSync('world', 'SavePage', {
+      let saveResult = window.contextBridge.toMainSync('page', 'SavePage', {
         'pagePath': pagePath,
         'pageContents': pageContents,
         'pageHTML': pageHTML
