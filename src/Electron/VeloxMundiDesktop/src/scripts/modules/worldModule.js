@@ -1,6 +1,6 @@
-const { deepStrictEqual } = require('assert');
-const { triggerAsyncId } = require('async_hooks');
-const { hasSubscribers } = require('diagnostics_channel');
+//const { deepStrictEqual } = require('assert');
+//const { triggerAsyncId } = require('async_hooks');
+//const { hasSubscribers } = require('diagnostics_channel');
 const {app, dialog, BrowserWindow, webContents} = require('electron');
 const { file } = require('electron-settings');
 const fs = require('fs');
@@ -24,7 +24,7 @@ module.exports = class ConfigManager {
     this.configpath = "";
   }
 
-  static InvokeConfig(event, method, data) {
+  static Invoke(event, method, data) {
     switch(method) {
       case 'GetWorldLinks':
         return this.GetWorldLinks();
@@ -99,7 +99,6 @@ module.exports = class ConfigManager {
     try {
       let worldPath = configManager.ReadKey('WorldDirectory');
       let dir = path.join(worldPath, worldName);
-      let b = fs.existsSync(dir);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
         fs.mkdirSync(path.join(dir, 'md'));
@@ -107,7 +106,7 @@ module.exports = class ConfigManager {
         fs.mkdirSync(path.join(dir, 'html', 'assets'));
         fs.mkdirSync(path.join(dir, 'html', 'css'));
         fs.mkdirSync(path.join(dir, 'user'));
-        fs.copyFile(path.join(app.getAppPath(), 'src', 'styles', 'default.css'), path.join(dir, 'html', 'css', 'default.css'));
+        fs.copyFileSync(path.join(app.getAppPath(), 'src', 'styles', 'default.css'), path.join(dir, 'html', 'css', 'default.css'));
         configManager.WriteKey('CurrentWorld', worldName);
         return {
           'success': true,

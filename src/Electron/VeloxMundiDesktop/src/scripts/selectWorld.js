@@ -21,7 +21,7 @@
     window.contextBridge.fromMain('menu', (event, action) =>  {
       switch(action) {
         case 'NewWorld':
-          showModal('World Name', '<p>New world name:<br/><input id="NewWorldName" type="text" size="25"/></p>', '<button id="CancelNewWorld" class="btn btn-default">Cancel</button><button id="CreateNewWorld" class="btn btn-success">Create</button>', '#NewWorldName');
+          showModal('World Name', '<p>New world name:<br/><input id="NewWorldName" type="text" size="25"/></p>', '<button id="CancelNewWorld" class="btn btn-default">Cancel</button><button id="CreateNewWorld" class="btn btn-success">Create</button>', '#NewWorldName','#CreateNewWorld');
           $('#CancelNewWorld').on('click', function() {
             hideModal();
           });

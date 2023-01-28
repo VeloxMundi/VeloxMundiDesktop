@@ -15,7 +15,7 @@ module.exports = class UIManager {
   constructor() {
   }
 
-  static InvokeConfig(event, method, win, data) {
+  static Invoke(event, method, win, data) {
     switch(method) {
       case 'SetMenu':
         this.SetMenu(event, win, data);
@@ -268,7 +268,7 @@ module.exports = class UIManager {
           {
             label: 'Options',
             click: async () => {
-              win.webContents.send('menu', 'Navigate', 'config.html');
+              win.webContents.send('menu', 'Navigate', 'options_main.html');
             }
           }
         ]

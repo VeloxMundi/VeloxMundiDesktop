@@ -136,24 +136,24 @@ $(document).ready(function() {
   function CheckPathAndSave() {
     
     if (pagePath=='') {
-        showModal('Save as...','<input type="text" length="25" id="SaveAsName"/>', '<button class="btn btn-default" id="CancelSaveAs">Cancel</button><button class="btn btn-danger" id="SetSaveAs">Save</button>','#SaveAsName','#SetSaveAs');
-        $('#CancelSaveAs').on('click', function(e) {
-          modalLock(false);
-          hideModal();
-        });
-        $('#SetSaveAs').on('click', function(e) {
-          modalLock(true);
-          let saveAsName = $('#SaveAsName').val();
-          if (saveAsName && saveAsName!='') {
-            $('#CancelSaveAs').prop('disabled',true);
-            $('#SetSaveAs').prop('disabled', true);
-          
-            window.contextBridge.toMain('world', 'SetSaveAsName', {
-              'action': 'Save',
-              'fileName': saveAsName
-            });
-          }
-        });
+      showModal('Save as...','<input type="text" length="25" id="SaveAsName"/>', '<button class="btn btn-default" id="CancelSaveAs">Cancel</button><button class="btn btn-danger" id="SetSaveAs">Save</button>','#SaveAsName');
+      $('#CancelSaveAs').on('click', function(e) {
+        modalLock(false);
+        hideModal();
+      });
+      $('#SetSaveAs').on('click', function(e) {
+        modalLock(true);
+        let saveAsName = $('#SaveAsName').val();
+        if (saveAsName && saveAsName!='') {
+          $('#CancelSaveAs').prop('disabled',true);
+          $('#SetSaveAs').prop('disabled', true);
+        
+          window.contextBridge.toMain('world', 'SetSaveAsName', {
+            'action': 'Save',
+            'fileName': saveAsName
+          });
+        }
+      });
 
       //$("body").append('<div id="overlay" style="background-color:rgba(211,211,211,.4);position:absolute;top:0;left:0;height:100%;width:100%;z-index:999"></div>');
       //window.contextBridge.toMain('world', 'GetSaveAsPath');

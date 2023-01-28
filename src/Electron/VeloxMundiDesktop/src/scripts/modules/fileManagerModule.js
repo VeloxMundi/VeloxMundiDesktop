@@ -16,7 +16,7 @@ module.exports = class fileManager {
 //    this.items = FileTree.readDir(this.path);
 //  }
 
-  static InvokeConfig(event, method, data) {
+  static Invoke(event, method, data) {
     switch(method) {
       case 'ReadFileToString':
         return this.ReadFileToString(data);

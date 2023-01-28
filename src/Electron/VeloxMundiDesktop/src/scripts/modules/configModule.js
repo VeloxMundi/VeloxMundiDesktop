@@ -19,7 +19,7 @@ module.exports = class ConfigManager {
   constructor() {
   }
 
-  static InvokeConfig(event, method, data) {
+  static Invoke(event, method, data) {
     if (!fs.existsSync(configPath)) {
       throw ('User configuration file is missing from "' + configPath + '"');
     }

@@ -12,11 +12,12 @@ $(document).ready(function() {
             $img = $('<img>').attr({src: saveImg.path});
             $('#editor').summernote('insertNode', $img[0]);
           }
-        },
-        onImageLinkInsert: function (url) {
-          let imgURL = window.contextBridge.toMainSync('world', 'SaveAssetFromURL', url);
+          pageDirty = true;
         },
         onChange: function(contents, $editable) {
+          pageDirty = true;
+        },
+        onChangeCodeview: function(contents, $editable) {
           pageDirty = true;
         }
       }
@@ -36,6 +37,7 @@ $(document).ready(function() {
         console.log(pagePath);
         let contents = window.contextBridge.toMainSync('world', 'ReadPage', pagePath);
         $('#editor').summernote('code',contents);
+        pageDirty = false;
         htmlFileName = pagePath.split('\\').pop().replace('.html','');
         document.title = docBaseTitle + ' ' + htmlFileName;
       }
@@ -156,7 +158,9 @@ $(document).ready(function() {
   function CheckPathAndSave() {
     
     if (pagePath=='') {
-        showModal('Save as...','<input type="text" length="25" id="SaveAsName"/>', '<button class="btn btn-default" id="CancelSaveAs">Cancel</button><button class="btn btn-danger" id="SetSaveAs">Save</button>','#SaveAsName', '#SetSaveAs');
+        showModal('Save as...','<input type="text" length="25" id="SaveAsName"/>', '<button class="btn btn-default" id="CancelSaveAs">Cancel</button><button class="btn btn-danger" id="SetSaveAs">Save</button>','#SaveAsName');
+        modalLock(true);
+        /*
         $('#CancelSaveAs').on('click', function(e) {
           modalLock(false);
           hideModal();
@@ -174,6 +178,7 @@ $(document).ready(function() {
             });
           }
         });
+        */
 
       //$("body").append('<div id="overlay" style="background-color:rgba(211,211,211,.4);position:absolute;top:0;left:0;height:100%;width:100%;z-index:999"></div>');
       //window.contextBridge.toMain('world', 'GetSaveAsPath');
