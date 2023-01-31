@@ -1,5 +1,6 @@
 let mdFileName = '';
 let docBaseTitle = '';
+let editorIndex = 0;
 
 $(document).ready(function() {
   // load page contents in editor
@@ -54,7 +55,62 @@ $(document).ready(function() {
     pageDirty = true;
   });
 
+  $('#InsertImage').on('click', function() {
+    editorIndex = document.getElementById('editor').selectionStart;
+    showModal('Insert Image','Select from files<br/><button class="btn btn-default" id="BrowseForImage">Select Image</button><input type="hidden" id="ImagePath" value=""/><img src="" style="max-width:75px;max-height:75px; display:none;" id="ImagePreview"/><p>Image URL<br/><input type="text" id="InsertImageURL" value="" class="form-control"/></p>','<button class="btn btn-default" id="CancelImageInsert">Cancel</button><button class="btn btn-success" id="InsertSelectedImage">Insert</button>');
+    $('#CancelImageInsert').on('click', function() {
+      hideModal();
+    });
+    $('#BrowseForImage').on('click', function() {
+      let files = window.contextBridge.toMainSync('ui', 'OpenFileDialog');
+      if (files && files.length>0) {
+        $('#ImagePath').val(files[0]);
+        $('#ImagePreview').attr('src',files[0]);
+        $('#ImagePreview').css('display','inline');
+        $('#InsertSelectedImage').trigger('click');
+      }
+    });
+    $('#InsertSelectedImage').on('click', function() {
+      let imgPath = $('#ImagePath').val();
+      let imgSrc = $('#InsertImageURL').val();
+      if (imgPath && imgPath!='') {
+        let resp = window.contextBridge.toMainSync('world', 'SaveAsset', imgPath);
+        if (resp.success) {
+          hideModal();
+          let img = '![](' + imgPath.replace(/_/g,'\\_').replace(/ /g,'%20') + ')\r\n';
+          InsertInEditor(img);
+        }
+        else {
+          $('#appModalError').text(resp.message);
+        }
+      }
+      else if (imgSrc && imgSrc!='') {
+        hideModal();
+        let img = '![](' + imgSrc.replace(/_/g,'\\_').replace(/ /g,'%20') + ')\r\n';
+        InsertInEditor(img);
+      }
+      else {
+        let x = window.contextBridge.toMainSync('ui', 'ShowMessage', {
+          message: 'No Image Selected',
+          type: 'error',
+          buttons: ["OK"],
+          defaultId: 0,
+          title: "No Image",
+          detail: "Please select an image or press [Cancel]"
+        });
+        $('#appModalError').text(x);
+      }
+    });
 
+  });
+
+  function InsertInEditor(toInsert) {
+    let eContent = $('#editor').val();
+    let newContent = eContent.slice(0,editorIndex) + toInsert + eContent.slice(editorIndex);
+    $('#editor').val(newContent);
+    pageDirty = true;
+    updateResult();
+  }
 
   // local variables
   let closeAfterSave=false;

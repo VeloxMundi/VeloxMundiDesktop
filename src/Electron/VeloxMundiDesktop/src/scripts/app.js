@@ -56,9 +56,7 @@ function navigate(pagePath) {
 }
 
 function showModal(title, body, footer, focus, defaultButton) {
-  if (title=='Save as...') {
-    let x =1;
-  }
+  $('#appModalError').text('');
   if (!title || title=='') {
     $('#appModalTitle').html('');
     $('#appModalTitle').hide();
@@ -180,7 +178,7 @@ $(document).ready(function() {
   HandleNavLinks();
   
   // Add modal div to every page
-  $('body').prepend('<div class="modal fade" id="appModal" tabindex="-1" role="dialog" aria-labelledby="appModalTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false"><div class="modal-dialog modal-dialog-centered modal-sm" role="document"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="appModalTitle"></h5><button id="appModalClose" type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body"><div id="appModalError" class="text-danger"></div><div id="appModalBody">' + '' + '</div></div><div class="modal-footer" id="appModalFooter"></div></div></div></div><button id="appModalShow" data-toggle="modal" data-target="#appModal" style="display:none"></button>');
+  $('body').prepend('<div class="modal fade" id="appModal" tabindex="-1" role="dialog" aria-labelledby="appModalTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false"><div class="modal-dialog modal-dialog modal-sm" role="document"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="appModalTitle"></h5><button id="appModalClose" type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body"><div id="appModalError" class="text-danger"></div><div id="appModalBody">' + '' + '</div></div><div class="modal-footer" id="appModalFooter"></div></div></div></div><button id="appModalShow" data-toggle="modal" data-target="#appModal" style="display:none"></button>');
   // Add "toast" div to every page
   $('body').prepend('<div id="toast" style="z-index:1000"></div>\r\n');
 

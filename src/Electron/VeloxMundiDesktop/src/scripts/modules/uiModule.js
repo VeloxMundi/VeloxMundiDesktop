@@ -20,6 +20,12 @@ module.exports = class UIManager {
       case 'SetMenu':
         this.SetMenu(event, win, data);
         break;
+      case 'OpenFileDialog':
+        return this.OpenFileDialog();
+        break;
+      case 'ShowMessage':
+        return this.ShowMessage(data);
+        break;
       default:
         win.webContents.send('error', 'Invalid method call: "' + method + '"');
         break;
@@ -59,6 +65,15 @@ module.exports = class UIManager {
       newMenu[3] = this.WorldMenu_NoWorld(win);
     }
     Menu.setApplicationMenu(Menu.buildFromTemplate(newMenu));
+  }
+
+  static OpenFileDialog() {
+    return dialog.showOpenDialogSync(function (fileNames) {         
+      });        
+  }
+
+  static ShowMessage(options) {
+    return dialog.showMessageBoxSync(options);
   }
 
 

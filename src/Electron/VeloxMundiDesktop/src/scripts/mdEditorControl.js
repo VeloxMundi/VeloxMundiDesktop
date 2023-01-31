@@ -54,9 +54,6 @@ var defaults = {
 $("#editor").on("keyup paste cut mouseup load", _.debounce(updateResult, 300, {
     maxWait: 500
 }));
-$("#viewer").on("keyup paste cut mouseup load", _.debounce(updateSrc, 300, {
-    maxWait: 500
-}));
 $("#editor").on("touchstart mouseover", (function () {
     $("#viewer").off("scroll");
     $("#editor").on("scroll", syncResultScroll);
@@ -79,14 +76,6 @@ function updateResult() {
     scrollMap = null;
 }
 
-function updateSrc() {
-    var source = $("#viewer").html();
-    $("#editor").val(converter.makeMarkdown(source));
-    //setStyles();
-    // reset lines mapping cache on content update
-    scrollMap = null;
-    
-}
 
 // Build offsets for each line (lines can be wrapped)
 // That's a bit dirty to process each line everytime, but ok for demo.

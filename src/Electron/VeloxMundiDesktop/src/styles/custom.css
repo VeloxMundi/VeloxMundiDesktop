@@ -117,6 +117,7 @@ textarea {
     margin-right: 14%;
     margin-left: 14%;
     padding: 7px;
+    z-index: 10000;
 }
 
 
@@ -127,6 +128,7 @@ textarea {
 
 .btn.btn-default {
     border:1px solid #D3D3D3;
+    background-color: rgba(255, 255, 255, 0.8);
 }
 
 
@@ -143,4 +145,27 @@ textarea {
     margin-right:35px;
     margin-top:-15px;
     padding-top:15px;
+  }
+
+  #appModal .modal-dialog {
+    box-sizing: border-box;
+    position: relative;
+    width: auto;
+    margin: 0.5rem;
+    pointer-events: none;
+    max-width: 500px;
+    margin: 1.75rem auto;
+    outline: 0;
+    border-radius: 5px;
+    box-shadow: 0 3px 9px rgb(0 0 0 / 50%);
+  }
+
+  #appModal .modal-dialog .modal-content {
+    margin-top: 30px;
+    margin-bottom: auto;
+  }
+
+  #appModal .modal-header, #appModal .modal-footer {
+    background-color: whitesmoke;
+    padding: 0.5rem 0.5rem;
   }
