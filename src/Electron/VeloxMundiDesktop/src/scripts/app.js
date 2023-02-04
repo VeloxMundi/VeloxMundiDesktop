@@ -57,15 +57,17 @@ function navigate(pagePath) {
 
 function showModal(title, body, footer, focus, defaultButton) {
   $('#appModalError').text('');
-  if (!title || title=='') {
     $('#appModalTitle').html('');
+    $('#appModalBody').html('');
+    $('#appModalFooter').html('');
+  if (!title || title=='') {
     $('#appModalTitle').hide();
   }
   else {
+    $('#appModalTitle').show();
     $('#appModalTitle').text(title);
   }
   if (!footer || footer=='') {
-    $('#appModalFooter').html('');
     $('#appModalFooter').hide();
   }
   else {
