@@ -52,8 +52,9 @@ $(document).ready(function() {
     $('#CancelButton').text('Cancel');
     $('#CancelButton').removeClass('btn-default');
     $('#CancelButton').addClass('btn-danger');
-    pageDirty = true;
+    pageDirty = true;    
   });
+  
 
   $('#InsertImage').on('click', function() {
     editorIndex = document.getElementById('editor').selectionStart;

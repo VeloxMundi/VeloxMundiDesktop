@@ -29,8 +29,8 @@ module.exports = class ConfigManager {
       case 'GetWorldLinks':
         return this.GetWorldLinks();
         break;
-      case 'GetWorldPages':
-        return this.GetWorldPages();
+      case 'GetWorldData':
+        return this.GetWorldData();
         break;
       case 'CreateWorld':
         return this.CreateWorld(data);
@@ -71,11 +71,22 @@ module.exports = class ConfigManager {
     return worldLinks;
   }
 
-  static GetWorldPages() {
-    let currentWorld=configManager.ReadKey('CurrentWorld');
-    let worldPath = configManager.ReadKey('WorldDirectory');
-    let dir = path.join(worldPath, currentWorld, 'md');
+  static GetWorldData() {
     let fileArray = [];
+    let data=null;
+    let currentWorld=configManager.ReadKey('CurrentWorld');
+    let worldDir = configManager.ReadKey('WorldDirectory');
+    let worldPath = path.join(worldDir,currentWorld);
+    let worldData = path.join(worldPath,"index.json");
+    let rawdata = fs.readFileSync(worldData);
+    if (rawdata != '') {
+      data = JSON.parse(rawdata);
+    }
+    return data;
+    
+    /*
+    let dir = path.join(worldPath, currentWorld, 'md');
+    
     let files = fs.readdirSync(dir).forEach(file => {
         var fileInfo = new fileManager(`${dir}\\${file}`, file);
         let ext = fileInfo.name.split('.').pop();
@@ -83,6 +94,7 @@ module.exports = class ConfigManager {
           fileArray.push(fileInfo);
         }
     });
+    */
     return fileArray;
   }
 

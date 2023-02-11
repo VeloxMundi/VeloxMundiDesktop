@@ -54,15 +54,15 @@ module.exports = class UIManager {
     }
     let currentWorld = configManager.ReadKey('CurrentWorld');
     if (currentWorld && currentWorld!='') {
-      newMenu[3].submenu[3].label = 'Close ' + currentWorld;
       if (currentWorld.length>15) {
         currentWorld = currentWorld.substring(0,12) + '...';
       }
-      newMenu[3].label = currentWorld;
-      newMenu[3].submenu[2].label = 'Change World';
+      newMenu[6].submenu[0].label = currentWorld;
+      newMenu[6].submenu[3].label = 'Close ' + currentWorld;
+      newMenu[6].submenu[2].label = 'Change World';
     }
     else {
-      newMenu[3] = this.WorldMenu_NoWorld(win);
+      newMenu[6] = this.WorldMenu_NoWorld(win);
     }
     Menu.setApplicationMenu(Menu.buildFromTemplate(newMenu));
   }
@@ -245,6 +245,24 @@ module.exports = class UIManager {
          role: 'editMenu'
       },
       {
+         role: 'viewMenu'
+      },
+    
+      {
+         role: 'windowMenu'
+      },
+      {
+        label: 'Tools',
+        submenu: [
+          {
+            label: 'Options',
+            click: async () => {
+              win.webContents.send('menu', 'Navigate', 'options_main.html');
+            }
+          }
+        ]
+      },
+      {
         label: 'World',
         submenu: [
           {
@@ -266,24 +284,6 @@ module.exports = class UIManager {
             label: 'Close World',
             click: async () => {
               win.webContents.send('menu', 'CloseWorld');
-            }
-          }
-        ]
-      },
-      {
-         role: 'viewMenu'
-      },
-    
-      {
-         role: 'windowMenu'
-      },
-      {
-        label: 'Tools',
-        submenu: [
-          {
-            label: 'Options',
-            click: async () => {
-              win.webContents.send('menu', 'Navigate', 'options_main.html');
             }
           }
         ]

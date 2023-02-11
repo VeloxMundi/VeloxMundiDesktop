@@ -71,6 +71,9 @@ $(".source-clear").on("click", (function (event) {
 function updateResult() {
     var source = $("#editor").val();
     $("#viewer").html(converter.makeHtml(source));
+    $("#viewer a").on('click', function(e) {
+        e.preventDefault();
+    });
 //    setStyles();
     // reset lines mapping cache on content update
     scrollMap = null;
