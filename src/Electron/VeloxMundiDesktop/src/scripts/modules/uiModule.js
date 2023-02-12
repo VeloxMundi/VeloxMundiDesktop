@@ -54,8 +54,8 @@ module.exports = class UIManager {
     }
     let currentWorld = configManager.ReadKey('CurrentWorld');
     if (currentWorld && currentWorld!='') {
-      if (currentWorld.length>15) {
-        currentWorld = currentWorld.substring(0,12) + '...';
+      if (currentWorld.length>25) {
+        currentWorld = currentWorld.substring(0,22) + '...';
       }
       newMenu[6].submenu[0].label = currentWorld;
       newMenu[6].submenu[3].label = 'Close ' + currentWorld;

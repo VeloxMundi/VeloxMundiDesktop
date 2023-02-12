@@ -4,9 +4,10 @@ let pagePath = '';
 let snRange = null;
 let worldData = null;
 let worldPages = null;
+let pageRelPath = '';
 
 $(document).ready(function() {
-  window.contextBridge.toMain('world','GetAllPages');
+  //window.contextBridge.toMain('world','GetAllPages');
   $('#editor').summernote(
     {
       callbacks: {
@@ -66,10 +67,11 @@ $(document).ready(function() {
             $('#pageLinkHref').val('');
             $('#pageLinkHref').trigger('focus');
           }
-        },        
+        }
+        /*,        
         onMouseup: function(e) {
           console.log('Click ' + e.pageX + '/' + e.pageY);
-        }
+        }*/
       }
     }
   );
@@ -102,6 +104,17 @@ $(document).ready(function() {
     $('#editor').summernote('enable');
     $('#editor').summernote('editor.setLastRange', snRange);
     $('#editor').summernote('restoreRange');
+    let link = $('#pageLinkHref').val();
+    let pageData = window.contextBridge.toMainSync('page', 'GetPageDataFromNameDisambiguation',link);
+    if (pageData && pageData.success) {
+      let linkHtml = '<a href="file:///' + pageData.pageFullPath + '" class="internalLink">' + $('#pageLinkText').val() + '</a>';
+      
+      $('#editor').summernote('pasteHTML', linkHtml);
+    }
+    else {
+      showToast((pageData && pageData.message ? pageData.message : 'Unable to find page data for ' + link + '.'),'text-danger');
+    }
+    
     $('#pageLinkHref').val('');
     $('#pageLinkText').val('');
 
@@ -118,7 +131,8 @@ $(document).ready(function() {
   let vars = query.split('&');
   for (var i=0; i<vars.length; i++) {
     let pair = vars[i].split('=');
-    if (pair[0].toLowerCase()=='page') {
+    if (pair[0].toLowerCase()=='path') {
+      pageRelPath = decodeURIComponent(pair[1]);
       let getPage = window.contextBridge.toMainSync('page', 'GetPagePath', decodeURIComponent(pair[1]));
       if (getPage.success) {
         pagePath = getPage.path;
@@ -126,12 +140,10 @@ $(document).ready(function() {
         let contents = window.contextBridge.toMainSync('page', 'ReadPage', pagePath);
         $('#editor').summernote('code',contents);
         pageDirty = false;
-        htmlFileName = pagePath.split('\\').pop().replace('.html','');
-        document.title = docBaseTitle + ' ' + htmlFileName;
       }
-      else {
-        showToast(getPage.message, 'text-danger');
-      }
+    }
+    else if (pair[0].toLowerCase()=='name') {      
+      document.title = docBaseTitle + ' ' + decodeURIComponent(pair[1]);
     }
   }
 
@@ -281,7 +293,7 @@ $(document).ready(function() {
       let pageHTML = $('#editor').summernote('code');
       let pageContents = converter.makeMarkdown(pageHTML);
       let saveResult = window.contextBridge.toMainSync('page', 'SavePage', {
-        'pagePath': pagePath,
+        'pageRelPath': pageRelPath,
         'pageContents': pageContents,
         'pageHTML': pageHTML
         });
@@ -414,18 +426,23 @@ $(document).ready(function() {
         /*for each item in the array...*/
         for (i = 0; i < arr.length; i++) {
           /*check if the item starts with the same letters as the text field value:*/
-          if (arr[i].pageName.substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+          if (arr[i].NameDisambiguation.substr(0, val.length).toUpperCase() == val.toUpperCase()) {
             /*create a DIV element for each matching element:*/
             b = document.createElement("DIV");
             /*make the matching letters bold:*/
-            b.innerHTML = "<strong>" + arr[i].pageName.substr(0, val.length) + "</strong>";
-            b.innerHTML += arr[i].pageName.substr(val.length);
+            b.innerHTML = "<strong>" + arr[i].NameDisambiguation.substr(0, val.length) + "</strong>";
+            b.innerHTML += arr[i].NameDisambiguation.substr(val.length);
             /*insert a input field that will hold the current array item's value:*/
-            b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+            b.innerHTML += "<input type='hidden' value='" + arr[i].NameDisambiguation + "'>";
             /*execute a function when someone clicks on the item value (DIV element):*/
             b.addEventListener("click", function(e) {
                 /*insert the value for the autocomplete text field:*/
                 inp.value = this.getElementsByTagName("input")[0].value;
+                $('#pageLinkText').trigger('focus');
+                if ($('#pageLinkText').val()=='') {
+                  $('#pageLinkText').val(inp.value);
+                  $('#pageLinkText').trigger('select');
+                }
                 /*close the list of autocompleted values,
                 (or any other open lists of autocompleted values:*/
                 closeAllLists();
@@ -455,19 +472,15 @@ $(document).ready(function() {
             /*If the ENTER key is pressed, prevent the form from being submitted,*/
             e.preventDefault();
             if (currentFocus > -1) {
-              console.log(currentFocus);
               /*and simulate a click on the "active" item:*/
               if (x) {
                 x[currentFocus].click();
               }
               else {
-                currentFocus=0;
                 x[currentFocus].click();
               }
-              console.log(currentFocus);
             }
             else {
-              console.log(currentFocus);
               currentFocus=0;
               x[currentFocus].click();
             }

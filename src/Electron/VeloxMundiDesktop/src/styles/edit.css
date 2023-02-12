@@ -139,3 +139,8 @@ pre {
     margin-left:0px;
     width: auto !important;
 }
+
+.autocomplete-active {
+    background-color:lightblue;
+    font-weight: bold;
+}

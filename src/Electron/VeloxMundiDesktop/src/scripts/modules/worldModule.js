@@ -15,6 +15,7 @@ const jsdom = require('jsdom');
 const configManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'configModule.js'));
 //configManager.InitPath(path.join(app.getAppPath(), 'user', 'config.json'), path.join(app.getAppPath(), 'data'));
 const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'fileManagerModule.js'));
+const pageManager = require(path.join(app.getAppPath(), 'src','scripts','modules', 'pageModule.js'));
 let modal = null;
 let saveAsEvent = null;
 
@@ -50,6 +51,9 @@ module.exports = class ConfigManager {
       case 'SaveAssetFromURL':
         return this.SaveAssetFromURL(data);
         break;
+      case 'IndexWorldPages':
+        return this.IndexWorldPages();
+        break;
       default:
         event.sender.send('Invalid method call: "' + method + '"');
         break;
@@ -73,11 +77,19 @@ module.exports = class ConfigManager {
 
   static GetWorldData() {
     let fileArray = [];
-    let data=null;
+    let data={
+      worldName : configManager.ReadKey('CurrentWorld'),
+      worldDirName : configManager.ReadKey('CurrentWorld'),
+      pages : []
+    };
     let currentWorld=configManager.ReadKey('CurrentWorld');
     let worldDir = configManager.ReadKey('WorldDirectory');
     let worldPath = path.join(worldDir,currentWorld);
     let worldData = path.join(worldPath,"index.json");
+    if (!fs.existsSync(worldData)) {
+      fs.writeFileSync(worldData, JSON.stringify(data, null, 2));
+      this.IndexWorldPages();
+    }
     let rawdata = fs.readFileSync(worldData);
     if (rawdata != '') {
       data = JSON.parse(rawdata);
@@ -96,6 +108,10 @@ module.exports = class ConfigManager {
     });
     */
     return fileArray;
+  }
+
+  static IndexWorldPages() {
+    // TODO: Iterate through all pages in the HTML directory and create an index for each.
   }
 
   static CreateWorld(worldName) {
