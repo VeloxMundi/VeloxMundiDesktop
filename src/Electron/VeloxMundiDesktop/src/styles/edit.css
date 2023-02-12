@@ -144,3 +144,9 @@ pre {
     background-color:lightblue;
     font-weight: bold;
 }
+#phantom {
+    position:absolute;
+    display:inline-block;
+    visibility:hidden;
+    word-wrap: break-word;
+}

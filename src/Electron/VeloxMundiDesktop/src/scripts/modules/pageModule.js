@@ -37,6 +37,9 @@ module.exports = class ConfigManager {
       case 'GetPageDataFromNameDisambiguation':
         return this.GetPageDataFromNameDisambiguation(data);
         break;
+      case 'NewPageType':
+        return this.NewPageType(data);
+        break;
       default:
         return null;
         break;
@@ -321,6 +324,15 @@ module.exports = class ConfigManager {
         success: false,
         message: 'Unable to load world data: ' + e
       };
+    }
+  }
+
+  static NewPageType(typeName) {
+    let baseDir = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld'));
+    let templateDir = path.join(basDir,'templates');
+    let typeTemplatePathNoExt = path.join(templateDir,typeName);
+    if (fs.existsSync(templateDir)) {
+      
     }
   }
 

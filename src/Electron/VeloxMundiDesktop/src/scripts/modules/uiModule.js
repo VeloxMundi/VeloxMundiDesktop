@@ -143,10 +143,21 @@ module.exports = class UIManager {
       label: 'File',
       submenu: [
         {
-          label: 'New Page',
-          click: async () => {
-            win.webContents.send('menu', 'NewPage');
-          }
+          label: 'New',
+          submenu: [
+            {
+              label: 'Page',
+              click: async () => {
+                win.webContents.send('menu', 'NewPage');
+              }
+            },
+            {
+              label: 'Type',
+              click: async () => {
+                win.webContents.send('menu', 'NewType');
+              }
+            }
+          ]
         },
         {
           type: 'separator'
