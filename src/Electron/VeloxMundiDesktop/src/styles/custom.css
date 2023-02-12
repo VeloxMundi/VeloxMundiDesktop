@@ -1,0 +1,171 @@
+/* styles.css */
+@import "../styles/default.css";
+/* THIRD PARTY ASSETS
+/* Bootstrap Icons are not in the repository. Download them yourself from https://icons.getbootstrap.com/ */
+@import "../assets/bootstrap-icons-1.10.3/bootstrap-icons.css";
+
+@font-face {
+    font-family: bootstrap-icons;
+    src: url(../assets/bootstrap-icons-1.10.3/fonts/bootstrap-icons.woff);
+}
+/* END THIRD PARTY ASSETS */
+
+
+
+body {
+    margin: 15px;
+}
+
+.box {
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+}
+
+.box .br.header {
+    flex: 0 1 0;
+    width: 100%;
+}
+
+.box .br.content {
+    flex: 1 1 0;
+    width: 100%;
+}
+
+.container, .row {
+    max-width: 100% !important;
+    
+}
+
+
+body 
+{
+    background-color: #fbfbfb;
+    /*padding-top:72px;*/
+}
+
+#world {
+    font-size: small;
+    font-weight: 600;
+    color: darkblue;
+    padding-right: 10px;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    cursor: not-allowed;
+}
+
+.source {
+    width: 100%;
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+    font-size: 13px;
+    padding: 2px;
+}
+
+textarea {
+    width: 100%;
+    display: block;
+    resize: vertical;
+    overflow-x: scroll;
+    max-width: none;
+}
+
+#editor, #viewer {
+    overflow-x: scroll;
+}
+
+    #viewer table {
+        border: 1px solid #000000;
+        border-collapse: collapse;
+    }
+#viewer table td, #viewer table th
+{
+    padding: 4px;
+    border: 1px solid #000000;
+}
+
+
+#breadcrumbs, #SelectWorldLink {
+    font-size: 0.85em !important;
+}
+
+#breadcrumbs {    
+    border-bottom: 1px solid #00000059;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+.nolink {
+    color: #000000;
+    text-decoration: none;
+}
+
+.not-allowed {
+    cursor: not-allowed;
+}
+
+#toast {
+    position: absolute;
+    width: 72%;
+    border: 1px solid rgba(0,0,0,.8);
+    border-radius: 5px;
+    display: none;
+    background:rgba(255,255,255,.98);
+    text-align: center;
+    margin-right: 14%;
+    margin-left: 14%;
+    padding: 7px;
+    z-index: 10000;
+}
+
+
+/* config.html */
+.configTable tr {
+    border-bottom: 1px dotted #00000059;
+}
+
+.btn.btn-default {
+    border:1px solid #D3D3D3;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+
+
+.windowCloser {
+    position: absolute;
+    top:0px;
+    right:0px;
+}
+
+.titlebar {
+    -webkit-user-select: none;
+    -webkit-app-region: drag;
+    margin-right:35px;
+    margin-top:-15px;
+    padding-top:15px;
+  }
+
+  #appModal .modal-dialog {
+    box-sizing: border-box;
+    position: relative;
+    width: auto;
+    margin: 0.5rem;
+    pointer-events: none;
+    max-width: 500px;
+    margin: 1.75rem auto;
+    outline: 0;
+    border-radius: 5px;
+    box-shadow: 0 3px 9px rgb(0 0 0 / 50%);
+  }
+
+  #appModal .modal-dialog .modal-content {
+    margin-top: 30px;
+    margin-bottom: auto;
+  }
+
+  #appModal .modal-header, #appModal .modal-footer {
+    background-color: whitesmoke;
+    padding: 0.5rem 0.5rem;
+  }

@@ -1,0 +1,29 @@
+{
+  "name": "velox-mundi-desktop",
+  "version": "0.0.2",
+  "description": "Velox Mundi Factory: A Quick World Maker. This is a fast and easy way to build a world for any type of creacive content.",
+  "main": "./src/scripts/main.js",
+  "productName": "Velox Mundi Desktop",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ."
+  },
+  "keywords": [
+    "tutorial"
+  ],
+  "author": "Doug Lockwood",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "electron": "^22.0.2",
+    "electron-builder": "^23.6.0",
+    "path": "^0.12.7"
+  },
+  "dependencies": {
+    "bootstrap": "^5.2.2",
+    "electron-settings": "^4.0.2",
+    "fs-extra": "^11.1.0",
+    "jquery": "^3.6.1",
+    "jsdom": "^21.1.0",
+    "mv": "^2.1.1"
+  }
+}
