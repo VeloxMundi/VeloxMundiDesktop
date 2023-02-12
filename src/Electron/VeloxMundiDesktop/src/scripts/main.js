@@ -1,12 +1,13 @@
 // Import required modules
 const {app, BrowserWindow, ipcMain, dialog, Menu, MenuItem, shell} = require('electron');
-const { fstat } = require('fs');
+const fs = require('fs');
 const path = require('path');
 
 // register modules
 const appConfig = require('electron-settings');
 const fileManager = require('./modules/fileManagerModule');
 const uiManager = require('./modules/uiModule');
+const pageManager = require('./modules/pageModule');
 
 // Set default global variables
 const appPath = app.getAppPath();
@@ -29,9 +30,11 @@ const world = require(path.join(scriptPath, 'modules', 'worldModule.js'));
 
 
 let mainWindow = null;
+let optionsWindow = null;
+let mainWindowStateKeeper = null;
 
 const createWindow = () => {
-    const mainWindowStateKeeper = windowStateKeeper('main');
+    mainWindowStateKeeper = windowStateKeeper('main');
     const windowOptions = {
       x: mainWindowStateKeeper.x,
       y: mainWindowStateKeeper.y,
@@ -52,8 +55,8 @@ const createWindow = () => {
 }
 
 app.whenReady().then(() => {
-    menu = Menu.buildFromTemplate(menuTemplate)
-    Menu.setApplicationMenu(menu)
+    //menu = Menu.buildFromTemplate(menuTemplate)
+    //Menu.setApplicationMenu(menu)
     createWindow();
 
     // for macOS, if the application is activated and no windows are open, create a new window
@@ -116,19 +119,32 @@ function CallModuleMethod(event, module, method, data)
         loadPage(method, data);
         break;
       case 'config':
-        return config.InvokeConfig(event, method, data);
+        return config.Invoke(event, method, data);
         break;
       case 'world':
-        return world.InvokeConfig(event, method, data);
+        return world.Invoke(event, method, data);
+        break;
+      case 'page':
+        return pageManager.Invoke(event, method, data);
         break;
       case 'file':
-        return fileManager.InvokeConfig(event, method, data);
+        return fileManager.Invoke(event, method, data);
         break;
       case 'ui':
-        return uiManager.InvokeConfig(event, method, mainWindow, data);
+        return uiManager.Invoke(event, method, mainWindow, data);
         break;
       case 'quit':
         mainWindow.close();
+        break;
+      case 'closeWindow':
+        switch(method) {
+          case 'Options':
+            optionsWindow.close();
+            optionsWindow = null;
+            break;
+          default:
+            break;
+        }
         break;
       case 'return':
         event.sender.send('return', method, data);
@@ -137,113 +153,88 @@ function CallModuleMethod(event, module, method, data)
     }
   }
   catch(e) {
-    mainWindow.webContents.send('error', 'An error has occurred in the ' + module + ' module.<br/>' + e);
+    focusedWindow().webContents.send('error', 'An error has occurred in the ' + module + ' module.<br/>' + e);
   }
 }
 
 function loadPage(pageName, qry) {
-  switch(pageName) {
-    case 'edit.html':
-      let editor = config.ReadUserPref('editorStyle');
-      switch(editor) {
-        case 'MD':
-          pageName='edit.html';
-          break;
-        default:
-          pageName='rteEdit.html';
-          break;
+  let doNav=true;
+  if (fs.existsSync(path.join(pagePath, pageName)))
+  {
+    // page-specific functions
+    switch(pageName) {
+      case 'edit.html':
+        let editor = config.ReadUserPref('editorStyle');
+        switch(editor) {
+          case 'MD':
+            pageName='edit.html';
+            break;
+          default:
+            pageName='rteEdit.html';
+            break;
+        }
+        break;
+    }
+    // Options pages load in a new window
+    if (pageName.startsWith('options_')) {
+      let mwPos = mainWindow.getPosition();
+      if (!optionsWindow) {
+        let optionsWindowOpts = {
+          x: mainWindow.getPosition()[0] + 50,
+          y: mainWindow.getPosition()[1] + 50,
+          width: 800,
+          height: 600,
+          frame: false,
+          webPreferences: {
+            preload: path.join(scriptPath, 'preload.js'),
+            nodeIntegration: false, // is default value after Electron v5
+            contextIsolation: true, // protect against prototype pollution
+            enableRemoteModule: false, // turn off remote
+          }
+        }
+        optionsWindow = new BrowserWindow(optionsWindowOpts);
+        optionsWindow.loadFile(path.join(pagePath, pageName));
       }
-      break;
-  }
-  let pathQuery = {};
-  if (qry && qry!='') {
-    let params = (decodeURIComponent(qry).split('&'));
-    for (let i=0; i<params.length; i++) {
-      let param = params[i].split('=');
-      pathQuery[param[0]] = param[1];
+      else {
+        optionsWindow.focus();
+        optionsWindow.loadFile(path.join(pagePath, pageName));
+      }
+      doNav=false; 
     }
   }
-  mainWindow.loadFile(path.join(pagePath, pageName), {query: pathQuery});
+  else {
+    focusedWindow().webContents.send('error', 'Page "' + pageName + '" was not found.');
+    doNav = false;
+  }
+  if (doNav) {
+    let pathQuery = {};
+    if (qry && qry!='') {
+      let params = (decodeURIComponent(qry).split('&'));
+      for (let i=0; i<params.length; i++) {
+        let param = params[i].split('=');
+        pathQuery[param[0]] = param[1];
+      }
+    }
+    mainWindow.loadFile(path.join(pagePath, pageName), {query: pathQuery});
+  }
 }
 
-// Menu
-const menuTemplate = [
-  (isMac ? {
-    label: app.name,
-    submenu: [
-      { role: 'about' },
-      { type: 'separator' },
-      { role: 'services' },
-      { type: 'separator' },
-      { role: 'hide' },
-      { role: 'hideOthers' },
-      { role: 'unhide' },
-      { type: 'separator' },
-      { role: 'quit' }
-    ]
-  } : {role: ''}),
-  {
-    role: 'fileMenu'
-  },
-  {
-     role: 'editMenu'
-  },
-  {
-    label: 'Go',
-    submenu: [
-      {
-        label: 'Velox Mundi Home',
-        click: async () => {
-          loadPage('index.html');
-        }
-      },
-      {
-        label: 'World Home',
-        click: async () => {
-          loadPage('worldHome.html');
-        }
-      },
-      {
-        type: 'separator'
-      },
-      {
-        label: 'Select a World',
-        click: async () => {
-          loadPage('selectWorld.html');
-        }
-      }
-    ]
-  },
-  {
-     role: 'viewMenu'
-  },
-
-  {
-     role: 'windowMenu'
-  },
-  {
-    label: 'Tools',
-    submenu: [
-      {
-        label: 'Options',
-        click: async () => {
-          loadPage('config.html');
-        }
-      }
-    ]
-  },
-  {
-     role: 'help',
-     submenu: [
-      {
-        label: 'Velox Mundi Online',
-        click: async () => {
-          await shell.openExternal('https://google.com');
-        }
-      }
-     ]
+function focusedWindow() {
+  let wins = BrowserWindow.getAllWindows();
+  for (let i=0; i<wins.length; i++) {
+    if (wins[i].isFocused()) {
+      return wins[i];
+    }
   }
-]
+}
+
+
+
+
+
+
+
+
 
 
 

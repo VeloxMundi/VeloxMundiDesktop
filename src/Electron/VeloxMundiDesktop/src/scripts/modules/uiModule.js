@@ -15,10 +15,16 @@ module.exports = class UIManager {
   constructor() {
   }
 
-  static InvokeConfig(event, method, win, data) {
+  static Invoke(event, method, win, data) {
     switch(method) {
       case 'SetMenu':
         this.SetMenu(event, win, data);
+        break;
+      case 'OpenFileDialog':
+        return this.OpenFileDialog();
+        break;
+      case 'ShowMessage':
+        return this.ShowMessage(data);
         break;
       default:
         win.webContents.send('error', 'Invalid method call: "' + method + '"');
@@ -48,17 +54,26 @@ module.exports = class UIManager {
     }
     let currentWorld = configManager.ReadKey('CurrentWorld');
     if (currentWorld && currentWorld!='') {
-      newMenu[3].submenu[3].label = 'Close ' + currentWorld;
-      if (currentWorld.length>15) {
-        currentWorld = currentWorld.substring(0,12) + '...';
+      if (currentWorld.length>25) {
+        currentWorld = currentWorld.substring(0,22) + '...';
       }
-      newMenu[3].label = currentWorld;
-      newMenu[3].submenu[2].label = 'Change World';
+      newMenu[6].submenu[0].label = currentWorld;
+      newMenu[6].submenu[3].label = 'Close ' + currentWorld;
+      newMenu[6].submenu[2].label = 'Change World';
     }
     else {
-      newMenu[3] = this.WorldMenu_NoWorld(win);
+      newMenu[6] = this.WorldMenu_NoWorld(win);
     }
     Menu.setApplicationMenu(Menu.buildFromTemplate(newMenu));
+  }
+
+  static OpenFileDialog() {
+    return dialog.showOpenDialogSync(function (fileNames) {         
+      });        
+  }
+
+  static ShowMessage(options) {
+    return dialog.showMessageBoxSync(options);
   }
 
 
@@ -128,10 +143,21 @@ module.exports = class UIManager {
       label: 'File',
       submenu: [
         {
-          label: 'New Page',
-          click: async () => {
-            win.webContents.send('menu', 'NewPage');
-          }
+          label: 'New',
+          submenu: [
+            {
+              label: 'Page',
+              click: async () => {
+                win.webContents.send('menu', 'NewPage');
+              }
+            },
+            {
+              label: 'Type',
+              click: async () => {
+                win.webContents.send('menu', 'NewType');
+              }
+            }
+          ]
         },
         {
           type: 'separator'
@@ -230,6 +256,24 @@ module.exports = class UIManager {
          role: 'editMenu'
       },
       {
+         role: 'viewMenu'
+      },
+    
+      {
+         role: 'windowMenu'
+      },
+      {
+        label: 'Tools',
+        submenu: [
+          {
+            label: 'Options',
+            click: async () => {
+              win.webContents.send('menu', 'Navigate', 'options_main.html');
+            }
+          }
+        ]
+      },
+      {
         label: 'World',
         submenu: [
           {
@@ -251,24 +295,6 @@ module.exports = class UIManager {
             label: 'Close World',
             click: async () => {
               win.webContents.send('menu', 'CloseWorld');
-            }
-          }
-        ]
-      },
-      {
-         role: 'viewMenu'
-      },
-    
-      {
-         role: 'windowMenu'
-      },
-      {
-        label: 'Tools',
-        submenu: [
-          {
-            label: 'Options',
-            click: async () => {
-              win.webContents.send('menu', 'Navigate', 'config.html');
             }
           }
         ]

@@ -1,9 +1,11 @@
+//const { nodeName } = require("jquery");
 
 const prefs = window.contextBridge.toMainSync('config', 'ReadKey', 'prefs');
 const world = window.contextBridge.toMainSync('config', 'ReadKey', 'CurrentWorld');
 let pageDirty = false;
 let modalLocked = false;
 let modalVisible = false;
+let setPageInConfig = true;
 
 function hideToast() {
   $('#closeToast').off();
@@ -25,7 +27,7 @@ function setPageDirty(isDirty) {
 }
 
 function navigate(pagePath) {
-  if (!pageDirty) {
+  if (!pageDirty || pagePath.startsWith('options_')) {
     if (!modalVisible) {
       window.contextBridge.toMain('navigate', pagePath);
     }
@@ -35,7 +37,7 @@ function navigate(pagePath) {
   }
   else {
     modalLock(false);
-    showModal('Unsaved changes', '<p>Would you like to save your changes before leaving this page?', '<button id="CancelNavigation" class="btn btn-default">Cancel</button><button id="CancelAndNavigate" class="btn btn-danger">Don\'t Save</button><button id="SaveAndNavigate" class="btn btn-success">Save</button>');
+    showModal('Unsaved changes', '<p>Would you like to save your changes before leaving this page?', '<button id="CancelNavigation" class="btn btn-default">Cancel</button><button id="CancelAndNavigate" class="btn btn-danger">Don\'t Save</button><button id="SaveAndNavigate" class="btn btn-success">Save</button>',undefined, '#SaveAndNavigate');
     $('#CancelNavigation').on('click', function() {
       modalLock(false);
       hideModal();
@@ -54,9 +56,16 @@ function navigate(pagePath) {
 }
 
 function showModal(title, body, footer, focus, defaultButton) {
-  modalLock(modalLocked);
+  $('#appModalError').text('');
+    $('#appModalTitle').html('');
+    $('#appModalBody').html('');
+    $('#appModalFooter').html('');
   if (!title || title=='') {
     $('#appModalTitle').hide();
+  }
+  else {
+    $('#appModalTitle').show();
+    $('#appModalTitle').text(title);
   }
   if (!footer || footer=='') {
     $('#appModalFooter').hide();
@@ -65,9 +74,14 @@ function showModal(title, body, footer, focus, defaultButton) {
     $('#appModalFooter').show();
     $('#appModalFooter').html(footer);
   }
-  $('#appModalTitle').text(title);
   $('#appModalBody').html(body);
-  $('#appModalShow').trigger('click');
+  /*
+  $('#appModal').modal('show');
+  $('#appModal').addClass('show');
+  $('#appModal').css('display', 'block');
+  */
+ $('#appModal').modal('hide');
+ $('#appModalShow').trigger('click');
   if (focus && focus!='') {
     $('#appModal').data('focus',focus);
     if (defaultButton && defaultButton!='') {
@@ -89,10 +103,16 @@ function showModal(title, body, footer, focus, defaultButton) {
       });
     }
   }
+  modalLock(modalLocked);
 }
 
 function hideModal() {
-  $('#appModalClose').prop('disabled',modalLocked);
+  if ($('#appModalTitle').text()=='Save as...') {
+    let x = 1;
+  }
+  else if ($('#appModalTitle').text()=='Unsaved changes') {
+    let x = 2;
+  }
   if (modalLocked) {
     $('#appmodalClose').hide();
   }
@@ -103,8 +123,15 @@ function hideModal() {
   $('#appModalFooter button').each(function() {
     $(this).off();
   });
+  /*
+  $('#appModal').modal('hide');
+  $('#appModal').removeClass('show');
+  $('#appModal').css('display', 'none');
+  */
+  //let isvis = $('#appModal').is(':visible');
+  $('#appModalClose').prop('disabled',false);
   $('#appModalClose').trigger('click');
-  let isvis = $('#appModal').is(':visible');
+  $('#appModalClose').prop('disabled',modalLocked);
 }
 
 function modalLock(locked) {
@@ -141,7 +168,9 @@ $(document).ready(function() {
     pageName += '?' + window.location.search.substring(1);
   }
   
-  window.contextBridge.toMain('config', 'SetPage', pageName);
+  if (setPageInConfig) {
+    window.contextBridge.toMain('config', 'SetPage', pageName);
+  }
   
   // Display the world name in any element with the class "WorldName"
   if ($('.WorldName').length) {
@@ -151,7 +180,7 @@ $(document).ready(function() {
   HandleNavLinks();
   
   // Add modal div to every page
-  $('body').prepend('<div class="modal fade" id="appModal" tabindex="-1" role="dialog" aria-labelledby="appModalTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false"><div class="modal-dialog modal-dialog-centered modal-sm" role="document"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="appModalTitle"></h5><button id="appModalClose" type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body"><div id="appModalError" class="text-danger"></div><div id="appModalBody">' + '' + '</div></div><div class="modal-footer" id="appModalFooter"></div></div></div></div><button id="appModalShow" data-toggle="modal" data-target="#appModal" style="display:none"></button>');
+  $('body').prepend('<div class="modal fade" id="appModal" tabindex="-1" role="dialog" aria-labelledby="appModalTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false"><div class="modal-dialog modal-dialog modal-sm" role="document"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="appModalTitle"></h5><button id="appModalClose" type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body"><div id="appModalError" class="text-danger"></div><div id="appModalBody">' + '' + '</div></div><div class="modal-footer" id="appModalFooter"></div></div></div></div><button id="appModalShow" data-toggle="modal" data-target="#appModal" style="display:none"></button>');
   // Add "toast" div to every page
   $('body').prepend('<div id="toast" style="z-index:1000"></div>\r\n');
 
@@ -172,6 +201,7 @@ $(document).ready(function() {
     modalVisible = false;
   });
 
+  
   // close navbar menu after clicking a link
   $(".navbar-collapse a").on('click', function () {
     $(".navbar-collapse").collapse("hide");
@@ -200,6 +230,7 @@ $(document).ready(function() {
       $('.modal-backdrop').not('fv-modal-stack').addClass('fv-modal-stack');
 
   });
+  
 
   // Handle menu actions
   window.contextBridge.fromMain('menu', (event, action, data) => {

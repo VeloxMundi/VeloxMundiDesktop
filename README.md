@@ -5,7 +5,8 @@ Welcome to Velox Mundi (Quick World). This application was designed to be a fast
 The primary application is an Electron app, which allows creators to write pages for anything related to their worlds.
 
 ## Installation
-No installers have been created for this application yet, so you will need to download the code and package and run it yourself.
+**Windows:**  
+Download the `Velox.Mundi.Desktop-win32-x64_v{X.Y.Z}.zip` file from the latest [release](https://github.com/lockworld/VeloxMundi/releases) release (Where X.Y.Z is the release number). Extract the `.zip` file to your computer and run the `Velox Mundi Desktop.exe` file.
 
 ### Development Prerequisites
 The following required assets are not included in this repository, but are needed to develop the application. These third-party resources are not part of this application, but required for proper functionality. 
@@ -15,27 +16,21 @@ These prerequisites are only needed to modify the source code. The third-party a
 Instructions on how to acquire and where to update the code to use each prerequisite are included below.
 
 **Bootstrap Icons**
-
 Source: [Bootstrap Icons Website](https://icons.getbootstrap.com/) / [Git Repo](https://github.com/twbs/icons/releases/)
-
 * Download and extract the latest bootstrap icons and related files (fonts and CSS).
-
 * Update "`src/Electron/VeloxMundiDesktop/src/styles/custom.css`" to import the bootstrap icons CSS file and define the "`bootstrap-icons`" font pointed to the correct download location. See [custom.css](src/Electron/VeloxMundiDesktop/src/styles/custom.css) for example.
 
-
 **Summernote**
-
 Source: [Summernote Website](https://summernote.org/) / [Git Repo](https://github.com/summernote/summernote)
-
 * Download and extract the latest summernote files (fonts, css, javascript, plugins, etc.).
-
 * Update script and stylesheet references to summernote in "`src/Electron/VeloxMundiDestkot/src/pages/RTEedit.html`".
+
 
 ## Current Features
 
 ### Unlimited World and Page Creation
 
-Users can create new worlds (limited functionality) and create, edit, rename, and delete pages within their world using the built-in markdown editor.
+Users can create new worlds, which will be stored in their world directory (set under Tools=>Options). Once a world has been created or selected, users can create, edit, rename, and delete pages within their world using the built-in markdown editor.
 
 ### Rich-Text and Markdown Editors
 Users can choose to edit files using a rich-text editor (default), or to use [markdown](https://markdownguide.com) to edit pages.

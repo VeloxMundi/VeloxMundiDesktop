@@ -1,41 +1,40 @@
-const { deepStrictEqual } = require('assert');
-const { triggerAsyncId } = require('async_hooks');
-const { hasSubscribers } = require('diagnostics_channel');
-const {app, dialog, BrowserWindow} = require('electron');
+//const { deepStrictEqual } = require('assert');
+//const { triggerAsyncId } = require('async_hooks');
+//const { hasSubscribers } = require('diagnostics_channel');
+const {app, dialog, BrowserWindow, webContents} = require('electron');
 const { file } = require('electron-settings');
 const fs = require('fs');
+const fse = require('fs-extra');
 let path = require('path');
 const { config } = require('process');
+const jsdom = require('jsdom');
+
 
 
 // Custom Modules
 const configManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'configModule.js'));
 //configManager.InitPath(path.join(app.getAppPath(), 'user', 'config.json'), path.join(app.getAppPath(), 'data'));
 const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'fileManagerModule.js'));
+const pageManager = require(path.join(app.getAppPath(), 'src','scripts','modules', 'pageModule.js'));
 let modal = null;
 let saveAsEvent = null;
+
 
 module.exports = class ConfigManager {
   constructor() {
     this.configpath = "";
   }
 
-  static InvokeConfig(event, method, data) {
+  static Invoke(event, method, data) {
     switch(method) {
       case 'GetWorldLinks':
         return this.GetWorldLinks();
         break;
-      case 'GetWorldPages':
-        return this.GetWorldPages();
+      case 'GetWorldData':
+        return this.GetWorldData();
         break;
       case 'CreateWorld':
         return this.CreateWorld(data);
-        break;
-      case 'SavePage':
-        return this.SavePage(data);
-        break;
-      case 'GetPagePath':
-        return this.GetPagePath(data);
         break;
       case 'SetSaveAsName':
         this.SetSaveAsName(event, data);
@@ -45,6 +44,15 @@ module.exports = class ConfigManager {
         break;
       case 'RenamePage':
         return this.RenamePage(data);
+        break;        
+      case 'SaveAsset':
+        return this.SaveAsset(data);
+        break;
+      case 'SaveAssetFromURL':
+        return this.SaveAssetFromURL(data);
+        break;
+      case 'IndexWorldPages':
+        return this.IndexWorldPages();
         break;
       default:
         event.sender.send('Invalid method call: "' + method + '"');
@@ -67,11 +75,30 @@ module.exports = class ConfigManager {
     return worldLinks;
   }
 
-  static GetWorldPages() {
-    let currentWorld=configManager.ReadKey('CurrentWorld');
-    let worldPath = configManager.ReadKey('WorldDirectory');
-    let dir = path.join(worldPath, currentWorld, 'md');
+  static GetWorldData() {
     let fileArray = [];
+    let data={
+      worldName : configManager.ReadKey('CurrentWorld'),
+      worldDirName : configManager.ReadKey('CurrentWorld'),
+      pages : []
+    };
+    let currentWorld=configManager.ReadKey('CurrentWorld');
+    let worldDir = configManager.ReadKey('WorldDirectory');
+    let worldPath = path.join(worldDir,currentWorld);
+    let worldData = path.join(worldPath,"index.json");
+    if (!fs.existsSync(worldData)) {
+      fs.writeFileSync(worldData, JSON.stringify(data, null, 2));
+      this.IndexWorldPages();
+    }
+    let rawdata = fs.readFileSync(worldData);
+    if (rawdata != '') {
+      data = JSON.parse(rawdata);
+    }
+    return data;
+    
+    /*
+    let dir = path.join(worldPath, currentWorld, 'md');
+    
     let files = fs.readdirSync(dir).forEach(file => {
         var fileInfo = new fileManager(`${dir}\\${file}`, file);
         let ext = fileInfo.name.split('.').pop();
@@ -79,18 +106,26 @@ module.exports = class ConfigManager {
           fileArray.push(fileInfo);
         }
     });
+    */
     return fileArray;
+  }
+
+  static IndexWorldPages() {
+    // TODO: Iterate through all pages in the HTML directory and create an index for each.
   }
 
   static CreateWorld(worldName) {
     try {
       let worldPath = configManager.ReadKey('WorldDirectory');
       let dir = path.join(worldPath, worldName);
-      let b = fs.existsSync(dir);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
         fs.mkdirSync(path.join(dir, 'md'));
         fs.mkdirSync(path.join(dir, 'html'));
+        fs.mkdirSync(path.join(dir, 'html', 'assets'));
+        fs.mkdirSync(path.join(dir, 'html', 'css'));
+        fs.mkdirSync(path.join(dir, 'user'));
+        fs.copyFileSync(path.join(app.getAppPath(), 'src', 'styles', 'default.css'), path.join(dir, 'html', 'css', 'default.css'));
         configManager.WriteKey('CurrentWorld', worldName);
         return {
           'success': true,
@@ -113,37 +148,6 @@ module.exports = class ConfigManager {
 
   }
 
-  static SavePage(pageInfo) {
-    try {
-      fs.writeFileSync(pageInfo.pagePath, pageInfo.pageContents);
-      let pathParts = pageInfo.pagePath.split(path.sep);
-      let htmlPath = pathParts[0];
-      for (let i=1; i<pathParts.length-2; i++) {
-        htmlPath = path.join(htmlPath, pathParts[i]);
-      }
-      let fileName = '';
-      let fileParts = pageInfo.pagePath.split(path.sep).pop().split('.');
-      for (let i=0; i<fileParts.length-1; i++) {
-        fileName += fileParts[0];
-      }
-      htmlPath = path.join(htmlPath, 'html');
-      if (!fs.existsSync(htmlPath)) {
-        fs.mkdirSync(htmlPath);
-      }
-      htmlPath = path.join(htmlPath, fileName + '.html');      
-      fs.writeFileSync(htmlPath, pageInfo.pageHTML);
-      return {
-        'success': true, 
-        'message': 'Saved file successfully!'
-      };
-    }
-    catch(e) {
-      return {
-        'success': false, 
-        'message': 'Unable to save file: ' + e
-      };
-    }
-  }
 
   static GetSaveAsPath() {
     let saveAsOptions = {
@@ -307,34 +311,31 @@ module.exports = class ConfigManager {
     }
   }
 
-  static GetPagePath(pageName) {
-    let baseDir = configManager.ReadKey('WorldDirectory');
-    let worldDir = path.join(baseDir, configManager.ReadKey('CurrentWorld'));
-    let pagePath = '';
-    let editor = configManager.ReadUserPref('editorStyle');
-    switch(editor) {
-      case 'RTE':
-        pagePath = path.join(worldDir, 'html', pageName + '.html');
-        break;
-      case 'MD':
-        pagePath = path.join(worldDir, 'md', pageName + '.md');
-        break;
-      default:
-        pagePath = path.join(worldDir, pageName);
-        break;
-    }
-    if (fs.existsSync(pagePath)) {
+  
+  static SaveAsset(newImgPath) {
+    try {
+      let worldDir = configManager.ReadKey('WorldDirectory');
+      let currentWorld = configManager.ReadKey('CurrentWorld');
+      let imgPath = path.join(worldDir, currentWorld, 'html', 'assets')
+      fse.ensureDirSync(imgPath);
+      let fileName = newImgPath.split('\\').pop();
+      let destPath = path.join(imgPath, fileName);
+      fs.copyFileSync(newImgPath, destPath);
       return {
         success: true,
-        path: pagePath
+        path: destPath
       };
     }
-    else {
+    catch(e) {
       return {
         success: false,
-        message: "Unable to find page \"" + pagePath + "\"."
+        message: e
       };
     }
+  }
+
+  static SaveAssetFromURL(url) {
+    let x = 1;
   }
 
 }

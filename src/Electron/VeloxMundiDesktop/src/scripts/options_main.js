@@ -1,3 +1,5 @@
+setPageInConfig = false;
+
 $(document).ready(function() {
   ('#SelectWorldPath').off;  
   ('#MoveAllWorlds').off;
@@ -21,7 +23,9 @@ $(document).ready(function() {
     }
   });
 
-  
+  $('#CloseOptions').on('click', function(e) {
+    window.contextBridge.toMain('closeWindow', 'Options')
+  });
 
   /*
   ipcRenderer.on('fromMain', (method, module, data) => {
