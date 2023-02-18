@@ -40,6 +40,21 @@ module.exports = class ConfigManager {
       case 'NewPageType':
         return this.NewPageType(data);
         break;
+      case 'SetSaveAsName':
+        this.SetSaveAsName(event, data);
+        break;
+      case 'DeletePage':
+        return this.DeletePage(data);
+        break;
+      case 'RenamePage':
+        return this.RenamePage(data);
+        break;        
+      case 'ChangePageEditor':
+        return this.ChangePageEditor(data);
+        break;
+      case 'NewPage':
+        this.NewPage(event);
+        break;
       default:
         return null;
         break;
@@ -267,17 +282,7 @@ module.exports = class ConfigManager {
     let worldDir = path.join(baseDir, configManager.ReadKey('CurrentWorld'));
     let pagePath = '';
     let editor = configManager.ReadUserPref('editorStyle');
-    switch(editor) {
-      case 'RTE':
-        pagePath = path.join(worldDir, 'html', pageRelPath + '.html');
-        break;
-      case 'MD':
-        pagePath = path.join(worldDir, 'md', pageRelPath + '.md');
-        break;
-      default:
-        pagePath = path.join(worldDir, 'html', pageRelPath + '.html');
-        break;
-    }
+    pagePath = path.join(worldDir,'pages',pageRelPath + (editor=="MD" ? '.md' : '.html'));
     if (fs.existsSync(pagePath)) {
       return {
         success: true,
@@ -334,6 +339,178 @@ module.exports = class ConfigManager {
     if (fs.existsSync(templateDir)) {
       
     }
+  }
+
+  static GetSaveAsPath() {
+    let saveAsOptions = {
+      modal: true,
+      width: 400,
+      height: 125,
+      frame: false,
+      alwaysOnTop: true,
+      webPreferences: {
+        preload: path.join(app.getAppPath(), 'src', 'scripts', 'preload.js'),
+        nodeIntegration: false, // is default value after Electron v5
+        contextIsolation: true, // protect against prototype pollution
+        enableRemoteModule: false, // turn off remote
+      }
+    }
+    modal = new BrowserWindow(saveAsOptions);
+
+    var theUrl = 'file://' + path.join(app.getAppPath(), 'src', 'pages', 'modals', 'SaveAsPrompt.html');
+    console.log('Modal url', theUrl);
+    modal.loadURL(theUrl);
+    modal.on('close', function() {
+      if (saveAsEvent!=null) {
+        saveAsEvent.sender.send('SaveAsPath', {
+          'success': false,
+          'message': 'File name was not set'
+        });
+      }
+    });
+  }
+
+  static SetSaveAsName(event, data) {
+    //TODO: Check if file name is acceptable before saving
+    let worldPath = configManager.ReadKey('WorldDirectory');
+    let currentWorld = configManager.ReadKey('CurrentWorld');
+    let savePath = path.join(worldPath, currentWorld, 'pages', data.fileName);
+    let saveAs = '';
+    if (data.action=='Save') {
+      if (data.fileName=='') {
+        saveAs = {
+          'success': false,
+          'message': 'File name was not specified. File has not been saved.'
+        };
+      }
+      else {
+        if (fs.existsSync(savePath)) {
+          SaveAs = {
+            'success': false,
+            'message': 'File already exists. File has not been saved.'
+          };
+        }
+        else {
+          saveAs = {
+            'success': true, 
+            'path': savePath,
+            'message' : ''
+          };
+        }
+      }
+    }
+    else {
+      saveAs = {
+        'success': false,
+        'message': ''
+      };
+    }
+    event.sender.send('SaveAsPath', saveAs);
+  }
+
+  static DeletePage(pageName) {    
+    let worldPath = configManager.ReadKey('WorldDirectory');
+    let currentWorld = configManager.ReadKey('CurrentWorld');
+    let pagePath = path.join(worldPath, currentWorld, 'pages', pageName);
+    try {
+      if (fs.existsSync(pagePath)) {
+        fs.unlinkSync(pagePath);
+        return {
+          'success': true
+        };
+      }
+      else {
+        return {
+          'success': false,
+          'message': 'File "' + pagePath + '" was not found.'
+        };
+      }
+    }
+    catch(e) {
+      return {
+        'success': false, 
+        'message': 'There was a problem deleting the file.<br/>' + e
+      };
+    }
+  }
+
+  static RenamePage(pageData) {
+    let worldPath = configManager.ReadKey('WorldDirectory');
+    let currentWorld = configManager.ReadKey('CurrentWorld');
+    let oldMdPagePath = path.join(worldPath, currentWorld, 'md', pageData.oldPageName + '.md');
+    let oldHtmlPagePath = path.join(worldPath, currentWorld, 'html', pageData.oldPageName + '.html');
+    let newMdPagePath = path.join(worldPath, currentWorld, 'md', pageData.newPageName + '.md');
+    let newHtmlPagePath = path.join(worldPath, currentWorld, 'html', pageData.newPageName + '.html');
+    if (fs.existsSync(newMdPagePath)) {
+      return {
+        'success': false,
+        'message': 'File "' + pageData.newPageName + '" already exists. Page was not renamed.'
+      };
+    }
+    else {
+      let retVal = {
+        'success': false,
+        'message': '',
+        'saveOnReturn': false,
+        'newPagePath': newMdPagePath
+      };
+      try {
+        fs.renameSync(oldMdPagePath, newMdPagePath, function(err) {
+          if (err) {
+            retVal.success = false;
+            retVal.message = 'Unable to rename ' + pageData.oldPageName + '.<br/>' + err;
+            return retVal;
+          }
+        });
+        try {
+          fs.renameSync(oldHtmlPagePath, newHtmlPagePath, function(err) {
+            let x = 1;
+            if (err) {
+              retVal.message += 'The main page was renamed successfully, but there was a problem renaming the output page. ';
+              try {
+                fs.unlinSynck(oldHtmlPagePath);
+                fs.unlinkSync(newHtmlPagePath);
+                retVal.message += 'Removed output pages for both old and new output files.';
+                return retVal;
+              }
+              catch(e) {
+                retVal.message += 'Try re-saving this page to generate a new output page.';
+                retVal.saveOnReturn = true;
+                return retVal;
+              }
+            }
+          }); 
+          retVal.success=true; 
+          return retVal;
+        }
+        catch(e) {
+          retVal.success=true,
+          retVal.saveOnReturn = true;
+          return retVal;
+        }      
+      }
+      catch(e) {
+        retVal.success = false;
+        retVal.message += 'Unable to save file.<br/>' + e;
+        retVal.saveOnReturn = false;
+        return retVal;
+      }
+    }
+  }
+
+  static NewPage(event) {
+    switch(configManager.ReadUserPref('editorStyle'))
+    {
+      case 'MD':
+        event.sender.send('navigate',path.join(app.getAppPath(), 'src','edit.html'));
+        break;
+      default: //RTE
+        event.sender.send('navigate',path.join(app.getAppPath(), 'src','rtedit.html'));
+        break;
+    }
+  }
+  static ChangePageEditor(pageName) {
+
   }
 
   

@@ -271,7 +271,7 @@ $(document).ready(function() {
             $('#CancelSaveAs').prop('disabled',true);
             $('#SetSaveAs').prop('disabled', true);
 
-            window.contextBridge.toMain('world', 'SetSaveAsName', {
+            window.contextBridge.toMain('page', 'SetSaveAsName', {
               'action': 'Save',
               'fileName': saveAsName
             });
