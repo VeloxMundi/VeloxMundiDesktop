@@ -73,16 +73,28 @@ module.exports = class ConfigManager {
     let currentWorld=configManager.ReadKey('CurrentWorld');
     let worldDir = configManager.ReadKey('WorldDirectory');
     let worldPath = path.join(worldDir,currentWorld);
-    let worldData = path.join(worldPath,"_world.json");
-    if (!fs.existsSync(worldData)) {
-      fs.writeFileSync(worldData, JSON.stringify(data, null, 2));
+    let worldDataPath = path.join(worldPath,"_world.json");
+    if (!fs.existsSync(worldDataPath)) {
+      fs.writeFileSync(worldDataPath, JSON.stringify(data, null, 2));
       this.IndexWorldPages();
     }
-    let rawdata = fs.readFileSync(worldData);
+    let rawdata = fs.readFileSync(worldDataPath);
     if (rawdata != '') {
       data = JSON.parse(rawdata);
     }
+    data.worldDataPath = worldDataPath;
     return data;
+  }
+
+  static SaveWorldData(data) {
+    if (data.worldDataPath) {
+      let worldDataPath = data.worldDataPath;
+      delete data.worldDataPath;
+      fs.writeFileSync(worldDataPath, JSON.stringify(data, null, 2));
+    }
+    else {
+      throw "Unable to save world data.";
+    }
   }
 
   static IndexWorldPages() {

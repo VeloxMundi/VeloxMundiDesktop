@@ -18,6 +18,9 @@ module.exports = class fileManager {
 
   static Invoke(event, method, data) {
     switch(method) {
+      case 'GetPathSep':
+        return path.sep;
+        break;
       case 'ReadFileToString':
         return this.ReadFileToString(data);
         break;

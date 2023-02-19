@@ -8,25 +8,25 @@ $(document).ready(function() {
     try {
       let worldData = window.contextBridge.toMainSync('world','GetWorldData');
 
-      let types = Array.from(new Set(worldData.pages.map((item) => item.Type))).sort();
+      let types = Array.from(new Set(worldData.pages.map((item) => item.type))).sort();
       for (let i=0; i<types.length; i++) {
         if (types[i]!='') {
           $('#PageList').append('<p>&nbsp;</p><h4>' + types[i] + '</h4>\r\n');
         }
         $('#PageList').append('<ul>');
         let typePages = worldData.pages.filter(function(p) {
-          return p.Type==types[i];
+          return p.type==types[i];
         }).sort((a,b) => (
-          (a.Name>b.Name) 
+          (a.name>b.name) 
             ? 1
             :
-              (a.Name<b.Name
+              (a.name<b.name
                 ? -1
                 : 0
               )
         ));
         for (let j=0; j<typePages.length; j++) {
-          $('#PageList').append('<li><a class="navLink" href="#" data-page="edit.html" data-query="path='+encodeURIComponent(typePages[j].RelPath)+'&name=' + typePages[j].NameDisambiguation + '">' + typePages[j].Name + '</a></li>');
+          $('#PageList').append('<li><a class="navLink" href="#" data-page="edit.html" data-query="path='+encodeURIComponent(typePages[j].relPath)+'&name=' + typePages[j].nameDisambiguation + '">' + typePages[j].name + '</a></li>');
         }
         
         $('#PageList').append('</ul>');

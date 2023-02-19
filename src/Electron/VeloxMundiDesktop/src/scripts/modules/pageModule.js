@@ -7,6 +7,9 @@ const { config } = require('process');
 const jsdom = require('jsdom');
 const { triggerAsyncId } = require('async_hooks');
 
+// variables
+const pubDirName = '_web';
+
 
 
 // Custom Modules
@@ -79,10 +82,42 @@ module.exports = class ConfigManager {
   }
   
   static SavePage(pageInfo) {
-    
+    /*
+     fileType,
+     pageContents,
+     pageName,
+     pageType,
+    */
     try {
       let basePath = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld'));
+      let pageDir = path.join(basePath, 'pages', pageInfo.pageType);
+      if (!fs.existsSync(pageDir)) {
+        fs.mkdirSync(pageDir);
+      }
+      let pagePath = path.join(pageDir, pageInfo.pageName + '.' + pageInfo.fileType);
       
+      fs.writeFileSync(pagePath, pageInfo.pageContents);   
+
+      // publish page in HTML output directory
+      let pubDir = path.join(basePath, pubDirName, pageInfo.pageType, pageInfo.pageName);
+      fse.ensureDirSync(pubDir);
+      let pubPath = path.join(pubDir, 'index.html');
+      fs.writeFileSync(pubPath, this.publishHTML('save',pageInfo.pageHTML));
+      
+      try {
+        this.AddPageToIndex(pagePath, true);
+        //this.BuildWebIndex();
+        return {
+          'success': true, 
+          'message': 'Saved file successfully!'
+        };
+      }
+      catch(e) {
+        return {
+          'success': false, 
+          'message': 'Page was saved, but page info was not added to index: ' + e
+        };
+      }
       /*
       let pathParts = pageInfo.pagePath.split(path.sep);
       let basePath = pathParts[0];
@@ -90,6 +125,8 @@ module.exports = class ConfigManager {
         basePath = path.join(basePath, pathParts[i]);
         }
       */
+
+      /*
       let fileName = pageInfo.pageRelPath.split(path.sep).pop();
 
       let pageRelDir = '';
@@ -111,19 +148,7 @@ module.exports = class ConfigManager {
 
       fs.writeFileSync(mdPath, pageInfo.pageContents);   
       fs.writeFileSync(htmlPath, this.tweakHTML('save', pageInfo.pageHTML));
-      try {
-        this.AddPageToIndex(pageInfo.pageRelPath, true);
-        return {
-          'success': true, 
-          'message': 'Saved file successfully!'
-        };
-      }
-      catch(e) {
-        return {
-          'success': false, 
-          'message': 'Page was saved, but page info was not added to index: ' + e
-        };
-      }
+      */
     }
     catch(e) {
       return {
@@ -135,91 +160,131 @@ module.exports = class ConfigManager {
 
   static AddPageToIndex(pagePath, SaveNow) {
     // Set up variables
-    let basePath = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld')) + path.sep;
-    let baseHtmlPath = path.join(basePath, 'html');
-    let pageRelPathParts = pagePath.replace(basePath,'').split(path.sep);
-    let pageType = (pageRelPathParts.length==2 ? pageRelPathParts[0] || '' : '');
-    let pageName = pagePath.split(path.sep).pop();
-    let pageRelPath = '';
-    let olinks = [];
-    let renamePage = false;
-    for (let i=0; i<pageRelPathParts.length-1; i++) {
-      pageRelPath += path.join(pageRelPath, pageRelPathParts[i]);
+    let pageData = getPageData(pagePath);
+
+    /*
+    let basePath = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld'),'pages') + path.sep;
+    let pageExt = pagePath.split('.').pop();
+    let relPathWithExt = pagePath.replace(basePath,'');
+    let relPathParts = relPathWithExt.split(path.sep);
+    let pageType = '';
+    for (let i=0; i<relPathParts.length-1; i++) {
+      pageType += relPathParts[i] + path.sep;
     }
-    pageRelPath = (pageRelPath!='' ? pageRelPath + path.sep : '') + pageName;
-    let pageHtmlPath = path.join(basePath, 'html', pageRelPath + '.html');
-    let pageHtmlRelPath = pageHtmlPath.replace(basePath,'');
-    let pageHTML = fs.readFileSync(pageHtmlPath).toString();
+    let fileNameParts = (relPathParts.length>1 ? relPathParts[relPathParts.length-1] : relPathParts[0]).split('.');
+    let pageName = '';
+    for (let i=0; i<fileNameParts.length-1; i++) {
+      pageName += fileNameParts[i];
+    }
+    let relPath = path.join(pageType, pageName);
+    */
+    
+    let olinks = [];
+    
 
     // Read world index
-    let indexPath = path.join(configManager.ReadKey('WorldDirectory'), configManager.ReadKey('CurrentWorld'),'index.json');
-    let data = {
-      worldName : configManager.ReadKey('CurrentWorld').replace(/([A-Z])/g, ' $1').replace(/([0-9][a-zA-Z])/g, ' $1').replace(/([a-z])([0-9])/g, '$1 $2').replace(/([_.])/g, ' ').trim(),
-      worldDirName : configManager.ReadKey('CurrentWorld'),
-      pages : []
-    };
-    if (!fs.existsSync(indexPath)) {
-      fileManager.WriteFile(indexPath, JSON.stringify(data, null, 2));
-    }
-    let rawdata = fs.readFileSync(indexPath);
-    if (rawdata != '') {
-      data = JSON.parse(rawdata);
-    }
+    let worldData = worldManager.GetWorldData();
     let thisPage = {
-      Name : pageName,
-      Type : pageType,
-      NameDisambiguation : pageName + (pageType=='' ? '' : ' (' + pageType + ')'),
-      Status : 'Active',
-      RelPath : pageRelPath,
-      HtmlRelPath : pageHtmlRelPath
+      name : pageData.relFileName,
+      nameDisambiguation : pageData.relFileName + (pageData.pageType=='' ? '' : ' (' + pageData.pageType + ')'),
+      type : pageData.pageType,
+      fileType : pageData.fileExt,
+      relPath : pageData.relPath
     }
     if (SaveNow) {
-      thisPage.Saved = new Date(Date.now()).toLocaleString();
-      try {
-        let dom = new jsdom.JSDOM(`<!DOCTYPE html><body>${pageHTML}</body>`);
-        let jquery = require('jquery')(dom.window);
-        let $ = jquery;
-        let lnks = $('a');
-        $('a').each(function() {
-          try {
-            let ths = $(this);
-            let href = decodeURIComponent(ths.attr('href'));
-            let baseHref = decodeURIComponent('file:///' + baseHtmlPath) + path.sep;
-            if (href.indexOf(baseHref)!=-1) {
-              href = href.replace(baseHref,'');
-              let existingO = olinks.indexOf(href);
-              if (existingO==-1) {
-                olinks.push(href);
+      thisPage.saved = new Date(Date.now()).toLocaleString();
+      if (pageData.fileExt=='html') {
+        try {
+          let pageHTML = '';
+          pageHTML = fs.readFileSync(pageData.fullPath).toString();
+          let dom = new jsdom.JSDOM(`<!DOCTYPE html><body>${pageHTML}</body>`);
+          let jquery = require('jquery')(dom.window);
+          let $ = jquery;
+          let lnks = $('a');
+          $('a').each(function() {
+            try {
+              let ths = $(this);
+              let href = decodeURIComponent(ths.attr('href'));
+              let baseHref = decodeURIComponent('file:///' + basePath);
+              if (href.indexOf(baseHref)!=-1) {
+                href = href.replace(baseHref,'');
+                let existingO = olinks.indexOf(href);
+                if (existingO==-1) {
+                  olinks.push(href);
+                }
               }
             }
-          }
-          catch(e) {
-            let x = 1;
-          }
-        });
-      } 
-      catch(e) {
-        // Fail silently if links cannot be indexed for some reason.
+            catch(e) {
+              console.log(e);
+            }
+          });
+        } 
+        catch(e) {
+          // Fail silently if links cannot be indexed for some reason.
+          console.log(e);
+        }
       }
-      thisPage.OutgoingLinks = olinks;
+      else if (pageData.fileExt=='md') {
+        // Use RegEx to parse links in MD files
+      }
+      thisPage.outgoingLinks = olinks;
     }
     
-    if (!data.pages || data.pages.length==0) {
-      data.pages = [thisPage];
+    if (!worldData.pages || worldData.pages.length==0) {
+      worldData.pages = [thisPage];
     }
     
-    let pageNameLower = pageName.toLowerCase();
-    for (let i=0; i<data.pages.length; i++) {
-      let dataPageNameLower = data.pages[i].Name.toLowerCase();
-      if (data.pages[i].HtmlRelPath.toLowerCase()==pageHtmlRelPath.toLowerCase()) {
-        data.pages[i] = thisPage;
+    for (let i=0; i<worldData.pages.length; i++) {
+      let dataPageNameLower = worldData.pages[i].name;
+      if (worldData.pages[i].relPath==pageData.relPath) {
+        worldData.pages[i] = thisPage;
       }
     }
+    let dataThisPage = worldData.pages.filter(function(p) {
+      return p.relPath==pageData.relPath
+    });
+    if (!dataThisPage || dataThisPage.length==0) {
+      worldData.pages.push(thisPage);
+    }
+    
+    worldData.pages.sort((a,b) => {
+      if (a.type>b.type) {
+        return 1;
+      }
+      else if (a.type<b.type) {
+        return -1
+      }
+      else {
+        if (a.name>b.name) {
+          return 1;
+        }
+        else if (a.name<b.name) {
+          return -1;
+        }
+        else {
+          return 0;
+        }
+      }
+      });
+      /*
+      (a.relPath.toLowerCase() > b.relPath.toLowerCase()) 
+        ? 1 
+        : (
+          (b.relPath.toLowerCase() > a.relPath.toLowerCase()) 
+            ? -1 
+            : 0
+          )
+      );
+      */
 
 
+    worldManager.SaveWorldData(worldData);
 
-    fileManager.WriteFile(indexPath, JSON.stringify(data, null, 2));
+  }
 
+  static publishHTML(pageInfo, html) {
+    //TODO: Tweak HTML to fit with publish strategy
+    return html;
   }
 
   static tweakHTML(action, html) {
@@ -277,12 +342,11 @@ module.exports = class ConfigManager {
     
   }
 
-  static GetPagePath(pageRelPath) {
+  static GetPagePath(pathInfo) {
     let baseDir = configManager.ReadKey('WorldDirectory');
     let worldDir = path.join(baseDir, configManager.ReadKey('CurrentWorld'));
     let pagePath = '';
-    let editor = configManager.ReadUserPref('editorStyle');
-    pagePath = path.join(worldDir,'pages',pageRelPath + (editor=="MD" ? '.md' : '.html'));
+    pagePath = path.join(worldDir,'pages',pathInfo.type, pathInfo.relPath + '.' + pathInfo.extension);
     if (fs.existsSync(pagePath)) {
       return {
         success: true,
@@ -435,16 +499,32 @@ module.exports = class ConfigManager {
   }
 
   static RenamePage(pageData) {
+    /*
+    oldPagePath
+    newPageName
+    */
+    let oldPathData = getPageData(pageData.oldPagePath);
+    let newPathData = getPageData(path.join(oldPathData.basePath,pageData.newPageName + '.' + oldPathData.fileExt));
+    /*
     let worldPath = configManager.ReadKey('WorldDirectory');
     let currentWorld = configManager.ReadKey('CurrentWorld');
-    let oldMdPagePath = path.join(worldPath, currentWorld, 'md', pageData.oldPageName + '.md');
-    let oldHtmlPagePath = path.join(worldPath, currentWorld, 'html', pageData.oldPageName + '.html');
-    let newMdPagePath = path.join(worldPath, currentWorld, 'md', pageData.newPageName + '.md');
-    let newHtmlPagePath = path.join(worldPath, currentWorld, 'html', pageData.newPageName + '.html');
-    if (fs.existsSync(newMdPagePath)) {
+    let basePath = path.join(worldPath,currentWorld);
+    let oldPageExt = pageData.oldPagePath.split('.').pop();
+    let newPageFilePath = path.join(basePath, 'pages', pageData.newPageName + '.' + oldPageExt);
+    let newPageNameParts = pageData.newPageName.split(path.sep);
+    let newPageType = '';
+    for (let i=0; i<newPageNameParts.length-1; i++) {
+      newPageType = path.join(newPageType,newPageNameParts[i]);
+    }
+    let trimmedPageName = newPageNameParts[newPageNameParts.length-1] + (newPageType=='' ? '' : ' (' + newPageType.replace(path.sep,'/') + ')');
+
+    */
+    
+
+    if (fs.existsSync(newPathData.fullPath)) {
       return {
         'success': false,
-        'message': 'File "' + pageData.newPageName + '" already exists. Page was not renamed.'
+        'message': 'File "' + newPathData.relPath + '" already exists. Page was not renamed.'
       };
     }
     else {
@@ -452,42 +532,32 @@ module.exports = class ConfigManager {
         'success': false,
         'message': '',
         'saveOnReturn': false,
-        'newPagePath': newMdPagePath
+        'newPagePath': newPathData.fullPath,
+        'newPageType': newPathData.pageType,
+        'newPageName': newPathData.relFileName
       };
       try {
-        fs.renameSync(oldMdPagePath, newMdPagePath, function(err) {
+        fs.renameSync(oldPathData.fullPath, newPathData.fullPath, function(err) {
           if (err) {
             retVal.success = false;
-            retVal.message = 'Unable to rename ' + pageData.oldPageName + '.<br/>' + err;
+            retVal.message = 'Unable to rename ' + oldPathData.relPath + '.<br/>' + err;
             return retVal;
           }
         });
         try {
-          fs.renameSync(oldHtmlPagePath, newHtmlPagePath, function(err) {
-            let x = 1;
-            if (err) {
-              retVal.message += 'The main page was renamed successfully, but there was a problem renaming the output page. ';
-              try {
-                fs.unlinSynck(oldHtmlPagePath);
-                fs.unlinkSync(newHtmlPagePath);
-                retVal.message += 'Removed output pages for both old and new output files.';
-                return retVal;
-              }
-              catch(e) {
-                retVal.message += 'Try re-saving this page to generate a new output page.';
-                retVal.saveOnReturn = true;
-                return retVal;
-              }
-            }
-          }); 
-          retVal.success=true; 
-          return retVal;
+          let data = worldManager.GetWorldData();
+          let pages = data.pages.filter(function(p) {
+            return p.relPath!=oldPathData.relPath
+          });
+          data.pages = pages;
+          worldManager.SaveWorldData(data);
+          retVal.success=true;
         }
         catch(e) {
-          retVal.success=true,
-          retVal.saveOnReturn = true;
+          retVal.success = false;
+          retVal.message = 'New file created at "' + newPathData.fullPath + '" but the existing file could not be deleted. Please remove the old file manually.';
           return retVal;
-        }      
+        }
       }
       catch(e) {
         retVal.success = false;
@@ -495,6 +565,7 @@ module.exports = class ConfigManager {
         retVal.saveOnReturn = false;
         return retVal;
       }
+      return retVal;
     }
   }
 
@@ -514,4 +585,52 @@ module.exports = class ConfigManager {
   }
 
   
+}
+
+function getPageData(fullPath) {
+  let worldPath = configManager.ReadKey('WorldDirectory');
+  let currentWorld = configManager.ReadKey('CurrentWorld');
+  let basePath = path.join(worldPath,currentWorld,'pages');
+  let basePathParts = basePath.split(path.sep);
+  let fullPathParts = fullPath.split(path.sep);
+  let relPath = '';
+  let fileExt = '';
+  let fileName = '';
+  let relFileName = '';
+  let relPathParts = [];
+  for (let i=basePathParts.length; i<fullPathParts.length; i++) {
+    if (i==fullPathParts.length-1) {
+      fileName = fullPathParts[i];
+      let fileNameParts = fileName.split('.');
+      fileExt = fileNameParts.pop();
+      relFileName = '';
+      for (let j=0; j<fileNameParts.length; j++) {
+        relFileName += fileNameParts[j] + (j==fileNameParts.length-1 ? '' : '.');
+      }
+      relPath = path.join(relPath, relFileName);
+      relPathParts.push(relFileName);
+    }
+    else {
+      relPath = path.join(relPath, fullPathParts[i]);
+      relPathParts.push(fullPathParts[i]);
+    }
+  }
+
+
+
+  let pageType = '';
+  for (let i=0; i<relPathParts.length-1; i++) {
+    pageType = path.join(pageType,relPathParts[i]);
+  }
+
+  return {
+    fullPath : fullPath,
+    relPath : relPath,
+    fileExt : fileExt,
+    fileName : fileName,
+    relFileName : relFileName,
+    pageType : pageType,
+    basePath : basePath
+  }
+
 }

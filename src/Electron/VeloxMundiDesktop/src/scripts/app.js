@@ -6,6 +6,7 @@ let pageDirty = false;
 let modalLocked = false;
 let modalVisible = false;
 let setPageInConfig = true;
+let pathSep = window.contextBridge.toMainSync('file', 'GetPathSep');
 
 function hideToast() {
   $('#closeToast').off();
