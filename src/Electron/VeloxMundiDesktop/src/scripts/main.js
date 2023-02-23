@@ -161,6 +161,7 @@ function loadPage(pageName, qry) {
   let doNav=true;
   if (fs.existsSync(path.join(pagePath, pageName)))
   {
+    /*
     // page-specific functions
     switch(pageName) {
       case 'edit.html':
@@ -175,6 +176,7 @@ function loadPage(pageName, qry) {
         }
         break;
     }
+    */
     // Options pages load in a new window
     if (pageName.startsWith('options_')) {
       let mwPos = mainWindow.getPosition();

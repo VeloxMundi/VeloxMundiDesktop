@@ -36,7 +36,22 @@ $(document).ready(function() {
     let pair = vars[i].split('=');
     if (pair[0].toLowerCase()=='path') {
       pageRelPath = decodeURIComponent(pair[1]);
-      let getPage = window.contextBridge.toMainSync('page', 'GetPagePath', decodeURIComponent(pair[1]));
+      let relPathParts = pageRelPath.split(pathSep);
+      pageName = '';
+      pageType = '';
+      for (let i=0; i<relPathParts.length; i++) {
+        if (i<relPathParts.length-1) {
+          pageType += (pageType=='' || i==relPathParts.length-1 ? '' : pathSep) + relPathParts[i];
+        }
+        else {
+          pageName = relPathParts[i];
+        }
+      }
+      let getPage = window.contextBridge.toMainSync('page', 'GetPagePath', {
+        relPath: pageName,
+        type: pageType,
+        extension: 'md'
+      });
       if (getPage.success) {
         pagePath = getPage.path;
         console.log(pagePath);
@@ -159,7 +174,7 @@ $(document).ready(function() {
     window.contextBridge.navigate('worldHome.html');
   });
 
-  window.contextBridge.fromMain('menu', (event, action) =>  {
+  window.contextBridge.fromMain('menu', (event, action, data) =>  {
     switch(action) {
       case 'SavePage':
         closeAfterSave = false;
@@ -172,6 +187,26 @@ $(document).ready(function() {
       case 'SaveAndClose':
         closeAfterSave=true;
         CheckPathAndSave();
+        break;
+      case 'Convert':
+        if (pageDirty) {
+          CheckPathAndSave();
+        }
+        else {
+          let res = window.contextBridge.toMainSync('page', 'Convert', {
+            pageRelPath : pageRelPath,
+            pageType : pageType,
+            oldFileType : 'md',
+            newFileType : 'html',
+            htmlContent : $('#viewer').html()
+          });
+          if (res.success) {
+            navigate('rteedit.html', 'path=' + pageRelPath + '&name=' + pageName);
+          }
+          else {
+            showToast(res.message, 'text-danger');
+          }
+        }
         break;
       case 'DeletePage':
         // Prompt for confirmation
@@ -637,10 +672,7 @@ $(document).ready(function() {
     });
   }
 
-  /*An array containing all the country names in the world:*/
-
-
-  /*initiate the autocomplete function on the "myInput" element, and pass along the countries array as possible autocomplete values:*/
+  /*initiate the autocomplete function on the "myInput" element, and pass along the array as possible autocomplete values:*/
   autocomplete(document.getElementById("pageLinkHref"), worldPages);
 
 

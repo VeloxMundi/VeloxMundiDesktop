@@ -124,6 +124,9 @@ module.exports = class UIManager {
             'selectworld.html',
             'worldhome.html'
           ],
+          hideOn: [
+            'index.html'
+          ],
           label: 'New',
           submenu: [
           {
@@ -196,7 +199,33 @@ module.exports = class UIManager {
           }
         },
         {
-          id: 'File-Separator01',
+          showOn: [
+            'edit.html',
+            'rteedit.html'
+          ],
+          type: 'separator'
+        },
+        {
+          id: 'File-ConvertToHtml',
+          showOn: [
+            'edit.html'
+          ],
+          label: 'Convert to HTML',
+          click: async () => {
+            win.webContents.send('menu', 'Convert', 'html');
+          }
+        },
+        {
+          id: 'File-ConvertToMd',
+          showOn: [
+            'rteedit.html'
+          ],
+          label: 'Convert to Markdown',
+          click: async () => {
+            win.webContents.send('menu', 'Convert', 'md');
+          }
+        },
+        {
           showOn: [
             'edit.html',
             'rteedit.html'
@@ -607,8 +636,10 @@ function filterSubmenu(page, submenuArray) {
       m.submenu = filterSubmenu(page, subm);
     }
     return (m.showOn &&
+            (!m.hideOn || !m.hideOn.includes(page)) &&
             (m.showOn.includes(page) ||
             m.showOn.includes('-all-'))
+
            );
   });
   /*

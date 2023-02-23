@@ -58,6 +58,8 @@ module.exports = class ConfigManager {
       case 'NewPage':
         this.NewPage(event);
         break;
+      case 'Convert':
+        return this.Convert(event, data);
       default:
         return null;
         break;
@@ -580,9 +582,51 @@ module.exports = class ConfigManager {
         break;
     }
   }
-  static ChangePageEditor(pageName) {
+  static Convert(event, pageData) {
+    if (pageData && pageData.oldFileType=='md' && pageData.newFileType=='html') {
+      let getPagePath = this.GetPagePath({
+        type : pageData.pageType,
+        relPath : pageData.pageRelPath,
+        extension : pageData.oldFileType
+      });
+      if (getPagePath.success) {
+        let pagePathParts = getPagePath.path.split('.');
+        let oldExt = pagePathParts.pop();
+        let newPagePath = pagePathParts.join('.') + '.html';
+        try {
+          fs.renameSync(getPagePath.path, newPagePath, function(err) {
+            if (err) {
+              retVal.success = false;
+              retVal.message = 'Unable to convert ' + getPagePath.path + '.<br/>' + err;
+              return retVal;
+            }
+          });
+          fs.writeFileSync(newPagePath, pageData.htmlContent);
+          this.AddPageToIndex(newPagePath, true);
+          return {
+            success: true,
+            newPath: newPagePath
+          };
+        }
+        catch(e) {
+          return {
+            success: false,
+            message: 'Unable to convert page. ' + e
+          };
+        }
+      }
+    }
+    else if (pageData && pageData.oldFileType=='html' && pageData.newFileType=='md') {
 
+    }
+    else {
+      return {
+        success: false,
+        message: 'Unable to convert page.'
+      };
+    }
   }
+
 
   
 }

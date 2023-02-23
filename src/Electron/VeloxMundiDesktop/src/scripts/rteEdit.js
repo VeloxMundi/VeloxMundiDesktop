@@ -3,8 +3,6 @@ let pagePath = '';
 let snRange = null;
 let worldData = null;
 let worldPages = null;
-let pageName = '';
-let pageType = '';
 
 $(document).ready(function() {
   //window.contextBridge.toMain('world','GetAllPages');
@@ -132,9 +130,17 @@ $(document).ready(function() {
   for (var i=0; i<vars.length; i++) {
     let pair = vars[i].split('=');
     if (pair[0].toLowerCase()=='path') {
-      let relPathParts = decodeURIComponent(pair[1]).split(window.contextBridge.toMainSync('file','GetPathSep'));
-      pageName = (relPathParts.length==1 ? relPathParts[0] : relPathParts[1]);
-      pageType = (relPathParts.length==1 ? '' : relPathParts[0]);
+      let relPathParts = decodeURIComponent(pair[1]).split(pathSep);
+      let pageName = '';
+      let pageType = '';
+      for (let i=0; i<relPathParts.length; i++) {
+        if (i<relPathParts.length-1) {
+          pageType += (pageType=='' || i==relPathParts.length-1 ? '' : pathSep) + relPathParts[i];
+        }
+        else {
+          pageName = relPathParts[i];
+        }
+      }
       let getPage = window.contextBridge.toMainSync('page', 'GetPagePath', {
         relPath: pageName,
         type: pageType,
