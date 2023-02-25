@@ -214,6 +214,8 @@ function CallModuleMethod(event, module, method, data)
         break;
       case 'return':
         event.sender.send('return', method, data);
+      case 'getVersion':
+        event.returnValue = app.getVersion();
       default:
         break;
     }
