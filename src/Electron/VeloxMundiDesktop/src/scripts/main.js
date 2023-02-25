@@ -31,7 +31,10 @@ const world = require(path.join(scriptPath, 'modules', 'worldModule.js'));
 
 let mainWindow = null;
 let optionsWindow = null;
+let previewWindow = null;
 let mainWindowStateKeeper = null;
+let optionsWindowStateKeeper = null;
+let previewWindowStateKeeper = null;
 
 const createWindow = () => {
     mainWindowStateKeeper = windowStateKeeper('main');
@@ -65,6 +68,8 @@ app.whenReady().then(() => {
           createWindow();
         }
       });
+
+    
 });
 
 // Close application once all windows are closed (Windows and Linux ONLY)
@@ -110,9 +115,69 @@ ipcMain.on('toMainSync', (event, module, method, data) => {
     event.returnValue = CallModuleMethod(event, module, method, data);
 });
 
+function CreateOptionsWindow(page, query) {
+  if (!optionsWindow) {
+    optionsWindowStateKeeper = windowStateKeeper('options');
+    const windowOptions = {
+      x: optionsWindowStateKeeper.x,
+      y: optionsWindowStateKeeper.y,
+      width: optionsWindowStateKeeper.width,
+      height: optionsWindowStateKeeper.height,
+      webPreferences: {
+        preload: path.join(scriptPath, 'preload.js'),
+        nodeIntegration: false, // is default value after Electron v5
+        contextIsolation: true, // protect against prototype pollution
+        enableRemoteModule: false, // turn off remote
+      }
+    }
+    optionsWindow = new BrowserWindow(windowOptions);
+    optionsWindowStateKeeper.track(optionsWindow);
+    optionsWindow.loadFile(path.join(pagePath, page), {query: query});
+    optionsWindow.on('closed', function() {
+      optionsWindow = null;
+    });
+    optionsWindow.focus();
+    optionsWindow.removeMenu();
+  }
+  else {
+    optionsWindow.focus();
+    optionsWindow.loadFile(path.join(pagePath, page));
+  }
+}
+
+function CreatePreviewWindow(page, query) {
+  if (!previewWindow) {
+    previewWindowStateKeeper = windowStateKeeper('preview');
+    const windowOptions = {
+      x: previewWindowStateKeeper.x,
+      y: previewWindowStateKeeper.y,
+      width: previewWindowStateKeeper.width,
+      height: previewWindowStateKeeper.height,
+      webPreferences: {
+        preload: path.join(scriptPath, 'preload.js'),
+        nodeIntegration: false, // is default value after Electron v5
+        contextIsolation: true, // protect against prototype pollution
+        enableRemoteModule: false, // turn off remote
+      }
+    }
+    previewWindow = new BrowserWindow(windowOptions);
+    previewWindowStateKeeper.track(previewWindow);
+    previewWindow.loadFile(path.join(pagePath, page), {query: query});
+    previewWindow.on('closed', function() {
+      previewWindow = null;
+    });
+    previewWindow.removeMenu();
+  }
+  else {
+    previewWindow.focus();
+    previewWindow.loadFile(path.join(pagePath, page));
+  }
+}
+
 function CallModuleMethod(event, module, method, data)
 {
   try {
+    let thisWin = focusedWindow();
     switch(module)
     {
       case 'navigate':
@@ -131,7 +196,7 @@ function CallModuleMethod(event, module, method, data)
         return fileManager.Invoke(event, method, data);
         break;
       case 'ui':
-        return uiManager.Invoke(event, method, mainWindow, data);
+        return uiManager.Invoke(event, method, data, thisWin, isMac);
         break;
       case 'quit':
         mainWindow.close();
@@ -140,8 +205,9 @@ function CallModuleMethod(event, module, method, data)
         switch(method) {
           case 'Options':
             optionsWindow.close();
-            optionsWindow = null;
             break;
+          case 'Preview':
+            previewWindow.close();
           default:
             break;
         }
@@ -161,46 +227,13 @@ function loadPage(pageName, qry) {
   let doNav=true;
   if (fs.existsSync(path.join(pagePath, pageName)))
   {
-    /*
-    // page-specific functions
-    switch(pageName) {
-      case 'edit.html':
-        let editor = config.ReadUserPref('editorStyle');
-        switch(editor) {
-          case 'MD':
-            pageName='edit.html';
-            break;
-          default:
-            pageName='rteEdit.html';
-            break;
-        }
-        break;
-    }
-    */
     // Options pages load in a new window
     if (pageName.startsWith('options_')) {
-      let mwPos = mainWindow.getPosition();
-      if (!optionsWindow) {
-        let optionsWindowOpts = {
-          x: mainWindow.getPosition()[0] + 50,
-          y: mainWindow.getPosition()[1] + 50,
-          width: 800,
-          height: 600,
-          frame: false,
-          webPreferences: {
-            preload: path.join(scriptPath, 'preload.js'),
-            nodeIntegration: false, // is default value after Electron v5
-            contextIsolation: true, // protect against prototype pollution
-            enableRemoteModule: false, // turn off remote
-          }
-        }
-        optionsWindow = new BrowserWindow(optionsWindowOpts);
-        optionsWindow.loadFile(path.join(pagePath, pageName));
-      }
-      else {
-        optionsWindow.focus();
-        optionsWindow.loadFile(path.join(pagePath, pageName));
-      }
+      CreateOptionsWindow(pageName);
+      doNav=false; 
+    }    
+    else if (pageName.startsWith('preview_')) {
+      CreatePreviewWindow(pageName);
       doNav=false; 
     }
   }

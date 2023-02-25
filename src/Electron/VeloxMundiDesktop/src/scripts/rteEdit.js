@@ -253,6 +253,9 @@ $(document).ready(function() {
           }
         });
         break;
+      case 'Convert':
+        navigate('preview_htmlToMd.html');
+        break;
       default:
         break;
     }

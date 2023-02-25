@@ -16,10 +16,10 @@ module.exports = class UIManager {
   constructor() {
   }
 
-  static Invoke(event, method, win, data) {
+  static Invoke(event, method, data, win, isMac) {
     switch(method) {
       case 'SetMenu':
-        this.SetMenu(event, win, data);
+        this.SetMenu(event, win, isMac, data);
         break;
       case 'OpenFileDialog':
         return this.OpenFileDialog();
@@ -36,7 +36,7 @@ module.exports = class UIManager {
 
   
 
-  static SetMenu(event, win, page) {
+  static SetMenu(event, win, isMac, page) {
     let pageMenu = this.menuitems(win).filter(function (m) {
       return (isMac && m.id=='macMain') ||
               (m.showOn &&
@@ -49,7 +49,25 @@ module.exports = class UIManager {
         pageMenu[i].submenu = filterSubmenu(page, pageMenu[i].submenu);
       }
     }
-    Menu.setApplicationMenu(Menu.buildFromTemplate(pageMenu));
+    if (isMac) {
+      Menu.setApplicationMenu(Menu.buildFromTemplate(pageMenu));
+    }
+    else {
+      if (page.startsWith('preview_') || page.startsWith('options_')) {
+        win.removeMenu();
+      }
+      else {
+        win.setMenu(Menu.buildFromTemplate(pageMenu));
+      }
+    }
+    /*
+    if (page.startsWith('options_') || page.startsWith('preview_')) {
+      win.setMenu(Menu.buildFromTemplate(pageMenu));
+    }
+    else {
+      Menu.setApplicationMenu(Menu.buildFromTemplate(pageMenu));
+    }
+    */
     /*
     let newMenu = this.MenuDefault(win);
     switch(page) { 
