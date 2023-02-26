@@ -1,10 +1,8 @@
-let htmlFileName = '';
 let docBaseTitle = '';
 let pagePath = '';
 let snRange = null;
 let worldData = null;
 let worldPages = null;
-let pageRelPath = '';
 
 $(document).ready(function() {
   //window.contextBridge.toMain('world','GetAllPages');
@@ -132,8 +130,23 @@ $(document).ready(function() {
   for (var i=0; i<vars.length; i++) {
     let pair = vars[i].split('=');
     if (pair[0].toLowerCase()=='path') {
-      pageRelPath = decodeURIComponent(pair[1]);
-      let getPage = window.contextBridge.toMainSync('page', 'GetPagePath', decodeURIComponent(pair[1]));
+      let relPathParts = decodeURIComponent(pair[1]).split(pathSep);
+      pageName = '';
+      pageType = '';
+      for (let i=0; i<relPathParts.length; i++) {
+        if (i<relPathParts.length-1) {
+          pageType += (pageType=='' || i==relPathParts.length-1 ? '' : pathSep) + relPathParts[i];
+        }
+        else {
+          pageName = relPathParts[i];
+        }
+      }
+      pageType = pageType.replace(pathSep,typeSep);
+      let getPage = window.contextBridge.toMainSync('page', 'GetPagePath', {
+        name: pageName,
+        type: pageType,
+        extension: 'html'
+      });
       if (getPage.success) {
         pagePath = getPage.path;
         console.log(pagePath);
@@ -143,7 +156,8 @@ $(document).ready(function() {
       }
     }
     else if (pair[0].toLowerCase()=='name') {      
-      document.title = docBaseTitle + ' ' + decodeURIComponent(pair[1]);
+      pageNameDisambiguation = decodeURIComponent(pair[1]).replace(pathSep,typeSep);
+      document.title = pageNameDisambiguation + ' ' + docBaseTitle;
     }
   }
 
@@ -207,48 +221,45 @@ $(document).ready(function() {
         });
         break;
       case 'RenamePage':
-        if (pageDirty || pagePath=='') {
-          showToast('Please save your changes before renaming the page.', 'text-danger');
+        showModal('Rename ' + pageType + pathSep + pageName, '<div id="RenameError" class="text-danger"></div><p>New name:</p><p><input type="text" id="NewPageName" length="25" value="' + pageType + pathSep + pageName + '"/></p>','<button id="CancelRename" class="btn btn-default">Cancel</button><button id="RenamePage" class="btn btn-success">Rename</button>','#NewPageName', '#RenamePage');
+        $('#CancelRename').on('click', function() {
           hideModal();
-        }
-        else {
-          showModal('Rename ' + htmlFileName, '<div id="RenameError" class="text-danger"></div><p>New name:</p><p><input type="text" id="NewPageName" length="25"/></p>','<button id="CancelRename" class="btn btn-default">Cancel</button><button id="RenamePage" class="btn btn-success">Rename</button>','#NewPageName', '#RenamePage');
-          $('#CancelRename').on('click', function() {
+        });
+        $('#RenamePage').on('click', function() {
+          SavePage();
+          let newPageName = $('#NewPageName').val();
+          if (newPageName && newPageName!='') {
+            let result = window.contextBridge.toMainSync('page', 'RenamePage', {
+              'oldPagePath': pagePath,
+              'newPageName': newPageName
+            });
             hideModal();
-          });
-          $('#RenamePage').on('click', function() {
-            let newPageName = $('#NewPageName').val();
-            if (newPageName && newPageName!='') {
-              let result = window.contextBridge.toMainSync('world', 'RenamePage', {
-                'oldPageName': htmlFileName,
-                'newPageName': newPageName
-              });
-              if (result.success) {
-                htmlFileName = newPageName;
-                document.title = docBaseTitle + ' ' + newPageName;
-                pagePath = result.newPagePath;
-                hideModal();
-                if (result.saveOnReturn) {
-                  SavePage();
-                }
-                else if (result.message && result.message!='') {
-                  showToast(result.message, 'text-warning');
-                }
-                else {
-                  showToast('File renamed successfully!', 'text-success');
-                }
-                window.contextBridge.toMain('config', 'WriteKey', ['CurrentPage', 'edit.html?path=' + encodeURIComponent(pagePath)]);
-              }
-              else {
-                hideModal();
-                showToast('There was a problem renaming the file.<br/>' + result.message, 'text-error');
-              }
+            if (result.success) {
+              document.title = docBaseTitle + ' ' + newPageName;
+              pagePath = result.newPagePath;
+              window.contextBridge.toMain('config', 'WriteKey', ['CurrentPage', 'edit.html?path=' + encodeURIComponent(pagePath)]);
+              pageName = result.newPageName;
+              pageType = result.newPageType;              
+              SavePage();
+              showToast('File renamed successfully!', 'text-success');
+            }
+            else if (result.message && result.message!='') {
+              showToast('There was a problem renaming the file.<br/>' + result.message, 'text-error');
             }
             else {
-              $('#RenameError').text('Please enter a new name');
+              showToast('There was a problem renaming the file.', 'text-danger');
             }
-          });
+          }
+          else {
+            $('#RenameError').text('Please enter a new name');
+          }
+        });
+        break;
+      case 'Convert':
+        if (pageDirty) {
+          CheckPathAndSave();
         }
+        navigate('preview_htmlToMd.html','path=' + pageType + pathSep + pageName + '&name=' + pageNameDisambiguation);
         break;
       default:
         break;
@@ -271,7 +282,7 @@ $(document).ready(function() {
             $('#CancelSaveAs').prop('disabled',true);
             $('#SetSaveAs').prop('disabled', true);
 
-            window.contextBridge.toMain('world', 'SetSaveAsName', {
+            window.contextBridge.toMain('page', 'SetSaveAsName', {
               'action': 'Save',
               'fileName': saveAsName
             });
@@ -291,11 +302,13 @@ $(document).ready(function() {
     $('#SaveButton').text('Saving...');
     try {
       let pageHTML = $('#editor').summernote('code');
-      let pageContents = converter.makeMarkdown(pageHTML);
+      //let pageContents = converter.makeMarkdown(pageHTML);
       let saveResult = window.contextBridge.toMainSync('page', 'SavePage', {
-        'pageRelPath': pageRelPath,
-        'pageContents': pageContents,
-        'pageHTML': pageHTML
+        'pageName': pageName,
+        'pageType' : pageType,
+        'pageContents': pageHTML,
+        'pageHTML': pageHTML,
+        'fileType': 'html'
         });
       if (saveResult.success)
       {
@@ -337,7 +350,7 @@ $(document).ready(function() {
       pageDirty=false;
       pagePath = data.path;
       window.contextBridge.toMain('config', 'WriteKey', ['CurrentPage', 'edit.html?path=' + encodeURIComponent(data.path)]);
-      htmlFileName = pagePath.split('\\').pop().replace('.md','');
+      pageName = pagePath.split('\\').pop();
       modalLock(false);
       hideModal();
       SavePage();
@@ -359,7 +372,7 @@ $(document).ready(function() {
         CheckPathAndSave();
         break;
       case 'ConfirmDelete':
-        let delResult = window.contextBridge.toMainSync('world', 'DeletePage', htmlFileName);
+        let delResult = window.contextBridge.toMainSync('world', 'DeletePage', pagePath);
         if (delResult.success) {
           pageDirty = false;
           modalLock(false);

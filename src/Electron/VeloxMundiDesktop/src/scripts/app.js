@@ -6,6 +6,8 @@ let pageDirty = false;
 let modalLocked = false;
 let modalVisible = false;
 let setPageInConfig = true;
+let pathSep = window.contextBridge.toMainSync('file', 'GetPathSep');
+let typeSep = ' / ';
 
 function hideToast() {
   $('#closeToast').off();
@@ -26,10 +28,10 @@ function setPageDirty(isDirty) {
   pageDirty = isDirty;
 }
 
-function navigate(pagePath) {
+function navigate(pagePath, qry) {
   if (!pageDirty || pagePath.startsWith('options_')) {
     if (!modalVisible) {
-      window.contextBridge.toMain('navigate', pagePath);
+      window.contextBridge.toMain('navigate', pagePath, qry);
     }
     else {
       $('#appModalError').text('There are unsaved changes.');

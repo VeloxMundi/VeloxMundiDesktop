@@ -36,15 +36,6 @@ module.exports = class ConfigManager {
       case 'CreateWorld':
         return this.CreateWorld(data);
         break;
-      case 'SetSaveAsName':
-        this.SetSaveAsName(event, data);
-        break;
-      case 'DeletePage':
-        return this.DeletePage(data);
-        break;
-      case 'RenamePage':
-        return this.RenamePage(data);
-        break;        
       case 'SaveAsset':
         return this.SaveAsset(data);
         break;
@@ -62,7 +53,6 @@ module.exports = class ConfigManager {
   }
 
   static GetWorldLinks() {
-    let currentWorld=configManager.ReadKey('CurrentWorld');
     let worldPath = configManager.ReadKey('WorldDirectory');
     let worldList = fileManager.ReadSubdirectories(worldPath);
     let worldLinks = '';
@@ -70,8 +60,6 @@ module.exports = class ConfigManager {
     {
       worldLinks += '<li><a href="#" class="worldLink" data-path="' + worldList[i].path + '">' + worldList[i].name + '</a></li>\r\n';
     }
-
-
     return worldLinks;
   }
 
@@ -85,29 +73,28 @@ module.exports = class ConfigManager {
     let currentWorld=configManager.ReadKey('CurrentWorld');
     let worldDir = configManager.ReadKey('WorldDirectory');
     let worldPath = path.join(worldDir,currentWorld);
-    let worldData = path.join(worldPath,"index.json");
-    if (!fs.existsSync(worldData)) {
-      fs.writeFileSync(worldData, JSON.stringify(data, null, 2));
+    let worldDataPath = path.join(worldPath,"_world.json");
+    if (!fs.existsSync(worldDataPath)) {
+      fs.writeFileSync(worldDataPath, JSON.stringify(data, null, 2));
       this.IndexWorldPages();
     }
-    let rawdata = fs.readFileSync(worldData);
+    let rawdata = fs.readFileSync(worldDataPath);
     if (rawdata != '') {
       data = JSON.parse(rawdata);
     }
+    data.worldDataPath = worldDataPath;
     return data;
-    
-    /*
-    let dir = path.join(worldPath, currentWorld, 'md');
-    
-    let files = fs.readdirSync(dir).forEach(file => {
-        var fileInfo = new fileManager(`${dir}\\${file}`, file);
-        let ext = fileInfo.name.split('.').pop();
-        if (ext=='md') {
-          fileArray.push(fileInfo);
-        }
-    });
-    */
-    return fileArray;
+  }
+
+  static SaveWorldData(data) {
+    if (data.worldDataPath) {
+      let worldDataPath = data.worldDataPath;
+      delete data.worldDataPath;
+      fs.writeFileSync(worldDataPath, JSON.stringify(data, null, 2));
+    }
+    else {
+      throw "Unable to save world data.";
+    }
   }
 
   static IndexWorldPages() {
@@ -120,13 +107,17 @@ module.exports = class ConfigManager {
       let dir = path.join(worldPath, worldName);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
-        fs.mkdirSync(path.join(dir, 'md'));
-        fs.mkdirSync(path.join(dir, 'html'));
-        fs.mkdirSync(path.join(dir, 'html', 'assets'));
-        fs.mkdirSync(path.join(dir, 'html', 'css'));
-        fs.mkdirSync(path.join(dir, 'user'));
-        fs.copyFileSync(path.join(app.getAppPath(), 'src', 'styles', 'default.css'), path.join(dir, 'html', 'css', 'default.css'));
+        fs.mkdirSync(path.join(dir, 'pages'));
+        fs.mkdirSync(path.join(dir, 'assets'));        
+        fs.mkdirSync(path.join(dir, 'styles'));
+        fs.copyFileSync(path.join(app.getAppPath(), 'src', 'styles', 'default.css'), path.join(dir, 'styles', 'default.css'));
         configManager.WriteKey('CurrentWorld', worldName);
+        let data={
+          worldName : worldName,
+          worldDirName : worldName, //TODO: Make filesystem friendly
+          pages : []
+        };
+        fs.writeFileSync(path.join(dir,'_world.json'), JSON.stringify(data, null, 2));
         return {
           'success': true,
           'message': 'World created successfully'
@@ -149,167 +140,7 @@ module.exports = class ConfigManager {
   }
 
 
-  static GetSaveAsPath() {
-    let saveAsOptions = {
-      modal: true,
-      width: 400,
-      height: 125,
-      frame: false,
-      alwaysOnTop: true,
-      webPreferences: {
-        preload: path.join(app.getAppPath(), 'src', 'scripts', 'preload.js'),
-        nodeIntegration: false, // is default value after Electron v5
-        contextIsolation: true, // protect against prototype pollution
-        enableRemoteModule: false, // turn off remote
-      }
-    }
-    modal = new BrowserWindow(saveAsOptions);
 
-    var theUrl = 'file://' + path.join(app.getAppPath(), 'src', 'pages', 'modals', 'SaveAsPrompt.html');
-    console.log('Modal url', theUrl);
-    modal.loadURL(theUrl);
-    modal.on('close', function() {
-      if (saveAsEvent!=null) {
-        saveAsEvent.sender.send('SaveAsPath', {
-          'success': false,
-          'message': 'File name was not set'
-        });
-      }
-    });
-  }
-
-  static SetSaveAsName(event, data) {
-    //TODO: Check if file name is acceptable before saving
-    let worldPath = configManager.ReadKey('WorldDirectory');
-    let currentWorld = configManager.ReadKey('CurrentWorld');
-    let savePath = path.join(worldPath, currentWorld, 'md', data.fileName + '.md');
-    let saveAs = '';
-    if (data.action=='Save') {
-      if (data.fileName=='') {
-        saveAs = {
-          'success': false,
-          'message': 'File name was not specified. File has not been saved.'
-        };
-      }
-      else {
-        if (fs.existsSync(savePath)) {
-          SaveAs = {
-            'success': false,
-            'message': 'File already exists. File has not been saved.'
-          };
-        }
-        else {
-          saveAs = {
-            'success': true, 
-            'path': savePath,
-            'message' : ''
-          };
-        }
-      }
-    }
-    else {
-      saveAs = {
-        'success': false,
-        'message': ''
-      };
-    }
-    event.sender.send('SaveAsPath', saveAs);
-  }
-
-  static DeletePage(pageName) {    
-    let worldPath = configManager.ReadKey('WorldDirectory');
-    let currentWorld = configManager.ReadKey('CurrentWorld');
-    let mdPagePath = path.join(worldPath, currentWorld, 'md', pageName + '.md');
-    let htmlPagePath = path.join(worldPath, currentWorld, 'html', pageName + '.html');
-    try {
-      if (fs.existsSync(mdPagePath)) {
-        fs.unlinkSync(mdPagePath);
-        // We only delete the HTML page if the MD page is deleted because the MD is the master file(??)
-        if (fs.existsSync(htmlPagePath)) {
-          fs.unlinkSync(htmlPagePath);
-        }
-        return {
-          'success': true
-        };
-      }
-      else {
-        return {
-          'success': false,
-          'message': 'File "' + mdPagePath + '" was not found.'
-        };
-      }
-    }
-    catch(e) {
-      return {
-        'success': false, 
-        'message': 'There was a problem deleting the file.<br/>' + e
-      };
-    }
-  }
-
-  static RenamePage(pageData) {
-    let worldPath = configManager.ReadKey('WorldDirectory');
-    let currentWorld = configManager.ReadKey('CurrentWorld');
-    let oldMdPagePath = path.join(worldPath, currentWorld, 'md', pageData.oldPageName + '.md');
-    let oldHtmlPagePath = path.join(worldPath, currentWorld, 'html', pageData.oldPageName + '.html');
-    let newMdPagePath = path.join(worldPath, currentWorld, 'md', pageData.newPageName + '.md');
-    let newHtmlPagePath = path.join(worldPath, currentWorld, 'html', pageData.newPageName + '.html');
-    if (fs.existsSync(newMdPagePath)) {
-      return {
-        'success': false,
-        'message': 'File "' + pageData.newPageName + '" already exists. Page was not renamed.'
-      };
-    }
-    else {
-      let retVal = {
-        'success': false,
-        'message': '',
-        'saveOnReturn': false,
-        'newPagePath': newMdPagePath
-      };
-      try {
-        fs.renameSync(oldMdPagePath, newMdPagePath, function(err) {
-          if (err) {
-            retVal.success = false;
-            retVal.message = 'Unable to rename ' + pageData.oldPageName + '.<br/>' + err;
-            return retVal;
-          }
-        });
-        try {
-          fs.renameSync(oldHtmlPagePath, newHtmlPagePath, function(err) {
-            let x = 1;
-            if (err) {
-              retVal.message += 'The main page was renamed successfully, but there was a problem renaming the output page. ';
-              try {
-                fs.unlinSynck(oldHtmlPagePath);
-                fs.unlinkSync(newHtmlPagePath);
-                retVal.message += 'Removed output pages for both old and new output files.';
-                return retVal;
-              }
-              catch(e) {
-                retVal.message += 'Try re-saving this page to generate a new output page.';
-                retVal.saveOnReturn = true;
-                return retVal;
-              }
-            }
-          }); 
-          retVal.success=true; 
-          return retVal;
-        }
-        catch(e) {
-          retVal.success=true,
-          retVal.saveOnReturn = true;
-          return retVal;
-        }      
-      }
-      catch(e) {
-        retVal.success = false;
-        retVal.message += 'Unable to save file.<br/>' + e;
-        retVal.saveOnReturn = false;
-        return retVal;
-      }
-    }
-  }
 
   
   static SaveAsset(newImgPath) {

@@ -1,6 +1,6 @@
 {
   "name": "velox-mundi-desktop",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Velox Mundi Factory: A Quick World Maker. This is a fast and easy way to build a world for any type of creacive content.",
   "main": "./src/scripts/main.js",
   "productName": "Velox Mundi Desktop",
@@ -24,6 +24,7 @@
     "fs-extra": "^11.1.0",
     "jquery": "^3.6.1",
     "jsdom": "^21.1.0",
-    "mv": "^2.1.1"
+    "mv": "^2.1.1",
+    "electron-context-menu": "^3.6.1"
   }
 }
