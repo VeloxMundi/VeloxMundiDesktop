@@ -5,26 +5,22 @@
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * http: https: data:"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * http: https: data:;"
     />
 
     <link rel="stylesheet" href="../scripts/resources/bootstrap-4.3.1/css/bootstrap.min.css" />
     <link rel="stylesheet" href="../styles/custom.css" />
-    <link rel="stylesheet" href="../styles/edit.css" />
-    <title>Velox Mundi: Edit</title>
+    <link rel="stylesheet" href="../styles/rtedit.css"/>
+    <title>: Edit</title>
+
+    <!-- include summernote css/js-->
+    <link href="../assets/summernote/summernote-bs4.min.css" rel="stylesheet">
   </head>
   <body>
-    <div class="row" id="md-edit-toolbar">
-      <div class="col-6">
-        <button id="InsertImage" class="btn btn-default" title="Insert image"><span class="bi-image"></span></button>
+    <div class="row">
+      <div class="col-12">
+        <div id="editor" class=""></div>
       </div>
-    </div>
-    <div class="row" id="editorViewer">
-      <div class="col-6">
-        <div id="phantom"></div>
-        <textarea id="editor" class=""></textarea>
-          </div>
-          <div id="viewer" class="col-6 full-height"></div>
     </div>
     <div class="modal" id="pageLinkModal" tabindex="-1" role="dialog" aria-labelledby="pageLinkModalTitle" aria-hidden="true" data-backdrop="static" data-keyboard="true">
       <div class="modal-dialog modal-dialog modal-sm" role="document" style="margin:0px;">
@@ -41,13 +37,11 @@
       </div>
     </div>
   </body>
-  <script src="../scripts/resources/jquery-3.6.1.min.js"></script>  
-  <script src="../scripts/resources/bootstrap-4.3.1/js/bootstrap.bundle.js" ></script>
-  <script src="../scripts/resources/lodash.js"></script>
-  <script src="../scripts/resources/showdown.js"></script>
-
-  <script src="../scripts/mdEditorControl.js"></script>
-  <script src="../scripts/app.js"></script>
-  <script src="../scripts/editor-common.js"></script>
-  <script src="../scripts/edit.js"></script>
+    <script src="../scripts/resources/jquery-3.6.1.min.js"></script>  
+    <script src="../scripts/resources/bootstrap-4.3.1/js/bootstrap.bundle.js" ></script>
+    <script src="../assets/summernote/summernote-bs4.min.js"></script>
+    <script src="../scripts/resources/showdown.js"></script>
+    <script src="../scripts/app.js"></script>
+    <script src="../scripts/edit_common.js"></script>
+    <script src="../scripts/edit_html.js"></script>
   </html>

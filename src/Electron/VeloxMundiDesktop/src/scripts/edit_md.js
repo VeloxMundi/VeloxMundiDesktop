@@ -48,7 +48,7 @@ $(document).ready(function() {
         }
       }
       let getPage = window.contextBridge.toMainSync('page', 'GetPagePath', {
-        relPath: pageName,
+        name: pageName,
         type: pageType,
         extension: 'md'
       });
@@ -194,14 +194,14 @@ $(document).ready(function() {
         }
         else {
           let res = window.contextBridge.toMainSync('page', 'Convert', {
-            pageRelPath : pageRelPath,
-            pageType : pageType,
+            type : pageType,
+            name : pageName,
             oldFileType : 'md',
             newFileType : 'html',
             htmlContent : $('#viewer').html()
           });
           if (res.success) {
-            navigate('rteedit.html', 'path=' + pageRelPath + '&name=' + pageName);
+            navigate('edit_html.html', 'path=' + pageRelPath + '&name=' + pageName);
           }
           else {
             showToast(res.message, 'text-danger');

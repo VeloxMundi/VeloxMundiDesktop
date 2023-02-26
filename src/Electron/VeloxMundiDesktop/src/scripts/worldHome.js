@@ -26,14 +26,14 @@ $(document).ready(function() {
               )
         ));
         for (let j=0; j<typePages.length; j++) {
-          $('#PageList').append('<li><a class="navLink" href="#" data-page="' + (typePages[j].fileType=='md' ? 'edit.html' : 'rteedit.html') + '" data-query="path='+encodeURIComponent(typePages[j].relPath)+'&name=' + typePages[j].nameDisambiguation + '">' + typePages[j].name + '</a></li>');
+          $('#PageList').append('<li><a class="navLink" href="#" data-page="' + (typePages[j].fileType=='md' ? 'edit_md.html' : 'edit_html.html') + '" data-query="path='+encodeURIComponent(typePages[j].relPath)+'&name=' + typePages[j].nameDisambiguation + '">' + typePages[j].name + '</a></li>');
         }
         
         $('#PageList').append('</ul>');
       }
       
 
-      document.title += ' ' + world;
+      document.title = world + ': ' + document.title;
     }
     catch(e) {
       showToast("Unable to load world data: " + e, "text-danger");

@@ -23,7 +23,7 @@ Source: [Bootstrap Icons Website](https://icons.getbootstrap.com/) / [Git Repo](
 **Summernote**
 Source: [Summernote Website](https://summernote.org/) / [Git Repo](https://github.com/summernote/summernote)
 * Download and extract the latest summernote files (fonts, css, javascript, plugins, etc.).
-* Update script and stylesheet references to summernote in "`src/Electron/VeloxMundiDestkot/src/pages/RTEedit.html`".
+* Update script and stylesheet references to summernote in "`src/Electron/VeloxMundiDestkot/src/pages/edit_html.html`".
 
 
 ## Current Features
@@ -33,27 +33,30 @@ Source: [Summernote Website](https://summernote.org/) / [Git Repo](https://githu
 Users can create new worlds, which will be stored in their world directory (set under Tools=>Options). Once a world has been created or selected, users can create, edit, rename, and delete pages within their world using the built-in markdown editor.
 
 ### Rich-Text and Markdown Editors
+
 Users can choose to edit files using a rich-text editor (default), or to use [markdown](https://markdownguide.com) to edit pages.
+
+### Convert between HTML and Markdown
+
+Pages can be converted between HTML and Markdown format at any time.
 
 ### Native HTML Support
 
 When a file is saved, it will be saved in both markdown and HTML formats. By saving the HTML directly, we make it easy for users to publish static HTML pages to their own website, and ensure pages load quickly, without requiring conversion from markdown to HTML during page loading.
 
+### Automatic Indexing
+
+Content within the world is indexed for quick reference.
+
+Indexes are currently in .json format, but may be moved to sqlite in the future. Data included in the index is the name, disambiguation name, relPath, fileType, and date last saved.
+
+Additional options for automatic indexes will likely be added in the future.
 
 ## Future Features
 
 ### Image and Video Support
 
 Images and videos can be embedded directly into any page, and played within the page.
-
-### Automatic Indexing
-
-Content within the world will automatically be indexed based on user specifications.
-
-Indexes may be generated as a single file, listing all content grouped by page tags, or multi-page indexes, where the tags are listed on one page and link to a page showing all content within that tag.
-
-Additional options for automatic indexes may also be provided.
-
 
 ### Custom CSS Support
 

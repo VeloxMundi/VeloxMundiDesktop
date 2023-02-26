@@ -3,6 +3,7 @@ const { file, configure } = require('electron-settings');
 const fs = require('fs');
 let path = require('path');
 const config = require('process');
+const contextMenu = require('electron-context-menu');
 
 const isMac = process.platform === 'darwin';
 
@@ -16,10 +17,10 @@ module.exports = class UIManager {
   constructor() {
   }
 
-  static Invoke(event, method, data, win, isMac) {
+  static Invoke(event, method, data, windows, isMac) {
     switch(method) {
       case 'SetMenu':
-        this.SetMenu(event, win, isMac, data);
+        this.SetMenu(event, windows, isMac, data);
         break;
       case 'OpenFileDialog':
         return this.OpenFileDialog();
@@ -36,7 +37,19 @@ module.exports = class UIManager {
 
   
 
-  static SetMenu(event, win, isMac, page) {
+  static SetMenu(event, windows, isMac, page) {
+    let win = null;
+    switch(page.split('_')[0]) {
+      case 'options':
+        win = windows.options;
+        break;
+      case 'preview':
+        win = windows.preview;
+        break;
+      default:
+        win = windows.main;
+        break;
+    }
     let pageMenu = this.menuitems(win).filter(function (m) {
       return (isMac && m.id=='macMain') ||
               (m.showOn &&
@@ -55,6 +68,9 @@ module.exports = class UIManager {
     else {
       if (page.startsWith('preview_') || page.startsWith('options_')) {
         win.removeMenu();
+        contextMenu({
+          showInspectElement: !app.isPackaged
+        });
       }
       else {
         win.setMenu(Menu.buildFromTemplate(pageMenu));
@@ -136,9 +152,9 @@ module.exports = class UIManager {
         {
           id: 'File-New',
           showOn: [
-            'edit.html',
+            'edit_md.html',
+            'edit_html.html',
             'index.html',
-            'rteedit.html',
             'selectworld.html',
             'worldhome.html'
           ],
@@ -150,8 +166,8 @@ module.exports = class UIManager {
           {
             id: 'File-New-Page',
             showOn: [
-              'edit.html',
-              'rteedit.html',
+              'edit_md.html',
+              'edit_html.html',
               'worldhome.html'
             ],
             label: 'Page',
@@ -162,8 +178,8 @@ module.exports = class UIManager {
           {
             id: 'File-New-Type',
             showOn: [
-              'edit.html',
-              'rteedit.html',
+              'edit_md.html',
+              'edit_html.html',
               'worldhome.html'
             ],
             label: 'Type',
@@ -186,8 +202,8 @@ module.exports = class UIManager {
         {
           id: 'File-Save',
           showOn: [
-            'edit.html',
-            'rteedit.html'
+            'edit_md.html',
+            'edit_html.html'
           ],
           label: 'Save', 
           click: async () => {
@@ -197,8 +213,8 @@ module.exports = class UIManager {
         {
           id: 'File-SaveAndClose',
           showOn: [
-            'edit.html',
-            'rteedit.html'
+            'edit_md.html',
+            'edit_html.html'
           ],
           label: 'Save and Close',
           click: async () => {
@@ -208,8 +224,8 @@ module.exports = class UIManager {
         {
           id: 'File-Close',
           showOn: [
-            'edit.html',
-            'rteedit.html'
+            'edit_md.html',
+            'edit_html.html'
           ],
           label: 'Close',
           click: async() => {
@@ -218,15 +234,15 @@ module.exports = class UIManager {
         },
         {
           showOn: [
-            'edit.html',
-            'rteedit.html'
+            'edit_md.html',
+            'edit_html.html'
           ],
           type: 'separator'
         },
         {
           id: 'File-ConvertToHtml',
           showOn: [
-            'edit.html'
+            'edit_md.html'
           ],
           label: 'Convert to HTML',
           click: async () => {
@@ -236,7 +252,7 @@ module.exports = class UIManager {
         {
           id: 'File-ConvertToMd',
           showOn: [
-            'rteedit.html'
+            'edit_html.html'
           ],
           label: 'Convert to Markdown',
           click: async () => {
@@ -245,16 +261,16 @@ module.exports = class UIManager {
         },
         {
           showOn: [
-            'edit.html',
-            'rteedit.html'
+            'edit_md.html',
+            'edit_html.html'
           ],
           type: 'separator'
         },
         {
           id: 'File-Rename',
           showOn: [
-            'edit.html',
-            'rteedit.html'
+            'edit_md.html',
+            'edit_html.html'
           ],
           label: 'Rename',
           click: async () => {
@@ -264,8 +280,8 @@ module.exports = class UIManager {
         {
           id: 'File-Delete',
           showOn: [
-            'edit.html',
-            'rteedit.html'
+            'edit_md.html',
+            'edit_html.html'
           ],
           label: 'Delete',
           click: async () => {
@@ -278,8 +294,8 @@ module.exports = class UIManager {
         {
           id: 'File-Separator-02',
           showOn: [
-            'edit.html',
-            'rteedit.html',
+            'edit_md.html',
+            'edit_html.html',
             'selectworld.html',
             'worldhome.html'
           ],

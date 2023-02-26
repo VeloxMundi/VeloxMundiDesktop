@@ -68,6 +68,8 @@ module.exports = class ConfigManager {
   
   
   static ReadPage(pagePath) {
+    return fileManager.ReadFileToString(pagePath);
+    //disable the rest for now...
     let pageContents = '';
     let editorStyle=configManager.ReadUserPref('editorStyle')
     switch(editorStyle) {
@@ -345,10 +347,15 @@ module.exports = class ConfigManager {
   }
 
   static GetPagePath(pathInfo) {
+    /* pathInfo:
+      type
+      name
+      extension
+    */
     let baseDir = configManager.ReadKey('WorldDirectory');
     let worldDir = path.join(baseDir, configManager.ReadKey('CurrentWorld'));
     let pagePath = '';
-    pagePath = path.join(worldDir,'pages',pathInfo.type, pathInfo.relPath + '.' + pathInfo.extension);
+    pagePath = path.join(worldDir,'pages',pathInfo.type, pathInfo.name + '.' + pathInfo.extension);
     if (fs.existsSync(pagePath)) {
       return {
         success: true,
@@ -522,7 +529,12 @@ module.exports = class ConfigManager {
 
     */
     
-
+    let newDirParts = newPathData.fullPath.split(path.sep);
+    newDirParts.pop();
+    let newDir = newDirParts.join(path.sep);
+    if (!fs.existsSync(newDir)) {
+      fs.mkdirSync(newDir);
+    }
     if (fs.existsSync(newPathData.fullPath)) {
       return {
         'success': false,
@@ -585,8 +597,8 @@ module.exports = class ConfigManager {
   static Convert(event, pageData) {
     if (pageData && pageData.oldFileType=='md' && pageData.newFileType=='html') {
       let getPagePath = this.GetPagePath({
-        type : pageData.pageType,
-        relPath : pageData.pageRelPath,
+        type : pageData.type,
+        name : pageData.name,
         extension : pageData.oldFileType
       });
       if (getPagePath.success) {
@@ -617,7 +629,37 @@ module.exports = class ConfigManager {
       }
     }
     else if (pageData && pageData.oldFileType=='html' && pageData.newFileType=='md') {
-
+      let getPagePath = this.GetPagePath({
+        type : pageData.type,
+        name : pageData.name,
+        extension : pageData.oldFileType
+      });
+      if (getPagePath.success) {
+        let pagePathParts = getPagePath.path.split('.');
+        let oldExt = pagePathParts.pop();
+        let newPagePath = pagePathParts.join('.') + '.md';
+        try {
+          fs.renameSync(getPagePath.path, newPagePath, function(err) {
+            if (err) {
+              retVal.success = false;
+              retVal.message = 'Unable to convert ' + getPagePath.path + '.<br/>' + err;
+              return retVal;
+            }
+          });
+          fs.writeFileSync(newPagePath, pageData.mdContent);
+          this.AddPageToIndex(newPagePath, true);
+          return {
+            success: true,
+            newPath: newPagePath
+          };
+        }
+        catch(e) {
+          return {
+            success: false,
+            message: 'Unable to convert page. ' + e
+          };
+        }
+      }
     }
     else {
       return {

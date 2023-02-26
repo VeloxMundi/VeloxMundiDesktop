@@ -116,6 +116,7 @@ ipcMain.on('toMainSync', (event, module, method, data) => {
 });
 
 function CreateOptionsWindow(page, query) {
+  qry = GetQueryObjFromString(query);
   if (!optionsWindow) {
     optionsWindowStateKeeper = windowStateKeeper('options');
     const windowOptions = {
@@ -132,7 +133,7 @@ function CreateOptionsWindow(page, query) {
     }
     optionsWindow = new BrowserWindow(windowOptions);
     optionsWindowStateKeeper.track(optionsWindow);
-    optionsWindow.loadFile(path.join(pagePath, page), {query: query});
+    optionsWindow.loadFile(path.join(pagePath, page), {query: qry});
     optionsWindow.on('closed', function() {
       optionsWindow = null;
     });
@@ -141,11 +142,12 @@ function CreateOptionsWindow(page, query) {
   }
   else {
     optionsWindow.focus();
-    optionsWindow.loadFile(path.join(pagePath, page));
+    optionsWindow.loadFile(path.join(pagePath, page), {query: qry});
   }
 }
 
 function CreatePreviewWindow(page, query) {
+  let qry = GetQueryObjFromString(query);
   if (!previewWindow) {
     previewWindowStateKeeper = windowStateKeeper('preview');
     const windowOptions = {
@@ -162,22 +164,39 @@ function CreatePreviewWindow(page, query) {
     }
     previewWindow = new BrowserWindow(windowOptions);
     previewWindowStateKeeper.track(previewWindow);
-    previewWindow.loadFile(path.join(pagePath, page), {query: query});
+    previewWindow.loadFile(path.join(pagePath, page), {query: qry});
     previewWindow.on('closed', function() {
       previewWindow = null;
     });
+    previewWindow.focus();
     previewWindow.removeMenu();
   }
   else {
     previewWindow.focus();
-    previewWindow.loadFile(path.join(pagePath, page));
+    previewWindow.loadFile(path.join(pagePath, page), {query: qry});
   }
+}
+
+function GetQueryObjFromString(query) {
+  let obj = {};
+  if (query) {
+    let queryParts = query.split('&');
+    for (let i=0; i<queryParts.length; i++) {
+      let param = queryParts[i].split('=');
+      obj[param[0]] = param[1];
+    }
+  }
+  return obj;
 }
 
 function CallModuleMethod(event, module, method, data)
 {
   try {
-    let thisWin = focusedWindow();
+    let windows = {
+      main : mainWindow,
+      preview: previewWindow,
+      options: optionsWindow
+    };
     switch(module)
     {
       case 'navigate':
@@ -196,7 +215,7 @@ function CallModuleMethod(event, module, method, data)
         return fileManager.Invoke(event, method, data);
         break;
       case 'ui':
-        return uiManager.Invoke(event, method, data, thisWin, isMac);
+        return uiManager.Invoke(event, method, data, windows, isMac);
         break;
       case 'quit':
         mainWindow.close();
@@ -231,11 +250,11 @@ function loadPage(pageName, qry) {
   {
     // Options pages load in a new window
     if (pageName.startsWith('options_')) {
-      CreateOptionsWindow(pageName);
+      CreateOptionsWindow(pageName, qry);
       doNav=false; 
     }    
     else if (pageName.startsWith('preview_')) {
-      CreatePreviewWindow(pageName);
+      CreatePreviewWindow(pageName, qry);
       doNav=false; 
     }
   }

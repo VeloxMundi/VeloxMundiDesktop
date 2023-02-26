@@ -131,8 +131,8 @@ $(document).ready(function() {
     let pair = vars[i].split('=');
     if (pair[0].toLowerCase()=='path') {
       let relPathParts = decodeURIComponent(pair[1]).split(pathSep);
-      let pageName = '';
-      let pageType = '';
+      pageName = '';
+      pageType = '';
       for (let i=0; i<relPathParts.length; i++) {
         if (i<relPathParts.length-1) {
           pageType += (pageType=='' || i==relPathParts.length-1 ? '' : pathSep) + relPathParts[i];
@@ -141,8 +141,9 @@ $(document).ready(function() {
           pageName = relPathParts[i];
         }
       }
+      pageType = pageType.replace(pathSep,typeSep);
       let getPage = window.contextBridge.toMainSync('page', 'GetPagePath', {
-        relPath: pageName,
+        name: pageName,
         type: pageType,
         extension: 'html'
       });
@@ -155,7 +156,8 @@ $(document).ready(function() {
       }
     }
     else if (pair[0].toLowerCase()=='name') {      
-      document.title = docBaseTitle + ' ' + decodeURIComponent(pair[1]);
+      pageNameDisambiguation = decodeURIComponent(pair[1]).replace(pathSep,typeSep);
+      document.title = pageNameDisambiguation + ' ' + docBaseTitle;
     }
   }
 
@@ -219,7 +221,7 @@ $(document).ready(function() {
         });
         break;
       case 'RenamePage':
-        showModal('Rename ' + pageType + pathSep + pageName, '<div id="RenameError" class="text-danger"></div><p>New name:</p><p><input type="text" id="NewPageName" length="25"/></p>','<button id="CancelRename" class="btn btn-default">Cancel</button><button id="RenamePage" class="btn btn-success">Rename</button>','#NewPageName', '#RenamePage');
+        showModal('Rename ' + pageType + pathSep + pageName, '<div id="RenameError" class="text-danger"></div><p>New name:</p><p><input type="text" id="NewPageName" length="25" value="' + pageType + pathSep + pageName + '"/></p>','<button id="CancelRename" class="btn btn-default">Cancel</button><button id="RenamePage" class="btn btn-success">Rename</button>','#NewPageName', '#RenamePage');
         $('#CancelRename').on('click', function() {
           hideModal();
         });
@@ -254,7 +256,10 @@ $(document).ready(function() {
         });
         break;
       case 'Convert':
-        navigate('preview_htmlToMd.html');
+        if (pageDirty) {
+          CheckPathAndSave();
+        }
+        navigate('preview_htmlToMd.html','path=' + pageType + pathSep + pageName + '&name=' + pageNameDisambiguation);
         break;
       default:
         break;
