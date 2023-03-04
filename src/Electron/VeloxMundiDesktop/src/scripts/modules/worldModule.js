@@ -45,6 +45,12 @@ module.exports = class ConfigManager {
       case 'IndexWorldPages':
         return this.IndexWorldPages();
         break;
+      case 'GetRelPath':
+        return this.GetRelPath(data);
+        break;
+      case 'GetFullPathFromRelPath':
+        return this.GetFullPathFromRelPath(data);
+        break;
       default:
         event.sender.send('Invalid method call: "' + method + '"');
         break;
@@ -149,15 +155,16 @@ module.exports = class ConfigManager {
 
 
   
-  static SaveAsset(newImgPath) {
+  static SaveAsset(newAssetPath, assetType) {
     try {
+      assetType = (!assetType || assetType=='' ? 'image' : assetType);
       let worldDir = configManager.ReadKey('WorldDirectory');
       let currentWorld = configManager.ReadKey('CurrentWorld');
       let imgPath = path.join(worldDir, currentWorld, '_web', '_assets');
       fse.ensureDirSync(imgPath);
-      let fileName = newImgPath.split('\\').pop();
+      let fileName = newAssetPath.split(path.sep).pop();
       let destPath = path.join(imgPath, fileName);
-      fs.copyFileSync(newImgPath, destPath);
+      fs.copyFileSync(newAssetPath, destPath);
       return {
         success: true,
         path: destPath,
@@ -172,8 +179,78 @@ module.exports = class ConfigManager {
     }
   }
 
-  static SaveAssetFromURL(url) {
-    let x = 1;
+  static GetFullPathFromRelPath(relPathInfo) {
+    /* relPathInfo:
+    fromFullPath (string)
+    relPath (string)
+    */
+    let fullPathInfo = {};
+    let fromPathParts = relPathInfo.fromFullPath.split(path.sep);
+    let baseIndex = fromPathParts.length-1;
+    let relPathParts = relPathInfo.relPath.split('/');
+    let relBaseIndex = 0;
+    for (let i=0; i<relPathParts.length; i++) {
+      if (relPathParts[i]=='..') {
+        baseIndex--;
+        relBaseIndex++;
+      }
+      else {
+        break;
+      }
+    }
+    // Something is wrong when we do path.join on 'C:' and 'folder', so I'm using this as a workaround...
+    let newBase = fromPathParts[0]+path.sep;
+    for (let i=1; i<baseIndex; i++) {
+      newBase = path.join(newBase, fromPathParts[i]);
+    }
+    let newRel = '';
+    for (let i=relBaseIndex; i<relPathParts.length; i++) {
+      newRel = path.join(newRel,relPathParts[i]);
+    }
+    fullPathInfo.success = true;
+    fullPathInfo.fullPath = path.join(newBase,newRel);
+
+  }
+  static GetRelPath(pathInfo) {
+    /* pathInfo:
+    isRelPath (bool)
+    fromPath (string)
+    toPath (string)
+    */
+    try {
+      let relPathInfo = {};
+      let relPath = '';
+      if (pathInfo.isRelPath) {
+        let basePath = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld'));
+        pathInfo.fromPath = path.join(basePath, pathInfo.fromPath);
+        pathInfo.toPath = path.join(basePath, pathInfo.toPath);
+      }
+      let fromPathParts = pathInfo.fromPath.split(path.sep);
+      let toPathParts = pathInfo.toPath.split(path.sep);
+      let divergeIndex = 0;
+      for (let i=0; i<toPathParts.length; i++) {
+        if (fromPathParts[i]!=toPathParts[i]) {
+          divergeIndex = i;
+          break; //stop iterating
+        }
+      }
+
+      for (let i=divergeIndex; i<fromPathParts.length-1; i++) {
+        relPath += '../';
+      }
+      let divergeTo = '';
+      for (let i=divergeIndex; i<toPathParts.length; i++) {
+        divergeTo = path.join(divergeTo, toPathParts[i]);
+      }
+      relPath += divergeTo;
+      relPathInfo.success = true;
+      relPathInfo.relPath = relPath;
+    }
+    catch(e) {
+      relPathInfo.success = false;
+      relPathInfo.message = e;
+    }
+    return relPathInfo;
   }
 
 }

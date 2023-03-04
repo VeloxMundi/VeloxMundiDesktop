@@ -270,21 +270,23 @@ module.exports = class ConfigManager {
   }
 
   static tweakMD(action, md) {
+    // Use worldManager.GetRelPath and worldManager.GetFullPathFromRelPath to alter image source for reading or saving the file
     let worldPath = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld')) + path.sep;
     let linkRegex = /<file\:\/\/\/(.+)\)/g
-    let temp = md.replace('<file:///' + worldPath,'');
+    let temp = md.replace('<file:///' + worldPath,'<');
     return md;
   }
   static tweakHTML(action, html) {
+    // Use worldManager.GetRelPath and worldManager.GetFullPathFromRelPath to alter image source for reading or saving the file.
     let basePath = path.join(configManager.ReadKey('WorldDirectory'), configManager.ReadKey('CurrentWorld'));
-    let baseImgPath = path.join(basePath, 'html', 'assets');
+    let baseImgPath = path.join(basePath, '_web','_assets','images');
     let dom = null;
     switch(action) {
       case 'read':
         dom = new jsdom.JSDOM(html);
         break;
       case 'save':
-        dom = new jsdom.JSDOM(`<!DOCTYPE html><body>${html}</body>`);
+        dom = new jsdom.JSDOM(`<!DOCTYPE html><html><body>${html}</body></html>`);
         break;
     }
     let jquery = require('jquery')(dom.window);
@@ -480,29 +482,40 @@ module.exports = class ConfigManager {
     let currentWorld = configManager.ReadKey('CurrentWorld');
     let pagePath = path.join(worldPath, currentWorld, 'pages', pageName);
     */
+    let delResult = {
+      success: false
+    };
     try {
+      let pageData = this.GetPageData({
+        fullPath : pagePath
+      });
+      let webDir = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld'),'_web',pageData.relPath);
+      if (fs.existsSync(webDir)) {
+        try {
+          fs.rmdirSync(webDir, {recursive: true});
+        }
+        catch(e) {
+          delResult.message += 'Unable to remove _web preview page.\r\n';
+        }
+      }
       if (fs.existsSync(pagePath)) {
         fs.unlinkSync(pagePath);
         this.RemovePageFromIndex({
           pagePath: pagePath
         });
-        return {
-          'success': true
-        };
+        delResult.success = true;
       }
       else {
-        return {
-          'success': false,
-          'message': 'File "' + pagePath + '" was not found.'
-        };
+        delResult.success = false;
+        delResult.message += 'File "' + pagePath + '" was not found.';
       }
     }
     catch(e) {
-      return {
-        'success': false, 
-        'message': 'There was a problem deleting the file.<br/>' + e
-      };
+      delResult.success = false;
+      delResult.message += 'There was a problem deleting the file.<br/>' + e;
     }
+
+    return delResult;
   }
 
   static RenamePage(pageData) {
@@ -663,7 +676,12 @@ module.exports = class ConfigManager {
   }
 
   static GetPageData(pathInfo) {
+    /* pathInfo:
+      fullPath (string) (optional)
+      relPath (string) (optional)
+    */
     let pathData = {
+      success : false,
       fullPath : '',
       relPath : '',
       fileExt : '',
@@ -706,6 +724,12 @@ module.exports = class ConfigManager {
       for (let i=0; i<relPathParts.length-1; i++) {
         pathData.pageType = path.join(pathData.pageType,relPathParts[i]);
       }
+
+      pathData.success = true;
+    }
+    else {
+      pathData.success = false;
+      pathData.message = 'Please specify either a relPath or a fullPath.';
     }
   
     return pathData;

@@ -115,10 +115,10 @@ $(document).ready(function() {
             let imgPath = $('#ImagePath').val();
             let imgSrc = $('#InsertImageURL').val();
             if (imgPath && imgPath!='') {
-              let resp = window.contextBridge.toMainSync('world', 'SaveAsset', imgPath);
-              if (resp.success) {
+              let saveResp = window.contextBridge.toMainSync('world', 'SaveAsset', imgPath);
+              if (saveResp.success) {
                 hideModal();
-                let img = '![](<file:///' + resp.path.replace(/_/g,'\\_').replace(/ /g,'%20') + '>)\r\n';
+                let img = '![](<file:///' + saveResp.path.replace(/_/g,'\\_').replace(/ /g,'%20') + '>)\r\n';
                 InsertInEditor(img);
               }
               else {
