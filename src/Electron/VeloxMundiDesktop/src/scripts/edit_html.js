@@ -66,10 +66,6 @@ $(document).ready(function() {
             $('#pageLinkHref').trigger('focus');
           }
         }
-        /*,        
-        onMouseup: function(e) {
-          console.log('Click ' + e.pageX + '/' + e.pageY);
-        }*/
       }
     }
   );
@@ -78,24 +74,15 @@ $(document).ready(function() {
     e.preventDefault();
   });
 
+  /*
   function getCaretPosition(editableDiv) {
     var caretPos = 0,
       sel, range;
 
-    /*else if (document.selection && document.selection.createRange) {
-      range = document.selection.createRange();
-      if (range.parentElement() == editableDiv) {
-        var tempEl = document.createElement("span");
-        editableDiv.insertBefore(tempEl, editableDiv.firstChild);
-        var tempRange = range.duplicate();
-        tempRange.moveToElementText(tempEl);
-        tempRange.setEndPoint("EndToEnd", range);
-        caretPos = tempRange.text.length;
-      }
-    }
-    */
     return caretPos;
   }
+  */
+
   $('.note-resizebar').hide();
 
   $('#pageLinkModal').on('hidden.bs.modal', function() {
@@ -143,8 +130,7 @@ $(document).ready(function() {
       }
       pageType = pageType.replace(pathSep,typeSep);
       let getPage = window.contextBridge.toMainSync('page', 'GetPagePath', {
-        name: pageName,
-        type: pageType,
+        relPath: (pageType && pageType!='' ? pageType + pathSep : '') + pageName,
         extension: 'html'
       });
       if (getPage.success) {
@@ -163,7 +149,7 @@ $(document).ready(function() {
 
   $('#editor').trigger('focus');
 
-  var converter = new showdown.Converter({ tables: true, strikethrough: true });
+  //var converter = new showdown.Converter({ tables: true, strikethrough: true });
 
 
   // local variables
@@ -211,55 +197,79 @@ $(document).ready(function() {
         break;
       case 'DeletePage':
         // Prompt for confirmation
-        showModal('Confirm delete', '<p>Are you sure you want to delete this page?</p><p><b>This cannot be undone!</b></p>','<button id="CancelDelete" class="btn btn-default">Cancel</button><button id="ConfirmDelete" class="btn btn-success">Delete</button>', '#ConfirmDelete');
-        $('#CancelDelete').on('click', function() {
-          hideModal();
-        });
-        $('#ConfirmDelete').on('click', function() {
-          modalLock(true);
-          window.contextBridge.toMain('return', 'ConfirmDelete');
-        });
+        showModal(
+          {
+            title: 'Confirm delete', 
+            body: '<p>Are you sure you want to delete this page?</p><p><b>This cannot be undone!</b></p>',
+            footer: '<button id="CancelDelete" class="btn btn-default">Cancel</button><button id="ConfirmDelete" class="btn btn-success">Delete</button>',
+            focus: '#ConfirmDelete',
+            callback: function() {
+              $('#CancelDelete').on('click', function() {
+                hideModal();
+              });
+              $('#ConfirmDelete').on('click', function() {
+                modalLock(true);
+                window.contextBridge.toMain('return', 'ConfirmDelete');
+              });
+            }
+          });
         break;
       case 'RenamePage':
-        showModal('Rename ' + pageType + pathSep + pageName, '<div id="RenameError" class="text-danger"></div><p>New name:</p><p><input type="text" id="NewPageName" length="25" value="' + pageType + pathSep + pageName + '"/></p>','<button id="CancelRename" class="btn btn-default">Cancel</button><button id="RenamePage" class="btn btn-success">Rename</button>','#NewPageName', '#RenamePage');
-        $('#CancelRename').on('click', function() {
-          hideModal();
-        });
-        $('#RenamePage').on('click', function() {
-          SavePage();
-          let newPageName = $('#NewPageName').val();
-          if (newPageName && newPageName!='') {
-            let result = window.contextBridge.toMainSync('page', 'RenamePage', {
-              'oldPagePath': pagePath,
-              'newPageName': newPageName
-            });
-            hideModal();
-            if (result.success) {
-              document.title = docBaseTitle + ' ' + newPageName;
-              pagePath = result.newPagePath;
-              window.contextBridge.toMain('config', 'WriteKey', ['CurrentPage', 'edit.html?path=' + encodeURIComponent(pagePath)]);
-              pageName = result.newPageName;
-              pageType = result.newPageType;              
-              SavePage();
-              showToast('File renamed successfully!', 'text-success');
+        showModal(
+          {
+            title: 'Rename ' + pageType + pathSep + pageName, 
+            body: '<div id="RenameError" class="text-danger"></div><p>New name:</p><p><input type="text" id="NewPageName" length="25" value="' + pageType + pathSep + pageName + '"/></p>',
+            footer: '<button id="CancelRename" class="btn btn-default">Cancel</button><button id="RenamePage" class="btn btn-success">Rename</button>',
+            focus: '#NewPageName', 
+            confirmButton: '#RenamePage',
+            callback: function() {
+              $('#CancelRename').on('click', function() {
+                hideModal();
+              });
+              $('#RenamePage').on('click', function() {
+                SavePage();
+                let newPageName = $('#NewPageName').val();
+                if (newPageName && newPageName!='') {
+                  let result = window.contextBridge.toMainSync('page', 'RenamePage', {
+                    'oldPagePath': pagePath,
+                    'newPageName': newPageName
+                  });
+                  hideModal();
+                  if (result.success) {
+                    document.title = docBaseTitle + ' ' + newPageName;
+                    pagePath = result.newPagePath;
+                    window.contextBridge.toMain('config', 'WriteKey', ['CurrentPage', 'edit.html?path=' + encodeURIComponent(pagePath)]);
+                    pageName = result.newPageName;
+                    pageType = result.newPageType;              
+                    SavePage();
+                    showToast('File renamed successfully!', 'text-success');
+                  }
+                  else if (result.message && result.message!='') {
+                    showToast('There was a problem renaming the file.<br/>' + result.message, 'text-error');
+                  }
+                  else {
+                    showToast('There was a problem renaming the file.', 'text-danger');
+                  }
+                }
+                else {
+                  $('#RenameError').text('Please enter a new name');
+                }
+              });
             }
-            else if (result.message && result.message!='') {
-              showToast('There was a problem renaming the file.<br/>' + result.message, 'text-error');
-            }
-            else {
-              showToast('There was a problem renaming the file.', 'text-danger');
-            }
-          }
-          else {
-            $('#RenameError').text('Please enter a new name');
-          }
-        });
+          });
         break;
       case 'Convert':
         if (pageDirty) {
           CheckPathAndSave();
         }
-        navigate('preview_htmlToMd.html','path=' + pageType + pathSep + pageName + '&name=' + pageNameDisambiguation);
+
+        if (!pageName || pageName=='') {
+          navigate('new_MD');
+          break;
+        }
+        else {        
+          navigate('preview_htmlToMd.html','path=' + pageType + pathSep + pageName + '&name=' + pageNameDisambiguation);
+        }
         break;
       default:
         break;
@@ -269,28 +279,34 @@ $(document).ready(function() {
   function CheckPathAndSave() {
 
     if (pagePath=='') {
-        showModal('Save as...','<input type="text" length="25" id="SaveAsName"/>', '<button class="btn btn-default" id="CancelSaveAs">Cancel</button><button class="btn btn-danger" id="SetSaveAs">Save</button>','#SaveAsName');
-        modalLock(true);
-        $('#CancelSaveAs').on('click', function(e) {
-          modalLock(false);
-          hideModal();
-        });
-        $('#SetSaveAs').on('click', function(e) {
-          modalLock(true);
-          let saveAsName = $('#SaveAsName').val();
-          if (saveAsName && saveAsName!='') {
-            $('#CancelSaveAs').prop('disabled',true);
-            $('#SetSaveAs').prop('disabled', true);
+      showModal(
+        {
+          title: 'Save as...',
+          body: '<input type="text" length="25" id="SaveAsName"/>',
+          footer: '<button class="btn btn-default" id="CancelSaveAs">Cancel</button><button class="btn btn-danger" id="SetSaveAs">Save</button>',
+          focus: '#SaveAsName',
+          callback: function() {
+            modalLock(true);
+            $('#CancelSaveAs').on('click', function(e) {
+              modalLock(false);
+              hideModal();
+            });
+            $('#SetSaveAs').on('click', function(e) {
+              modalLock(true);
+              let saveAsName = $('#SaveAsName').val();
+              if (saveAsName && saveAsName!='') {
+                $('#CancelSaveAs').prop('disabled',true);
+                $('#SetSaveAs').prop('disabled', true);
 
-            window.contextBridge.toMain('page', 'SetSaveAsName', {
-              'action': 'Save',
-              'fileName': saveAsName
+                window.contextBridge.toMain('page', 'SetSaveAsName', {
+                  'action': 'Save',
+                  'fileName': saveAsName
+                });
+              }
             });
           }
-        });
-
-      //$("body").append('<div id="overlay" style="background-color:rgba(211,211,211,.4);position:absolute;top:0;left:0;height:100%;width:100%;z-index:999"></div>');
-      //window.contextBridge.toMain('world', 'GetSaveAsPath');
+        }
+      );
     }
     else {
       SavePage();
@@ -372,7 +388,7 @@ $(document).ready(function() {
         CheckPathAndSave();
         break;
       case 'ConfirmDelete':
-        let delResult = window.contextBridge.toMainSync('world', 'DeletePage', pagePath);
+        let delResult = window.contextBridge.toMainSync('page', 'DeletePage', pagePath);
         if (delResult.success) {
           pageDirty = false;
           modalLock(false);
@@ -380,6 +396,7 @@ $(document).ready(function() {
           navigate('worldHome.html');
         }
         else {
+          hideModal();
           showToast(delResult.message, 'text-danger');
         }
         break;
@@ -439,14 +456,14 @@ $(document).ready(function() {
         /*for each item in the array...*/
         for (i = 0; i < arr.length; i++) {
           /*check if the item starts with the same letters as the text field value:*/
-          if (arr[i].NameDisambiguation.substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+          if (arr[i].nameDisambiguation.substr(0, val.length).toUpperCase() == val.toUpperCase()) {
             /*create a DIV element for each matching element:*/
             b = document.createElement("DIV");
             /*make the matching letters bold:*/
-            b.innerHTML = "<strong>" + arr[i].NameDisambiguation.substr(0, val.length) + "</strong>";
-            b.innerHTML += arr[i].NameDisambiguation.substr(val.length);
+            b.innerHTML = "<strong>" + arr[i].nameDisambiguation.substr(0, val.length) + "</strong>";
+            b.innerHTML += arr[i].nameDisambiguation.substr(val.length);
             /*insert a input field that will hold the current array item's value:*/
-            b.innerHTML += "<input type='hidden' value='" + arr[i].NameDisambiguation + "'>";
+            b.innerHTML += "<input type='hidden' value='" + arr[i].nameDisambiguation + "'>";
             /*execute a function when someone clicks on the item value (DIV element):*/
             b.addEventListener("click", function(e) {
                 /*insert the value for the autocomplete text field:*/

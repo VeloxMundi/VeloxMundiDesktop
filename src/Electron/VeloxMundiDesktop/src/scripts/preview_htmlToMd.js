@@ -21,8 +21,7 @@ $(function(e) {
       }
       pageType = pageType.replace(pathSep,typeSep);
       let getPage = window.contextBridge.toMainSync('page', 'GetPagePath', {
-        name: pageName,
-        type: pageType,
+        relPath: (pageType && pageType!='' ? pageType + pathSep : '') + pageName,
         extension: 'html'
       });
       if (getPage.success) {

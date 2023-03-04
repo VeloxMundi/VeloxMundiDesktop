@@ -97,12 +97,15 @@ module.exports = class ConfigManager {
     }
   }
 
+  
   static IndexWorldPages() {
-    // TODO: Iterate through all pages in the HTML directory and create an index for each.
+    // TODO: Iterate through all pages in the 'pages' directory and create an index for each.
+
   }
 
   static CreateWorld(worldName) {
     try {
+      let appPath = app.getAppPath();
       let worldPath = configManager.ReadKey('WorldDirectory');
       let dir = path.join(worldPath, worldName);
       if (!fs.existsSync(dir)) {
@@ -110,7 +113,10 @@ module.exports = class ConfigManager {
         fs.mkdirSync(path.join(dir, 'pages'));
         fs.mkdirSync(path.join(dir, 'assets'));        
         fs.mkdirSync(path.join(dir, 'styles'));
-        fs.copyFileSync(path.join(app.getAppPath(), 'src', 'styles', 'default.css'), path.join(dir, 'styles', 'default.css'));
+        fs.copyFileSync(path.join(appPath, 'src', 'styles', 'default.css'), path.join(dir, 'styles', 'default.css'));
+        if (fs.existsSync(path.join(appPath, 'user', 'global.css'))) {
+          fs.copyFileSync(path.join(appPath, 'user', 'global.css'), path.join(dir, 'styles', 'global.css'));
+        }
         configManager.WriteKey('CurrentWorld', worldName);
         let data={
           worldName : worldName,
@@ -147,14 +153,15 @@ module.exports = class ConfigManager {
     try {
       let worldDir = configManager.ReadKey('WorldDirectory');
       let currentWorld = configManager.ReadKey('CurrentWorld');
-      let imgPath = path.join(worldDir, currentWorld, 'html', 'assets')
+      let imgPath = path.join(worldDir, currentWorld, '_web', '_assets');
       fse.ensureDirSync(imgPath);
       let fileName = newImgPath.split('\\').pop();
       let destPath = path.join(imgPath, fileName);
       fs.copyFileSync(newImgPath, destPath);
       return {
         success: true,
-        path: destPath
+        path: destPath,
+        relPath: path.join('_web','_assets',fileName)
       };
     }
     catch(e) {

@@ -38,103 +38,124 @@ function navigate(pagePath, qry) {
     }
   }
   else {
-    modalLock(false);
-    showModal('Unsaved changes', '<p>Would you like to save your changes before leaving this page?', '<button id="CancelNavigation" class="btn btn-default">Cancel</button><button id="CancelAndNavigate" class="btn btn-danger">Don\'t Save</button><button id="SaveAndNavigate" class="btn btn-success">Save</button>',undefined, '#SaveAndNavigate');
-    $('#CancelNavigation').on('click', function() {
-      modalLock(false);
-      hideModal();
-    });
-    $('#CancelAndNavigate').on('click', function() {
-      modalLock(false);
-      pageDirty=false;
-      hideModal();
-      navigate(pagePath);
-    });
-    $('#SaveAndNavigate').on('click', function() {
-      modalLock(true);
-      window.contextBridge.toMain('return', 'SaveAndNavigate', pagePath);
+    modalLock(false);;
+    showModal(
+      {
+        title: 'Unsaved changes', 
+        body: '<p>Would you like to save your changes before leaving this page?', 
+        footer: '<button id="CancelNavigation" class="btn btn-default">Cancel</button><button id="CancelAndNavigate" class="btn btn-danger">Don\'t Save</button><button id="SaveAndNavigate" class="btn btn-success">Save</button>',
+        focus: '#SaveAndNavigate', 
+        callback: function() {
+          $('#CancelNavigation').on('click', function() {
+            modalLock(false);
+            hideModal();
+          });
+          $('#CancelAndNavigate').on('click', function() {
+            modalLock(false);
+            pageDirty=false;
+            hideModal();
+            navigate(pagePath);
+          });
+          $('#SaveAndNavigate').on('click', function() {
+            modalLock(true);
+            window.contextBridge.toMain('return', 'SaveAndNavigate', pagePath);
+          });
+        }
     });
   }
 }
 
-function showModal(title, body, footer, focus, defaultButton) {
-  $('#appModalError').text('');
-    $('#appModalTitle').html('');
-    $('#appModalBody').html('');
-    $('#appModalFooter').html('');
-  if (!title || title=='') {
-    $('#appModalTitle').hide();
+function showModal({title, body, footer, focus, defaultButton, callback}) {
+  if ($('#appModal').hasClass('show')) {
+    $('#appModal').modal('hide').on('hidden.bs.modal', function() {
+      showModal({title, body, footer, focus, defaultButton, callback});
+      $('#appModal').off('hidden.bs.modal');
+    });
   }
   else {
-    $('#appModalTitle').show();
-    $('#appModalTitle').text(title);
-  }
-  if (!footer || footer=='') {
-    $('#appModalFooter').hide();
-  }
-  else {
-    $('#appModalFooter').show();
-    $('#appModalFooter').html(footer);
-  }
-  $('#appModalBody').html(body);
-  /*
-  $('#appModal').modal('show');
-  $('#appModal').addClass('show');
-  $('#appModal').css('display', 'block');
-  */
- $('#appModal').modal('hide');
- $('#appModalShow').trigger('click');
-  if (focus && focus!='') {
-    $('#appModal').data('focus',focus);
-    if (defaultButton && defaultButton!='') {
-      $(focus).on('keypress', function(event){
-        var keycode = (event.keyCode ? event.keyCode : event.which);
-        if(keycode == '13'){
-            $(defaultButton).trigger('click');
+    $('#appModal').modal('show').on('shown.bs.modal', function() {
+      $('#appModalError').text('');
+      $('#appModalTitle').html('');
+      $('#appModalBody').html('');
+      $('#appModalFooter').html('');
+      if (!title || title=='') {
+        $('#appModalTitle').hide();
+      }
+      else {
+        $('#appModalTitle').show();
+        $('#appModalTitle').text(title);
+      }
+      if (!footer || footer=='') {
+        $('#appModalFooter').hide();
+      }
+      else {
+        $('#appModalFooter').show();
+        $('#appModalFooter').html(footer);
+      }
+      $('#appModalBody').html(body);
+
+      if (focus && focus!='') {
+        //$('#appModal').data('focus',focus);
+        $(focus).trigger('focus');
+        if (defaultButton && defaultButton!='') {
+          $(focus).on('keypress', function(event){
+            //var keycode = (event.key==='Enter' || event.key==='NumberpadEnter');
+            if(event.key==='Enter' || event.key==='NubmerpadEnter'){
+                $(defaultButton).trigger('click');
+            }
+          });
         }
-      });
-    }
-  }
-  else {
-    if (defaultButton && defaultButton!='') {
-      $(document).on('keypress', function(event){
-        var keycode = (event.keyCode ? event.keyCode : event.which);
-        if(keycode == '13'){
-            $(defaultButton).trigger('click');
+      }
+      else {
+        if (defaultButton && defaultButton!='') {
+          $(document).on('keypress', function(event){
+            //var keycode = ();
+            if(event.key==='Enter' || event.key==='NubmerpadEnter'){
+                $(defaultButton).trigger('click');
+            }
+          });
         }
-      });
-    }
+      }
+      modalLock(modalLocked);
+      if (callback) {
+        callback();
+      }
+      $('#appModal').off('shown.bs.modal');
+    });  
   }
-  modalLock(modalLocked);
 }
 
 function hideModal() {
-  if ($('#appModalTitle').text()=='Save as...') {
-    let x = 1;
-  }
-  else if ($('#appModalTitle').text()=='Unsaved changes') {
-    let x = 2;
-  }
-  if (modalLocked) {
-    $('#appmodalClose').hide();
-  }
-  else {
-    $('#appmodalClose').show();
-  }
-  // Remove on-click event handlers for all buttons
-  $('#appModalFooter button').each(function() {
-    $(this).off();
+  $('#appModal').modal('hide').on('hidden.bs.modal', function() {    
+    if (modalLocked) {
+      $('#appmodalClose').hide();
+    }
+    else {
+      $('#appmodalClose').show();
+    }
+    // Remove on-click event handlers for all buttons
+    $('#appModalFooter button').each(function() {
+      $(this).off();
+    });
+    $('#appModalError').text('');
+    $('#appModalTitle').html('');
+    $('#appModalBody').html('');
+    $('#appModalFooter').html('');
+    $('#appModal').off('hidden.bs.modal');
   });
-  /*
-  $('#appModal').modal('hide');
-  $('#appModal').removeClass('show');
-  $('#appModal').css('display', 'none');
-  */
-  //let isvis = $('#appModal').is(':visible');
-  $('#appModalClose').prop('disabled',false);
-  $('#appModalClose').trigger('click');
-  $('#appModalClose').prop('disabled',modalLocked);
+  
 }
+
+function setDefaultAppModalHidden() {
+  $('#appModal').on('hidden.bs.modal', function() {      
+    $('#appModalError').text('');
+    $('#appModalTitle').html('');
+    $('#appModalBody').html('');
+    $('#appModalFooter').html('');
+    $('#appModal').off('shown.bs.modal');
+  });
+}
+
 
 function modalLock(locked) {
   modalLocked = locked;
@@ -188,6 +209,7 @@ $(document).ready(function() {
 
 
   // Monitor modal status
+  /*
   $(document).on('shown.bs.modal', '#appModal', function () {
       // run your validation... ( or shown.bs.modal )
       modalVisible = true;
@@ -198,22 +220,28 @@ $(document).ready(function() {
         $(focus).trigger('focus');
       }
   });
+
+
   $(document).on('hide.bs.modal', '#appModal', function () {
     // run your validation... ( or shown.bs.modal )
     modalVisible = false;
   });
-
+  */
   
   // close navbar menu after clicking a link
   $(".navbar-collapse a").on('click', function () {
     $(".navbar-collapse").collapse("hide");
   });
+
+
+  /*
   // modal handling...allows multiple modals
   $('.modal').on('hidden.bs.modal', function(event) {
       $(this).removeClass( 'fv-modal-stack' );
       $('body').data( 'fv_open_modals', $('body').data( 'fv_open_modals' ) - 1 );
   });
 
+  /*
   $('.modal').on('shown.bs.modal', function (event) {
       // keep track of the number of open modals
       if ( typeof( $('body').data( 'fv_open_modals' ) ) == 'undefined' ) {
@@ -232,7 +260,7 @@ $(document).ready(function() {
       $('.modal-backdrop').not('fv-modal-stack').addClass('fv-modal-stack');
 
   });
-  
+  */
 
   // Handle menu actions
   window.contextBridge.fromMain('menu', (event, action, data) => {
@@ -261,7 +289,7 @@ $(document).ready(function() {
         }
         break;
       case 'NewPage':
-        navigate('edit.html');
+        navigate('new');
         break;
       default:
         break;

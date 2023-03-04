@@ -240,7 +240,12 @@ function CallModuleMethod(event, module, method, data)
     }
   }
   catch(e) {
-    focusedWindow().webContents.send('error', 'An error has occurred in the ' + module + ' module.<br/>' + e);
+    try {
+      focusedWindow().webContents.send('error', 'An error has occurred in the ' + module + ' module.<br/>' + e);
+    }
+    catch(e2) {
+      console.log('Unable to display error message: ' + e + '\r\n' + e2);
+    }
   }
 }
 
@@ -259,8 +264,34 @@ function loadPage(pageName, qry) {
     }
   }
   else {
-    focusedWindow().webContents.send('error', 'Page "' + pageName + '" was not found.');
-    doNav = false;
+    if (pageName=='new' || pageName.startsWith('new_')) {
+      try {
+        let pageNameSplit = pageName.split('new_');
+        switch(pageNameSplit[1].toLowerCase()) {
+          case 'md':
+            pageName='edit_md.html';
+            break;
+          default:
+            pageName='edit_html.html';
+            break;
+        }
+      }
+      catch {
+        let editorStyle = config.ReadUserPref('editorStyle');
+        switch (editorStyle) {
+          case 'MD':
+            pageName='edit_md.html';
+            break;
+          default:
+            pageName='edit_html.html';
+            break;
+        }
+      }
+    }
+    else {
+      focusedWindow().webContents.send('error', 'Page "' + pageName + '" was not found.');
+      doNav = false;
+    }
   }
   if (doNav) {
     let pathQuery = {};
