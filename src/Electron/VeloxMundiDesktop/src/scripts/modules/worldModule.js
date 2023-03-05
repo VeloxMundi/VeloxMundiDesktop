@@ -187,6 +187,9 @@ module.exports = class ConfigManager {
     let fullPathInfo = {};
     let fromPathParts = relPathInfo.fromFullPath.split(path.sep);
     let baseIndex = fromPathParts.length-1;
+    if (relPathInfo.relPath.startsWith('_assets')) {
+      relPathInfo.relPath = '../_web/' + relPathInfo.relPath;
+    }
     let relPathParts = relPathInfo.relPath.split('/');
     let relBaseIndex = 0;
     for (let i=0; i<relPathParts.length; i++) {
@@ -210,6 +213,8 @@ module.exports = class ConfigManager {
     fullPathInfo.success = true;
     fullPathInfo.fullPath = path.join(newBase,newRel);
 
+    return fullPathInfo;
+
   }
   static GetRelPath(pathInfo) {
     /* pathInfo:
@@ -217,8 +222,8 @@ module.exports = class ConfigManager {
     fromPath (string)
     toPath (string)
     */
+    let relPathInfo = {};
     try {
-      let relPathInfo = {};
       let relPath = '';
       if (pathInfo.isRelPath) {
         let basePath = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld'));
@@ -240,7 +245,7 @@ module.exports = class ConfigManager {
       }
       let divergeTo = '';
       for (let i=divergeIndex; i<toPathParts.length; i++) {
-        divergeTo = path.join(divergeTo, toPathParts[i]);
+        divergeTo = (divergeTo!='' ? divergeTo + '/' : '') +toPathParts[i];
       }
       relPath += divergeTo;
       relPathInfo.success = true;

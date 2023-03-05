@@ -67,15 +67,18 @@ module.exports = class ConfigManager {
   
   
   static ReadPage(pagePath) {
-    return fileManager.ReadFileToString(pagePath);
-    //disable the rest for now...
     let pageContents = '';
-    let editorStyle=configManager.ReadUserPref('editorStyle')
-    switch(editorStyle) {
-      case 'RTE':
+    let fileType = pagePath.split('.').pop();
+    switch(fileType) {
+      case 'html':
         let html = fileManager.ReadFileToString(pagePath);
-        html = this.tweakHTML('read', html);
+        html = this.tweakHTML('read', html, pagePath);
         return html;
+        break;
+      case 'md':
+        let md = fileManager.ReadFileToString(pagePath);
+        md = this.tweakMD('read', md, pagePath);
+        return md;
         break;
       default:
         return fileManager.ReadFileToString(pagePath);
@@ -98,7 +101,7 @@ module.exports = class ConfigManager {
         fs.mkdirSync(pageDir);
       }
       let pagePath = path.join(pageDir, pageInfo.pageName + '.' + pageInfo.fileType);
-      let contents = (pageInfo.fileType=='md' ? this.tweakMD('save', pageInfo.pageContents) : pageInfo.pageContents);
+      let contents = (pageInfo.fileType=='md' ? this.tweakMD('save', pageInfo.pageContents, pagePath) : this.tweakHTML('save', pageInfo.pageContents, pagePath));
       fs.writeFileSync(pagePath, contents);   
 
       // publish page in HTML output directory
@@ -257,9 +260,9 @@ module.exports = class ConfigManager {
     //TODO: Tweak HTML to fit with publish strategy
     html = '<!DOCTYPE html>\r\n<html>\r\n'
           + '  <head>\r\n'
-          + `  <link rel="stylesheet" href="css/default.css">\r\n`
-          + `  <link rel="stylesheet" href="css/user.css">\r\n`
-          + `  <link rel="stylesheet" href="css/global.css">\r\n`
+          + `  <link rel="stylesheet" href="_assets/css/default.css">\r\n`
+          + `  <link rel="stylesheet" href="_assets/css/user.css">\r\n`
+          + `  <link rel="stylesheet" href="_assets/css/global.css">\r\n`
           + '  </head>\r\n'
           + '  <body>\r\n' 
           + html 
@@ -269,50 +272,83 @@ module.exports = class ConfigManager {
     return html;
   }
 
-  static tweakMD(action, md) {
+  static tweakMD(action, md, pagePath) {
     // Use worldManager.GetRelPath and worldManager.GetFullPathFromRelPath to alter image source for reading or saving the file
-    let worldPath = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld')) + path.sep;
-    let linkRegex = /<file\:\/\/\/(.+)\)/g
-    let temp = md.replace('<file:///' + worldPath,'<');
-    return md;
-  }
-  static tweakHTML(action, html) {
-    // Use worldManager.GetRelPath and worldManager.GetFullPathFromRelPath to alter image source for reading or saving the file.
-    let basePath = path.join(configManager.ReadKey('WorldDirectory'), configManager.ReadKey('CurrentWorld'));
-    let baseImgPath = path.join(basePath, '_web','_assets','images');
-    let dom = null;
-    switch(action) {
+    //let worldPath = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld')) + path.sep;
+    switch (action) {
       case 'read':
-        dom = new jsdom.JSDOM(html);
+        md = md.replace(/(!\[.*?\]\(<)(.*?)(>\))/g,function(match, p1,p2,p3) {
+          let fullPathData = worldManager.GetFullPathFromRelPath({
+            fromFullPath: pagePath,
+            relPath: p2
+          });
+          if (fullPathData.success) {
+            return p1 + 'file:///' + fullPathData.fullPath.replace(/ /g,'%20').replace(/_/g,'\\_') + p3;
+          }
+          else {
+            return match;
+          }
+        });
         break;
       case 'save':
-        dom = new jsdom.JSDOM(`<!DOCTYPE html><html><body>${html}</body></html>`);
+        md = md.replace(/(!\[.*?\]\(<)(file:\/\/\/)(.*?)(>\))/g,function(match, p1,p2,p3,p4) {
+          let relPathData = worldManager.GetRelPath({
+            isRelPath: false,
+            fromPath: pagePath,
+            toPath: p3.replace(/%20/g, ' ').replace(/\\\\_/g,'\\_')
+          });
+          if (relPathData.success) {
+            return p1 + relPathData.relPath.replace(/ /g,'%20') + p4;
+          }
+          else {
+            return match;
+          }
+        });
         break;
     }
+    // match is the whole matching string, p1 is capture group 1, and p2 is capture group 2
+    
+    return md;
+  }
+  static tweakHTML(action, html, pagePath) {
+    let basePath = path.join(configManager.ReadKey('WorldDirectory'), configManager.ReadKey('CurrentWorld'));
+    let baseImgPath = path.join(basePath, '_web','_assets','images');
+    let dom = new jsdom.JSDOM(`<!DOCTYPE html><html><body>${html}</body></html>`);
     let jquery = require('jquery')(dom.window);
     let imgs = jquery('img');
     for (let i=0; i<imgs.length; i++) {
       let oldSrc = jquery(imgs[i]).attr('src');
       switch(action) {
         case 'save':
-          if (oldSrc.indexOf(baseImgPath)!=-1) {
-            let newSrc = oldSrc.replace(baseImgPath,'assets');
-            jquery(imgs[i]).attr('src',newSrc.replace('\\\\','/'));
-            jquery(imgs[i]).addClass('image-local');
+          if (oldSrc.startsWith('file:///' + baseImgPath)) {
+            let relData = worldManager.GetRelPath({
+              isRelPath: false,
+              fromPath: pagePath.replace('file:///',''),
+              toPath: oldSrc.replace('file:///','')
+            });
+            if (relData.success) {
+              jquery(imgs[i]).attr('src',relData.relPath);
+              jquery(imgs[i]).addClass('image-local');
+            }
           }
           break;
         case 'read':
-          let relAssets = 'assets';
-          if (oldSrc.startsWith(relAssets + path.sep) || oldSrc.startsWith(relAssets + '/')) {
-            let newSrc = oldSrc.replace('/', path.sep).replace(relAssets, baseImgPath);
-            jquery(imgs[i]).attr('src',newSrc.replace('\\\\','/'));
-            jquery(imgs[i]).addClass('image-local');
+          let relImgPath = '../_web/_assets';
+          if (oldSrc.startsWith(relImgPath)) {
+            let newSrcData = worldManager.GetFullPathFromRelPath({
+              fromFullPath: pagePath,
+              relPath: oldSrc
+            });
+            if (newSrcData.success) {
+              jquery(imgs[i]).attr('src','file:///' + newSrcData.fullPath);
+              jquery(imgs[i]).addClass('image-local');
+            }
           }
           break;
       }
       
     }
-    
+    /*
     switch(action) {
       case 'save':
         html = `<!DOCTYPE html><html><head>\r\n`
@@ -328,6 +364,8 @@ module.exports = class ConfigManager {
         html = jquery('body').html();
         break;
     }
+    */
+    html = jquery('body').html();
     return html;
     
   }
