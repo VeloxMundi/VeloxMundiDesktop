@@ -291,6 +291,7 @@ module.exports = class ConfigManager {
         });
         break;
       case 'save':
+        // match is the whole matching string, p1 is capture group 1, and p2 is capture group 2, etc.
         md = md.replace(/(!\[.*?\]\(<)(file:\/\/\/)(.*?)(>\))/g,function(match, p1,p2,p3,p4) {
           let relPathData = worldManager.GetRelPath({
             isRelPath: false,
@@ -306,7 +307,6 @@ module.exports = class ConfigManager {
         });
         break;
     }
-    // match is the whole matching string, p1 is capture group 1, and p2 is capture group 2
     
     return md;
   }
@@ -658,7 +658,7 @@ module.exports = class ConfigManager {
               return retVal;
             }
           });
-          fs.writeFileSync(newPagePath, pageData.htmlContent);
+          fs.writeFileSync(newPagePath, this.tweakHTML('save', pageData.htmlContent, newPagePath));
           this.AddPageToIndex(newPagePath, true);
           return {
             success: true,
@@ -690,7 +690,7 @@ module.exports = class ConfigManager {
               return retVal;
             }
           });
-          fs.writeFileSync(newPagePath, pageData.mdContent);
+          fs.writeFileSync(newPagePath, this.tweakMD('save',pageData.mdContent,newPagePath));
           this.AddPageToIndex(newPagePath, true);
           return {
             success: true,

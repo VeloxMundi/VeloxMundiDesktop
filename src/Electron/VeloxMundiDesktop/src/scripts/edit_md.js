@@ -1,12 +1,13 @@
 let mdFileName = '';
 let docBaseTitle = '';
 let editorIndex = 0;
-let worldPages = null;
 let pagePath = '';
 let pageRelPath = '';
 let worldDir = window.contextBridge.toMainSync('world', 'GetWorldDir');
 
+
 $(document).ready(function() {
+  fileExt = '.md';
   docBaseTitle = document.title;
   try {
     let query = window.location.search.substring(1);
@@ -155,9 +156,7 @@ $(document).ready(function() {
     updateResult();
   }
 
-  // local variables
-  let closeAfterSave=false;
-  let navAfterSave='';
+  
 
   $('#CancelButton').on('click', function() {
     window.contextBridge.navigate('worldHome.html');
@@ -165,18 +164,6 @@ $(document).ready(function() {
 
   window.contextBridge.fromMain('menu', (event, action, data) =>  {
     switch(action) {
-      case 'SavePage':
-        closeAfterSave = false;
-        CheckPathAndSave();
-        break;
-      case 'ClosePage':
-        closeAfterSave = true;
-        navigate('worldHome.html');
-        break;
-      case 'SaveAndClose':
-        closeAfterSave=true;
-        CheckPathAndSave();
-        break;
       case 'Convert':
         if (pageDirty) {
           CheckPathAndSave();
@@ -221,101 +208,14 @@ $(document).ready(function() {
             }
           });
         break;
-      case 'RenamePage':
-        if (pageDirty || pagePath=='') {
-          showToast('Please save your changes before renaming the page.', 'text-danger');
-          hideModal();
-        }
-        else {
-          showModal(
-            {
-              title: 'Rename ' + mdFileName, 
-              body: '<div id="RenameError" class="text-danger"></div><p>New name:</p><p><input type="text" id="NewPageName" length="25"/></p>',
-              footer: '<button id="CancelRename" class="btn btn-default">Cancel</button><button id="RenamePage" class="btn btn-success">Rename</button>',
-              focus: '#NewPageName', 
-              defaultButton: '#RenamePage',
-              callback: function() {
-                $('#CancelRename').on('click', function() {
-                  hideModal();
-                });
-                $('#RenamePage').on('click', function() {
-                  let newPageName = $('#NewPageName').val();
-                  if (newPageName && newPageName!='') {
-                    let result = window.contextBridge.toMainSync('page', 'RenamePage', {
-                      'oldPagePath': pagePath,
-                      'newPageName': newPageName
-                    });
-                    if (result.success) {
-                      mdFileName = newPageName;
-                      document.title = docBaseTitle + ' ' + newPageName;
-                      pagePath = result.newPagePath;
-                      hideModal();
-                      if (result.saveOnReturn) {
-                        SavePage();
-                      }
-                      else if (result.message && result.message!='') {
-                        showToast(result.message, 'text-warning');
-                      }
-                      else {
-                        showToast('File renamed successfully!', 'text-success');
-                      }
-                      window.contextBridge.toMain('config', 'WriteKey', ['CurrentPage', 'edit.html?path=' + encodeURIComponent(pagePath)]);
-                    }
-                    else {
-                      hideModal();
-                      showToast('There was a problem renaming the file.<br/>' + result.message, 'text-error');
-                    }
-                  }
-                  else {
-                    $('#RenameError').text('Please enter a new name');
-                  }
-                });
-              }
-            });
-        }
-        break;
       default:
+        processMenuItem(action, data);
         break;
     }
   });
 
-  function CheckPathAndSave() {
-
-    if (pagePath=='') {
-      showModal(
-        {
-          title: 'Save as...',
-          body: '<input type="text" length="25" id="SaveAsName"/>',
-          footer: '<button class="btn btn-default" id="CancelSaveAs">Cancel</button><button class="btn btn-danger" id="SetSaveAs">Save</button>',
-          focus: '#SaveAsName',
-          defaultButton: '#SetSaveAs',
-          callback: function() {
-            $('#CancelSaveAs').on('click', function(e) {
-              modalLock(false);
-              hideModal();
-            });
-            $('#SetSaveAs').on('click', function(e) {
-              modalLock(true);
-              let saveAsName = $('#SaveAsName').val();
-              if (saveAsName && saveAsName!='') {
-                $('#CancelSaveAs').prop('disabled',true);
-                $('#SetSaveAs').prop('disabled', true);
-    
-                window.contextBridge.toMain('page', 'SetSaveAsName', {
-                  'action': 'Save',
-                  'fileName': saveAsName + '.md'
-                });
-              }
-            });
-          }
-        });
-    }
-    else {
-      SavePage();
-    }
-  }
-
-  function SavePage() {
+  
+  window.SavePage = function() {
     $('#SaveButton').prop('disabled', 'true');
     $('#SaveButton').text('Saving...');
     try {
@@ -384,11 +284,6 @@ $(document).ready(function() {
 
   window.contextBridge.fromMain('return', (event, method, data) => {
     switch(method) {
-      case 'SaveAndNavigate':
-        modalLock(false);
-        navAfterSave = data;
-        CheckPathAndSave();
-        break;
       case 'ConfirmDelete':
         let delResult = window.contextBridge.toMainSync('page', 'DeletePage', pagePath);
         if (delResult.success) {
@@ -402,38 +297,11 @@ $(document).ready(function() {
         }
         break;
       default:
+        processReturn(method, data);
         break;
     }
   });
 
-  /*
-  function tempFx() {
-    modalLock(false);
-    hideModal();
-    $('#CancelSaveAs').prop('disabled',false);
-    $('#SetSaveAs').prop('disabled', false);
-  }
-  */
-
-
-  /*
-  window.contextBridge.fromMain('saveResults', (event, data) => {
-
-
-    if (data[0]==1)
-    {
-      setMessage('Saved successfully!');
-      $('#CancelButton').text('Close');
-      $('#CancelButton').removeClass('btn-danger');
-      $('#CancelButton').addClass('btn-default');
-    }
-    else
-    {
-      setMessage('There was an error saving changes:\r\n' + data[1], 'text-danger');
-    }
-    $('#editor').trigger('focus');
-  });
-  */
 
 
   updateResult(); // from mdEditorControl.js
@@ -443,23 +311,116 @@ $(document).ready(function() {
 
 
 
-
-
-
-
-
-
-  /********************************
-   * Set up autocomplete list
-  *********************************/
-  worldData = window.contextBridge.toMainSync("world", "GetWorldData");
-  worldPages = worldData.pages;
+  $('#pageLinkModal').on('mousemove', function(e) {
+    //console.log(`MODAL X: ${e.pageX}, Y: ${e.pageY}`);
+  });
+  /**********TEST********/
+  /*
+  $("#editor").on("mousemove", function(e) {
+    const $this = $(this);
+    const x = e.pageX - $this.offset().left;
+    const y = e.pageY - $this.offset().top;
+    const position = getCaretPosition(this);
+    const row = position.row;
+    const col = position.col;
+    console.log(`X: ${x}, Y: ${y}, Row: ${row}, Col: ${col}`);
+  });
+  function getCaretPosition(element) {
+    const position = element.selectionStart;
+    const text = element.value;
+    let row = 1;
+    let col = 0;
+    for (let i = 0; i < position; i++) {
+      if (text[i] === "\n") {
+        row++;
+        col = 0;
+      } else {
+        col++;
+      }
+    }
+    return { row: row, col: col };
+  }  
+  */
+  
 
 
   /********************************
    * Phantom div for positioning
   *********************************/
+  function getCaretCoordinates() {
+    // Create a div element with the same styles as the textarea
+    var div = $('<div></div>');
+    div.css({
+      position: 'absolute',
+      top: -9999,
+      left: -9999,
+      width: $('#editor').width(),
+      fontSize: $('#editor').css('fontSize'),
+      fontFamily: $('#editor').css('fontFamily'),
+      fontWeight: $('#editor').css('fontWeight'),
+      letterSpacing: $('#editor').css('letterSpacing'),
+      whiteSpace: 'pre-wrap',
+      wordWrap: 'break-word'
+    });
+    var text = $('#editor').val();
+    var lines = text.split('\n');
+    var row = 0;
+    var col = 0;
+    let position = $('#editor').prop('selectionStart');
+    for (var i = 0; i < lines.length && position >= lines[i].length; i++) {
+      position -= lines[i].length + 1;
+      if (position<0) {
+        position = 0;
+      }
+      row++;
+    }
+    col = position;
+    // Get the height of a row of text in the textarea
+    var lineHeight = parseInt($('#editor').css('lineHeight'));
+    if (isNaN(lineHeight)) {
+      lineHeight = parseFloat($('#editor').css('fontSize')) * 1.2;
+    }
+    // Calculate the x and y coordinates of the cursor position
+    div.text(text.substring(0, position));
+    let newx = div.width();
+    let newy = row * lineHeight;
+    console.log(`NewX: ${newx}, NewY: ${newy}, position: ${position}`);
+    // Add the column width times the column number to the x coordinate
+    let selStart = $('#editor').prop('selectionStart');
+    if (isNaN(selStart)) {
+      selStart = 0;
+    }
+    newx = col * (newx / selStart);
+    // Add the row height and the row number to the y coordinate
+    /*
+    newy += lineHeight;
+    newy += (row - 1) * lineHeight;
+    newy -= $('#editor').scrollTop();
+    */
+    console.log(`NewX2: ${newx}, NewY2: ${newy}, col: ${col}, row: ${row}, lineHeight: ${lineHeight}, scrollTop: ${$('#editor').scrollTop()}`);
+    // Return the x and y coordinates
+    return {x: newx, y: newy};
+  }
   !function(){
+    // create a test element to approximate the font size used in the editor:
+    /*
+    let tempEl = $('<span>').css({
+      position: 'absolute',
+      left: '-9999px',
+      top: '-9999px',
+      visibility: 'hidden',
+      whiteSpace: 'pre'
+    }).appendTo('body');
+    tempEl.css({
+      fontSize: $('#editor').css('fontSize'),
+      fontFamily: $('#editor').css('fontFamily')
+    });
+    tempEl.text($('body').html());
+    let fontWidth = tempEl.width() / $('body').html().length;
+    tempEl.remove();
+    */
+
+
     /*text area element*/
     var someInput = document.getElementById("editor"),
     /*a hidden div that has the same with height including border/padding values
@@ -485,16 +446,137 @@ $(document).ready(function() {
     someInput.addEventListener("keydown",function(e){
       if (e.key==="@") {
         e.preventDefault();
-        let x = 0;
-        let y = 0;
+        //let x = 0;
+        //let y = 0;
         refreshContent(e.currentTarget.value);
+
         //$('#editor').summernote('disable');
-        $('#pageLinkModal').modal('show');
-        //NOTE: If the #pageLinkModal has the class "fade", this will not work. That class makes modal('show') or modal('hide') run asynchronously, which breaks the following code...
+        
+        /********************
+        TEST 1: https://jh3y.medium.com/how-to-where-s-the-caret-getting-the-xy-position-of-the-caret-a24ba372990a
+        *********************/
+
+
+        // Function to call to get the X and Y of the cursor in the textarea...
+        const getCursorXY = (input, selectionPoint) => {
+          const {
+            offsetLeft: inputX,
+            offsetTop: inputY,
+          } = input;
+          // create a dummy element that will be a clone of our input
+          const div = document.createElement('div');
+          // get the computed style of the input and clone it onto the dummy element
+          const copyStyle = getComputedStyle(input);
+          for (const prop of copyStyle) {
+            div.style[prop] = copyStyle[prop];
+          }
+          // we need a character that will replace whitespace when filling our dummy element if it's a single line <input/>
+          const swap = '.'
+          const inputValue = input.value;
+          // set the div content to that of the textarea up until selection
+          const textContent = inputValue.substr(0, selectionPoint);
+          // set the text content of the dummy element div
+          div.textContent = textContent;
+          if (input.tagName === 'TEXTAREA') 
+          {
+            div.style.height = 'auto';
+          }
+          /* Not needed, as we don't have an <input/>
+          // if a single line input then the div needs to be single line and not break out like a text area
+          if (input.tagName === 'INPUT') div.style.width = 'auto'
+          */
+          // create a marker element to obtain caret position
+          const span = document.createElement('span');
+          // give the span the textContent of remaining content so that the recreated dummy element is as close as possible
+          span.textContent = inputValue.substr(selectionPoint) || '.';
+          // append the span marker to the div
+          div.appendChild(span);
+          // append the dummy element to the body
+          document.body.appendChild(div);
+          // get the marker position, this is the caret position top and left relative to the input
+          const { offsetLeft: spanX, offsetTop: spanY } = span;
+          // lastly, remove that dummy element
+          // NOTE:: can comment this out for debugging purposes if you want to see where that span is rendered
+          document.body.removeChild(div);
+          // return an object with the x and y of the caret. account for input positioning so that you don't need to wrap the input
+          return {
+            x: inputX + spanX,
+            y: inputY + spanY,
+          }
+        }
+        
+        /******************************************************************************************************************************************************************************************************************************************************************************************/
+        const { x, y } = getCursorXY(document.querySelector('#editor'), $('#editor').prop('selectionStart'));
+
+
+        // End
+
+
+
+
+        /*********************
+        END TEST 1:
+        **********************/
         let rngText = '';
         if (window.getSelection) {
           sel = window.getSelection();
           rngText = sel.toString();
+        }
+        
+        $('#pageLinkModal').css('left',x-$('#editor').offset().left);
+        let editorHeight = $('#editor').height();
+        let scrollTop = $('#editor').scrollTop();
+        $('#pageLinkModal').css('top',y-editorHeight-scrollTop);
+        if (rngText && rngText!='') {
+          $('#pageLinkText').val(rngText);
+        }
+        else {
+          $('#pageLinkText').val('');
+        }
+        $('#pageLinkHref').val('');
+        $('#pageLinkModal').modal('show').on('shown.bs.modal', function() {
+          $('#pageLinkHref').trigger('focus');
+          $('#pageLinkModal').off('shown.bs.modal');
+        });
+
+        /*
+        */
+          /*
+          x = $('#editor').offset().left;
+          y = $('#editor').offset().top;
+          const position = document.getElementById('editor').selectionStart;
+          const text = $('#editor').val();
+          let row = 1;
+          let col = 0;
+          for (let i=0; i<position; i++) {
+            if (text[i]==='\n') {
+              row++;
+              col = 0;
+            }
+            else {
+              col++;
+            }
+          }
+          let computedStyle = getComputedStyle(document.getElementById('editor'));
+          let lineHeight = parseInt(computedStyle.getPropertyValue('line-height'));
+          //console.log(`X: ${x}, Y: ${y}, PageX: ${e.pageX}, PageY: ${e.pageY}`);
+          x += col * fontWidth; // This will not be exact...it assumes a mono-spaced font
+          y += row * lineHeight;
+          console.log(`X: ${x}, Y: ${y}, Row: ${row}, Col: ${col}, fontSize: ${fontWidth}, lineHeight: ${lineHeight}`);
+          */
+
+
+          /*
+          let coords = getCaretCoordinates();
+          x = coords.x - (coords.x>($('#editor').width()-($('#pageLinkModal').width()/2))
+              ? $('#editor').position().x + $('#editor').width()-$('#pageLinkModal').width()
+              : coords.x
+          );
+          y = coords.y;
+          console.log(`X: ${x}, Y: ${y}`);
+          */
+
+          /*
           if (sel.rangeCount) {
             let editorWindow = $('#editorViewer');
             let edp = editorWindow.position();
@@ -513,6 +595,8 @@ $(document).ready(function() {
 
 
           }
+          */
+         /*
         }
         $('#pageLinkModal').css('left',x);
         $('#pageLinkModal').css('top',y);
@@ -521,6 +605,7 @@ $(document).ready(function() {
         }
         $('#pageLinkHref').val('');
         $('#pageLinkHref').trigger('focus');
+        */
       }
     },false);
     /*clear children*/
@@ -539,6 +624,14 @@ $(document).ready(function() {
     }
   }();
 
+
+
+
+  
+
+
+
+
   /*******************************
    * pageLinkModal listeners
   ********************************/
@@ -552,16 +645,18 @@ $(document).ready(function() {
 
   $('#pageLinkModal').on('hidden.bs.modal', function() {
     let link = $('#pageLinkHref').val();
-    let pageData = window.contextBridge.toMainSync('page', 'GetPageDataFromNameDisambiguation',link);
-    if (pageData && pageData.success) {
-      let linkText = '[' + $('#pageLinkText').val() + '](<' + pageData.pageFullPath + '>)';
-      var txtarea = document.getElementById("editor");
-      var start = txtarea.selectionStart;
-      var finish = txtarea.selectionEnd;
-      var allText = txtarea.value;
-      var sel = allText.substring(start, finish);
-      var newText=allText.substring(0, start)+linkText+allText.substring(finish, allText.length);
-      txtarea.value=newText;
+    if (link && link!='') {
+      let pageData = window.contextBridge.toMainSync('page', 'GetPageDataFromNameDisambiguation',link);
+      if (pageData && pageData.success) {
+        let linkText = '[' + $('#pageLinkText').val() + '](<' + pageData.pageFullPath + '>)';
+        var txtarea = document.getElementById("editor");
+        var start = txtarea.selectionStart;
+        var finish = txtarea.selectionEnd;
+        var allText = txtarea.value;
+        //var sel = allText.substring(start, finish);
+        var newText=allText.substring(0, start)+linkText+allText.substring(finish, allText.length);
+        txtarea.value=newText;
+      }
 
       //$('#editor').summernote('pasteHTML', linkHtml);
     }
@@ -575,126 +670,14 @@ $(document).ready(function() {
   });
 
 
-  /********************************
-   * AUTOCOMPLETE                 *
-  *********************************/
-  function autocomplete(inp, arr) {
-    /*the autocomplete function takes two arguments,
-    the text field element and an array of possible autocompleted values:*/
-    var currentFocus;
-    /*execute a function when someone writes in the text field:*/
-    inp.addEventListener("input", function(e) {
-        var a, b, i, val = this.value;
-        /*close any already open lists of autocompleted values*/
-        closeAllLists();
-        if (!val) { return false;}
-        currentFocus = -1;
-        /*create a DIV element that will contain the items (values):*/
-        a = document.createElement("DIV");
-        a.setAttribute("id", this.id + "autocomplete-list");
-        a.setAttribute("class", "autocomplete-items");
-        /*append the DIV element as a child of the autocomplete container:*/
-        this.parentNode.appendChild(a);
-        /*for each item in the array...*/
-        for (i = 0; i < arr.length; i++) {
-          /*check if the item starts with the same letters as the text field value:*/
-          if (arr[i].NameDisambiguation.substr(0, val.length).toUpperCase() == val.toUpperCase()) {
-            /*create a DIV element for each matching element:*/
-            b = document.createElement("DIV");
-            /*make the matching letters bold:*/
-            b.innerHTML = "<strong>" + arr[i].NameDisambiguation.substr(0, val.length) + "</strong>";
-            b.innerHTML += arr[i].NameDisambiguation.substr(val.length);
-            /*insert a input field that will hold the current array item's value:*/
-            b.innerHTML += "<input type='hidden' value='" + arr[i].NameDisambiguation + "'>";
-            /*execute a function when someone clicks on the item value (DIV element):*/
-            b.addEventListener("click", function(e) {
-                /*insert the value for the autocomplete text field:*/
-                inp.value = this.getElementsByTagName("input")[0].value;
-                $('#pageLinkText').trigger('focus');
-                if ($('#pageLinkText').val()=='') {
-                  $('#pageLinkText').val(inp.value);
-                  $('#pageLinkText').trigger('select');
-                }
-                /*close the list of autocompleted values,
-                (or any other open lists of autocompleted values:*/
-                closeAllLists();
-            });
-            a.appendChild(b);
-          }
-        }
-    });
-    /*execute a function presses a key on the keyboard:*/
-    inp.addEventListener("keydown", function(e) {
-        var x = document.getElementById(this.id + "autocomplete-list");
-        if (x) x = x.getElementsByTagName("div");
-        if (x && x.length>0) {
-          if (e.keyCode == 40) {
-            /*If the arrow DOWN key is pressed,
-            increase the currentFocus variable:*/
-            currentFocus++;
-            /*and and make the current item more visible:*/
-            addActive(x);
-          } else if (e.keyCode == 38) { //up
-            /*If the arrow UP key is pressed,
-            decrease the currentFocus variable:*/
-            currentFocus--;
-            /*and and make the current item more visible:*/
-            addActive(x);
-          } else if (e.key == 'Enter') {
-            /*If the ENTER key is pressed, prevent the form from being submitted,*/
-            e.preventDefault();
-            if (currentFocus > -1) {
-              /*and simulate a click on the "active" item:*/
-              if (x) {
-                x[currentFocus].click();
-              }
-              else {
-                x[currentFocus].click();
-              }
-            }
-            else {
-              currentFocus=0;
-              x[currentFocus].click();
-            }
-          }
-        }
-    });
-    function addActive(x) {
-      /*a function to classify an item as "active":*/
-      if (!x) return false;
-      /*start by removing the "active" class on all items:*/
-      removeActive(x);
-      if (currentFocus >= x.length) currentFocus = 0;
-      if (currentFocus < 0) currentFocus = (x.length - 1);
-      /*add class "autocomplete-active":*/
-      x[currentFocus].classList.add("autocomplete-active");
-    }
-    function removeActive(x) {
-      /*a function to remove the "active" class from all autocomplete items:*/
-      for (var i = 0; i < x.length; i++) {
-        x[i].classList.remove("autocomplete-active");
-      }
-    }
-    function closeAllLists(elmnt) {
-      /*close all autocomplete lists in the document,
-      except the one passed as an argument:*/
-      var x = document.getElementsByClassName("autocomplete-items");
-      for (var i = 0; i < x.length; i++) {
-        if (elmnt != x[i] && elmnt != inp) {
-          x[i].parentNode.removeChild(x[i]);
-        }
-      }
-    }
-    /*execute a function when someone clicks in the document:*/
-    document.addEventListener("click", function (e) {
-        closeAllLists(e.target);
-    });
-  }
 
-  /*initiate the autocomplete function on the "myInput" element, and pass along the array as possible autocomplete values:*/
-  autocomplete(document.getElementById("pageLinkHref"), worldPages);
+
+
+
 
 
 
 
 });
+
+

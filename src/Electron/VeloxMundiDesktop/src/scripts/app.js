@@ -29,13 +29,8 @@ function setPageDirty(isDirty) {
 }
 
 function navigate(pagePath, qry) {
-  if (!pageDirty || pagePath.startsWith('options_')) {
-    if (!modalVisible) {
-      window.contextBridge.toMain('navigate', pagePath, qry);
-    }
-    else {
-      $('#appModalError').text('There are unsaved changes.');
-    }
+  if (!pageDirty || pagePath.startsWith('options_') || pagePath.startsWith('preview_')) {
+    window.contextBridge.toMain('navigate', pagePath, qry);
   }
   else {
     modalLock(false);;
