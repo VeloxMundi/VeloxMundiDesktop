@@ -308,321 +308,72 @@ $(document).ready(function() {
 
 
 
-
-
-
-  $('#pageLinkModal').on('mousemove', function(e) {
-    //console.log(`MODAL X: ${e.pageX}, Y: ${e.pageY}`);
-  });
-  /**********TEST********/
-  /*
-  $("#editor").on("mousemove", function(e) {
-    const $this = $(this);
-    const x = e.pageX - $this.offset().left;
-    const y = e.pageY - $this.offset().top;
-    const position = getCaretPosition(this);
-    const row = position.row;
-    const col = position.col;
-    console.log(`X: ${x}, Y: ${y}, Row: ${row}, Col: ${col}`);
-  });
-  function getCaretPosition(element) {
-    const position = element.selectionStart;
-    const text = element.value;
-    let row = 1;
-    let col = 0;
-    for (let i = 0; i < position; i++) {
-      if (text[i] === "\n") {
-        row++;
-        col = 0;
-      } else {
-        col++;
-      }
+  // Function to call to get the X and Y of the cursor in the textarea...From https://jh3y.medium.com/how-to-where-s-the-caret-getting-the-xy-position-of-the-caret-a24ba372990a
+  const getCursorXY = (input, selectionPoint) => {
+    const {
+      offsetLeft: inputX,
+      offsetTop: inputY,
+    } = input;
+    // create a dummy element that will be a clone of our input
+    const div = document.createElement('div');
+    // get the computed style of the input and clone it onto the dummy element
+    const copyStyle = getComputedStyle(input);
+    for (const prop of copyStyle) {
+      div.style[prop] = copyStyle[prop];
     }
-    return { row: row, col: col };
-  }  
-  */
-  
-
-
-  /********************************
-   * Phantom div for positioning
-  *********************************/
-  function getCaretCoordinates() {
-    // Create a div element with the same styles as the textarea
-    var div = $('<div></div>');
-    div.css({
-      position: 'absolute',
-      top: -9999,
-      left: -9999,
-      width: $('#editor').width(),
-      fontSize: $('#editor').css('fontSize'),
-      fontFamily: $('#editor').css('fontFamily'),
-      fontWeight: $('#editor').css('fontWeight'),
-      letterSpacing: $('#editor').css('letterSpacing'),
-      whiteSpace: 'pre-wrap',
-      wordWrap: 'break-word'
-    });
-    var text = $('#editor').val();
-    var lines = text.split('\n');
-    var row = 0;
-    var col = 0;
-    let position = $('#editor').prop('selectionStart');
-    for (var i = 0; i < lines.length && position >= lines[i].length; i++) {
-      position -= lines[i].length + 1;
-      if (position<0) {
-        position = 0;
-      }
-      row++;
+    const inputValue = input.value;
+    // set the div content to that of the textarea up until selection
+    const textContent = inputValue.substr(0, selectionPoint);
+    // set the text content of the dummy element div
+    div.textContent = textContent;
+    div.style.height = 'auto';
+    // create a marker element to obtain caret position
+    const span = document.createElement('span');
+    // give the span the textContent of remaining content so that the recreated dummy element is as close as possible
+    span.textContent = inputValue.substr(selectionPoint) || '.';
+    // append the span marker to the div
+    div.appendChild(span);
+    // append the dummy element to the body
+    document.body.appendChild(div);
+    // get the marker position, this is the caret position top and left relative to the input
+    const { offsetLeft: spanX, offsetTop: spanY } = span;
+    // lastly, remove that dummy element
+    // NOTE:: can comment this out for debugging purposes if you want to see where that span is rendered
+    document.body.removeChild(div);
+    // return an object with the x and y of the caret. account for input positioning so that you don't need to wrap the input
+    return {
+      x: inputX + spanX,
+      y: inputY + spanY,
     }
-    col = position;
-    // Get the height of a row of text in the textarea
-    var lineHeight = parseInt($('#editor').css('lineHeight'));
-    if (isNaN(lineHeight)) {
-      lineHeight = parseFloat($('#editor').css('fontSize')) * 1.2;
-    }
-    // Calculate the x and y coordinates of the cursor position
-    div.text(text.substring(0, position));
-    let newx = div.width();
-    let newy = row * lineHeight;
-    console.log(`NewX: ${newx}, NewY: ${newy}, position: ${position}`);
-    // Add the column width times the column number to the x coordinate
-    let selStart = $('#editor').prop('selectionStart');
-    if (isNaN(selStart)) {
-      selStart = 0;
-    }
-    newx = col * (newx / selStart);
-    // Add the row height and the row number to the y coordinate
-    /*
-    newy += lineHeight;
-    newy += (row - 1) * lineHeight;
-    newy -= $('#editor').scrollTop();
-    */
-    console.log(`NewX2: ${newx}, NewY2: ${newy}, col: ${col}, row: ${row}, lineHeight: ${lineHeight}, scrollTop: ${$('#editor').scrollTop()}`);
-    // Return the x and y coordinates
-    return {x: newx, y: newy};
   }
-  !function(){
-    // create a test element to approximate the font size used in the editor:
-    /*
-    let tempEl = $('<span>').css({
-      position: 'absolute',
-      left: '-9999px',
-      top: '-9999px',
-      visibility: 'hidden',
-      whiteSpace: 'pre'
-    }).appendTo('body');
-    tempEl.css({
-      fontSize: $('#editor').css('fontSize'),
-      fontFamily: $('#editor').css('fontFamily')
-    });
-    tempEl.text($('body').html());
-    let fontWidth = tempEl.width() / $('body').html().length;
-    tempEl.remove();
-    */
+  /*onkeyup refresh the contents but if you want it to be
+  available for other events like paste etc. add these here*/
+  $('#editor').on('keydown',function(e) {
+    if (e.key==="@") {
+      e.preventDefault();      
+      
+      const { x, y } = getCursorXY(document.querySelector('#editor'), $('#editor').prop('selectionStart'));
 
-
-    /*text area element*/
-    var someInput = document.getElementById("editor"),
-    /*a hidden div that has the same with height including border/padding values
-    of the text area, but is hidden behind, its contents should always be the same*/
-        phantom = document.getElementById("phantom"),
-        /*a span to reuse for cloning*/
-        span = document.createElement("span");
-    /*get coordinates of the current caret*/
-    someInput.getCurrentCoordinates = function(){
-        var index = this.selectionStart,
-            inputRect = this.getBoundingClientRect();
-            charRect = phantom.children[index].getBoundingClientRect();
-        return {
-            top:charRect.top,
-            left:charRect.left,
-            relTop:charRect.top - inputRect.top,
-            relLeft:charRect.left - inputRect.left,
-            width:charRect.width
-        };
-    };
-    /*onkeyup refresh the contents but if you want it to be
-    available for other events like paste etc. add these here*/
-    someInput.addEventListener("keydown",function(e){
-      if (e.key==="@") {
-        e.preventDefault();
-        //let x = 0;
-        //let y = 0;
-        refreshContent(e.currentTarget.value);
-
-        //$('#editor').summernote('disable');
-        
-        /********************
-        TEST 1: https://jh3y.medium.com/how-to-where-s-the-caret-getting-the-xy-position-of-the-caret-a24ba372990a
-        *********************/
-
-
-        // Function to call to get the X and Y of the cursor in the textarea...
-        const getCursorXY = (input, selectionPoint) => {
-          const {
-            offsetLeft: inputX,
-            offsetTop: inputY,
-          } = input;
-          // create a dummy element that will be a clone of our input
-          const div = document.createElement('div');
-          // get the computed style of the input and clone it onto the dummy element
-          const copyStyle = getComputedStyle(input);
-          for (const prop of copyStyle) {
-            div.style[prop] = copyStyle[prop];
-          }
-          // we need a character that will replace whitespace when filling our dummy element if it's a single line <input/>
-          const swap = '.'
-          const inputValue = input.value;
-          // set the div content to that of the textarea up until selection
-          const textContent = inputValue.substr(0, selectionPoint);
-          // set the text content of the dummy element div
-          div.textContent = textContent;
-          if (input.tagName === 'TEXTAREA') 
-          {
-            div.style.height = 'auto';
-          }
-          /* Not needed, as we don't have an <input/>
-          // if a single line input then the div needs to be single line and not break out like a text area
-          if (input.tagName === 'INPUT') div.style.width = 'auto'
-          */
-          // create a marker element to obtain caret position
-          const span = document.createElement('span');
-          // give the span the textContent of remaining content so that the recreated dummy element is as close as possible
-          span.textContent = inputValue.substr(selectionPoint) || '.';
-          // append the span marker to the div
-          div.appendChild(span);
-          // append the dummy element to the body
-          document.body.appendChild(div);
-          // get the marker position, this is the caret position top and left relative to the input
-          const { offsetLeft: spanX, offsetTop: spanY } = span;
-          // lastly, remove that dummy element
-          // NOTE:: can comment this out for debugging purposes if you want to see where that span is rendered
-          document.body.removeChild(div);
-          // return an object with the x and y of the caret. account for input positioning so that you don't need to wrap the input
-          return {
-            x: inputX + spanX,
-            y: inputY + spanY,
-          }
-        }
-        
-        /******************************************************************************************************************************************************************************************************************************************************************************************/
-        const { x, y } = getCursorXY(document.querySelector('#editor'), $('#editor').prop('selectionStart'));
-
-
-        // End
-
-
-
-
-        /*********************
-        END TEST 1:
-        **********************/
-        let rngText = '';
-        if (window.getSelection) {
-          sel = window.getSelection();
-          rngText = sel.toString();
-        }
-        
-        $('#pageLinkModal').css('left',x-$('#editor').offset().left);
-        let editorHeight = $('#editor').height();
-        let scrollTop = $('#editor').scrollTop();
-        $('#pageLinkModal').css('top',y-editorHeight-scrollTop);
-        if (rngText && rngText!='') {
-          $('#pageLinkText').val(rngText);
-        }
-        else {
-          $('#pageLinkText').val('');
-        }
-        $('#pageLinkHref').val('');
-        $('#pageLinkModal').modal('show').on('shown.bs.modal', function() {
-          $('#pageLinkHref').trigger('focus');
-          $('#pageLinkModal').off('shown.bs.modal');
-        });
-
-        /*
-        */
-          /*
-          x = $('#editor').offset().left;
-          y = $('#editor').offset().top;
-          const position = document.getElementById('editor').selectionStart;
-          const text = $('#editor').val();
-          let row = 1;
-          let col = 0;
-          for (let i=0; i<position; i++) {
-            if (text[i]==='\n') {
-              row++;
-              col = 0;
-            }
-            else {
-              col++;
-            }
-          }
-          let computedStyle = getComputedStyle(document.getElementById('editor'));
-          let lineHeight = parseInt(computedStyle.getPropertyValue('line-height'));
-          //console.log(`X: ${x}, Y: ${y}, PageX: ${e.pageX}, PageY: ${e.pageY}`);
-          x += col * fontWidth; // This will not be exact...it assumes a mono-spaced font
-          y += row * lineHeight;
-          console.log(`X: ${x}, Y: ${y}, Row: ${row}, Col: ${col}, fontSize: ${fontWidth}, lineHeight: ${lineHeight}`);
-          */
-
-
-          /*
-          let coords = getCaretCoordinates();
-          x = coords.x - (coords.x>($('#editor').width()-($('#pageLinkModal').width()/2))
-              ? $('#editor').position().x + $('#editor').width()-$('#pageLinkModal').width()
-              : coords.x
-          );
-          y = coords.y;
-          console.log(`X: ${x}, Y: ${y}`);
-          */
-
-          /*
-          if (sel.rangeCount) {
-            let editorWindow = $('#editorViewer');
-            let edp = editorWindow.position();
-            let edw = edp.left+editorWindow.width();
-            let plmw = $('#pageLinkModalContent').width();
-
-            //TODO: Try this to get XY: https://hashnode.com/post/how-do-you-get-the-position-of-the-cursor-in-pixelsinside-a-textarea-cje14wjck0d1om3wtvfem6ofg
-            let rg = sel.getRangeAt(0);
-            let rect = someInput.getCurrentCoordinates();
-            x = rect.left;
-            y = rect.top;
-
-            if (x+plmw>edw) {
-              x=edw-plmw;
-            }
-
-
-          }
-          */
-         /*
-        }
-        $('#pageLinkModal').css('left',x);
-        $('#pageLinkModal').css('top',y);
-        if (rngText && rngText!='') {
-          $('#pageLinkText').val(rngText);
-        }
-        $('#pageLinkHref').val('');
-        $('#pageLinkHref').trigger('focus');
-        */
+      let rngText = '';
+      if (window.getSelection) {
+        rngText = window.getSelection().toString();
       }
-    },false);
-    /*clear children*/
-    function removeChildren(node){
-        while(node.hasChildNodes()){
-            node.removeChild(node.lastChild);
-        }
+      // Set pageLinkModal left to x - editor offset
+      $('#pageLinkModal').css('left',x-$('#editor').offset().left);
+
+      // Set pageLinkModal top to y - editor height (new div appears below editor) - distance scrolled inside the textarea
+      $('#pageLinkModal').css('top', y - $('#editor').height() - $('#editor').scrollTop());
+
+      $('#pageLinkText').val(rngText);
+      $('#pageLinkHref').val('');
+
+      // Show the pageLinkModal
+      $('#pageLinkModal').modal('show').on('shown.bs.modal', function() {
+        $('#pageLinkHref').trigger('focus');
+        $('#pageLinkModal').off('shown.bs.modal');
+      });
     }
-    /*clone a single span, put a letter in it and append*/
-    function refreshContent(text){
-        removeChildren(phantom);
-        text.split("").forEach(function(d,i){
-            span.textContent = d;
-            phantom.appendChild(span.cloneNode(true))
-        });
-    }
-  }();
+  });
 
 
 
@@ -653,16 +404,13 @@ $(document).ready(function() {
         var start = txtarea.selectionStart;
         var finish = txtarea.selectionEnd;
         var allText = txtarea.value;
-        //var sel = allText.substring(start, finish);
         var newText=allText.substring(0, start)+linkText+allText.substring(finish, allText.length);
         txtarea.value=newText;
       }
-
-      //$('#editor').summernote('pasteHTML', linkHtml);
-    }
-    else {
-      showToast((pageData && pageData.message ? pageData.message : 'Unable to find page data for ' + link + '.'),'text-danger');
-    }
+      else {
+        showToast((pageData && pageData.message ? pageData.message : 'Unable to find page data for ' + link + '.'),'text-danger');
+      }
+    }   
 
     $('#pageLinkHref').val('');
     $('#pageLinkText').val('');
