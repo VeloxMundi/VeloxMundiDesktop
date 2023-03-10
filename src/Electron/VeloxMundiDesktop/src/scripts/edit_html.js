@@ -91,7 +91,7 @@ $(document).ready(function() {
     let link = $('#pageLinkHref').val();
     let pageData = window.contextBridge.toMainSync('page', 'GetPageDataFromNameDisambiguation',link);
     if (pageData && pageData.success) {
-      let linkHtml = '<a href="file:///' + pageData.pageFullPath + '" class="internalLink">' + $('#pageLinkText').val() + '</a>';
+      let linkHtml = '<a href="' + pageData.data.relPath + '" class="internalLink">' + $('#pageLinkText').val() + '</a>';
       
       $('#editor').summernote('pasteHTML', linkHtml);
     }

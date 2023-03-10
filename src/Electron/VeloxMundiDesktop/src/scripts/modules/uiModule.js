@@ -50,13 +50,14 @@ module.exports = class UIManager {
         win = windows.main;
         break;
     }
-    let pageMenu = this.menuitems(win).filter(function (m) {
+    let pageMenu = filterSubmenu(page, this.menuitems(win));
+    /*let pageMenu = this.menuitems(win).filter(function (m) {
       return (isMac && m.id=='macMain') ||
               (m.showOn &&
                 (m.showOn.includes(page) ||
                 m.showOn.includes('-all-'))
               );
-    });
+    });*/
     for (let i=0; i<pageMenu.length; i++) {
       if (pageMenu[i].submenu && pageMenu[i].submenu.length>0) {
         pageMenu[i].submenu = filterSubmenu(page, pageMenu[i].submenu);
@@ -66,7 +67,7 @@ module.exports = class UIManager {
       Menu.setApplicationMenu(Menu.buildFromTemplate(pageMenu));
     }
     else {
-      if (page.startsWith('preview_') || page.startsWith('options_')) {
+      if (page.startsWith('options_')) {
         win.removeMenu();
         contextMenu({
           showInspectElement: !app.isPackaged
@@ -107,6 +108,10 @@ module.exports = class UIManager {
     {
       id: 'File',
       showOn: ['-all-'],
+      hideOn: [
+        'options_',
+        'preview_'
+      ],
       label: 'File',
       submenu: [
         {
@@ -166,6 +171,7 @@ module.exports = class UIManager {
             'edit_html.html'
           ],
           label: 'Save', 
+          accelerator: 'CommandOrControl+S',
           click: async () => {
             win.webContents.send('menu', 'SavePage');
           }
@@ -264,6 +270,10 @@ module.exports = class UIManager {
         {
           id: 'File-Exit',
           showOn: ['-all-'],
+          hideOn: [
+            'preview_',
+            'options_'
+          ],
           label: 'Exit',
           click: async() => {
             win.webContents.send('menu', 'ExitApp');
@@ -274,21 +284,115 @@ module.exports = class UIManager {
     {
       id: 'Edit',
       showOn: ['-all-'],
+      hideOn: [
+        'options_',
+        'preview_'
+      ],
       role: 'editMenu'
     },
     {
       id: 'View',
+      label: 'View',
       showOn: ['-all-'],
-      role: 'viewMenu'
+      hideOn: [
+        'options_',
+      ],
+      //role: 'viewMenu'
+      submenu: [
+        {
+          id: 'View-Preview',
+          label: 'Preview Page',
+          accelerator: 'CommandOrControl+Shift+P',
+          showOn: [
+            'edit_md.html',
+            'edit_html.html'
+          ],
+          click: async() => {
+            win.webContents.send('menu', 'Preview');
+          }
+        },
+        {
+          id: 'View-Back',
+          label: 'Back',
+          showOn: [
+            'preview_page.html'
+          ],
+          click: async() => {
+            win.webContents.goBack();
+          }
+        },
+        {
+          id: 'View-Forward',
+          label: 'Forward',
+          showOn: [
+            'preview_page.html'
+          ],
+          click: async() => {
+            win.webContents.goForward();
+          }
+        },
+        {
+          showOn: [
+            'edit_md.html',
+            'edit_html.html',
+            'preview_'
+          ],
+          type: 'separator'
+        },
+        {
+          showOn: ['-all-'],
+          role: 'reload'
+        },
+        {
+          showOn: ['-all-'],
+          role: 'forcereload'
+        },
+        {
+          showOn: ['-all-'],
+          role: 'toggledevtools'
+        },
+        {
+          showOn: ['-all-'],
+          type: 'separator'
+        },
+        {
+          showOn: ['-all-'],
+          role: 'resetzoom'
+        },
+        {
+          showOn: ['-all-'],
+          role: 'zoomin'
+        },
+        {
+          showOn: ['-all-'],
+          role: 'zoomout'
+        },
+        {
+          showOn: ['-all-'],
+          type: 'separator'
+        },
+        {
+          showOn: ['-all-'],
+          role: 'togglefullscreen'
+        }
+      ]
     },  
     {
       id: 'Window',
       showOn: ['-all-'],
+      hideOn: [
+        'preview_',
+        'options_'
+      ],
       role: 'windowMenu'
     },
     {
       id: 'Tools',
       showOn: ['-all-'],
+      hideOn: [
+        'preview_',
+        'options_'
+      ],
       label: 'Tools',
       submenu: [
         {
@@ -304,6 +408,10 @@ module.exports = class UIManager {
     {
       id: 'World',
       showOn: ['-all-'],
+      hideOn: [
+        'preview_',
+        'options_'
+      ],
       label: 'World',
       submenu: [
         {
@@ -340,6 +448,10 @@ module.exports = class UIManager {
     {
       id: 'Help',
       showOn: ['-all-'],
+      hideOn: [
+        'preview_',
+        'options_'
+      ],
       role: 'help',
        submenu: [
         {
@@ -369,17 +481,58 @@ module.exports = class UIManager {
 function filterSubmenu(page, submenuArray) {
   page = page.toLowerCase();
   return submenuArray.filter(function (m) {
+    let pageStub = (page.includes('_') ? page.split('_')[0] + '_' : null);
     let subm = m.submenu;
     //let show = m.showOn.includes(page);
     if (subm && subm.length>0) {
       m.submenu = filterSubmenu(page, subm);
     }
+    let ret = false;
+    if (
+      m.showOn && m.showOn.includes('-all-')
+    ) {
+      ret = true;
+    }
+    if (
+      m.showOn && 
+      (
+        m.showOn.includes(page) ||
+        (pageStub && m.showOn.includes(pageStub))
+      )
+    ) {
+      ret = true;
+    }
+
+    if (
+      m.hideOn && 
+      (
+        m.hideOn.includes(page) ||
+        (pageStub && m.hideOn.includes(pageStub))
+      )
+    ) {
+      ret = false;
+    }
+
+    return ret;
+    /*
     return (m.showOn &&
-            (!m.hideOn || !m.hideOn.includes(page)) &&
-            (m.showOn.includes(page) ||
-            m.showOn.includes('-all-'))
+            (
+              !m.hideOn || 
+              !m.hideOn.includes(page) ||
+              (
+                !pageStub || !m.hideOn.includes(pageStub)
+              )
+            ) &&
+            (
+              m.showOn.includes(page) ||
+              m.showOn.includes('-all-') ||
+              (
+                pageStub && m.showOn.includes(pageStub)
+              )
+            )
 
            );
+    */
   });
 }
 

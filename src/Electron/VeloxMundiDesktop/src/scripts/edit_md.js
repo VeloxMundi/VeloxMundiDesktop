@@ -350,7 +350,8 @@ $(document).ready(function() {
   available for other events like paste etc. add these here*/
   $('#editor').on('keydown',function(e) {
     if (e.key==="@") {
-      e.preventDefault();      
+      e.preventDefault();    
+      $('#editor').attr('disabled','true');  
       
       const { x, y } = getCursorXY(document.querySelector('#editor'), $('#editor').prop('selectionStart'));
 
@@ -399,7 +400,8 @@ $(document).ready(function() {
     if (link && link!='') {
       let pageData = window.contextBridge.toMainSync('page', 'GetPageDataFromNameDisambiguation',link);
       if (pageData && pageData.success) {
-        let linkText = '[' + $('#pageLinkText').val() + '](<' + pageData.pageFullPath + '>)';
+        //TODO: Get RelPath from this page to the linked page!!
+        let linkText = '[' + $('#pageLinkText').val() + '](<' + pageData.data.relPath + '>)';
         var txtarea = document.getElementById("editor");
         var start = txtarea.selectionStart;
         var finish = txtarea.selectionEnd;
@@ -414,7 +416,7 @@ $(document).ready(function() {
 
     $('#pageLinkHref').val('');
     $('#pageLinkText').val('');
-
+    $('#editor').removeAttr('disabled');  
   });
 
 

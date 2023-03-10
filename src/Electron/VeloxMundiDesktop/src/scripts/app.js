@@ -275,6 +275,12 @@ $(document).ready(function() {
         window.contextBridge.toMainSync('config', 'WriteKey', ['CurrentWorld', '']);
         navigate('selectWorld.html');
         break;
+      case 'PageBack':
+        window.history.go(-1);
+        break;
+      case 'PageForward':
+        window.history.go(+1);
+        break;
       case 'ExitApp':
         if (!pageDirty) {
         window.contextBridge.toMainSync('quit');

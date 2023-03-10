@@ -58,6 +58,8 @@ const createWindow = () => {
 }
 
 app.whenReady().then(() => {
+  
+
     //menu = Menu.buildFromTemplate(menuTemplate)
     //Menu.setApplicationMenu(menu)
     createWindow();
@@ -169,7 +171,7 @@ function CreatePreviewWindow(page, query) {
       previewWindow = null;
     });
     previewWindow.focus();
-    previewWindow.removeMenu();
+    //previewWindow.removeMenu();
   }
   else {
     previewWindow.focus();

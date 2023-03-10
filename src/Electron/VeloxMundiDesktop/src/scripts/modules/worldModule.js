@@ -160,7 +160,7 @@ module.exports = class ConfigManager {
       assetType = (!assetType || assetType=='' ? 'image' : assetType);
       let worldDir = configManager.ReadKey('WorldDirectory');
       let currentWorld = configManager.ReadKey('CurrentWorld');
-      let imgPath = path.join(worldDir, currentWorld, '_web', '_assets');
+      let imgPath = path.join(worldDir, currentWorld, '_web', '_assets', 'images');
       fse.ensureDirSync(imgPath);
       let fileName = newAssetPath.split(path.sep).pop();
       let destPath = path.join(imgPath, fileName);

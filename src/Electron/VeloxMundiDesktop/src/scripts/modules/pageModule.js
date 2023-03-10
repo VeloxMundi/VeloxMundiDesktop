@@ -597,27 +597,20 @@ module.exports = class ConfigManager {
             return retVal;
           }
         });
-        try {
-          
-          this.AddPageToIndex(newPathData.fullPath, false);
-          this.RemovePageFromIndex({
-            pagePath : oldPathData.fullPath
-          });
-          /*
-          let data = worldManager.GetWorldData();
-          let pages = data.pages.filter(function(p) {
-            return p.relPath!=oldPathData.relPath
-          });
-          data.pages = pages;
-          worldManager.SaveWorldData(data);
-          */
-          retVal.success=true;
+        this.AddPageToIndex(newPathData.fullPath, false);
+        this.RemovePageFromIndex({
+          pagePath : oldPathData.fullPath
+        });
+
+        // Clean up previews        
+        if (fs.existsSync(oldPathData.previewPath)) {
+          fs.unlinkSync(oldPathData.previewPath);
         }
-        catch(e) {
-          retVal.success = false;
-          retVal.message = 'New file created at "' + newPathData.fullPath + '" but the existing file could not be deleted. Please remove the old file manually.';
-          return retVal;
+        let contents = fs.readdirSync(oldPathData.previewDir);
+        if (contents.length==0) {
+          fs.rmdirSync(oldPathData.previewDir);
         }
+        retVal.success=true;
       }
       catch(e) {
         retVal.success = false;
@@ -726,7 +719,9 @@ module.exports = class ConfigManager {
       fileName : '',
       relFileName : '',
       pageType : '',
-      basePath : ''
+      basePath : '',
+      previewDir : '',
+      previewPath : ''
     };
     if ((!pathInfo.fullPath || pathInfo.fullPath=='') && (pathInfo.relPath && pathInfo.relPath!='')) {
       pathInfo.fullPath = path.join(configManager.ReadKey('WorldDirectory'), configManager.ReadKey('CurrentWorld'),'pages',pathInfo.relPath + '.' + pathInfo.fileExt);
@@ -762,6 +757,9 @@ module.exports = class ConfigManager {
       for (let i=0; i<relPathParts.length-1; i++) {
         pathData.pageType = path.join(pathData.pageType,relPathParts[i]);
       }
+
+      pathData.previewDir = path.join(worldPath, currentWorld, '_web',pathData.relPath);
+      pathData.previewPath = path.join(pathData.previewDir, 'index.html');
 
       pathData.success = true;
     }

@@ -73,6 +73,10 @@ window.processMenuItem = function(menuItem, data) {
         );
       }
       break;
+    case 'Preview':
+      CheckPathAndSave();
+      navigate('preview_page.html','path=' + pagePath);
+      break;
     default:
       break;
   }
