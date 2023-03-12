@@ -1,5 +1,6 @@
 let docBaseTitle = '';
 let pagePath = '';
+let worldPath = '';
 let snRange = null;
 
 $(document).ready(function() {
@@ -91,9 +92,20 @@ $(document).ready(function() {
     let link = $('#pageLinkHref').val();
     let pageData = window.contextBridge.toMainSync('page', 'GetPageDataFromNameDisambiguation',link);
     if (pageData && pageData.success) {
-      let linkHtml = '<a href="' + pageData.data.relPath + '" class="internalLink">' + $('#pageLinkText').val() + '</a>';
-      
-      $('#editor').summernote('pasteHTML', linkHtml);
+      let relPathData = window.contextBridge.toMainSync('world', 'GetRelPath', {
+            isRelPath : false,
+            fromPath : pagePath,
+            toPath : pageData.pageFullPath
+      });
+      if (relPathData.success) {
+        let relPathParts = relPathData.relPath.split('.');
+        relPathParts.pop();
+        let linkHtml = '<a href="page:' + relPathParts.join('.') + '" class="internalLink">' + $('#pageLinkText').val() + '</a>';
+        $('#editor').summernote('pasteHTML', linkHtml);
+      }
+      else {
+        showToast((relPathData && relPathData.message ? relPathData.message : 'Unable to find path to "' + relPathParts.join('.') + '."'), 'text-danger');
+      }      
     }
     else {
       showToast((pageData && pageData.message ? pageData.message : 'Unable to find page data for ' + link + '.'),'text-danger');
@@ -116,28 +128,21 @@ $(document).ready(function() {
   for (var i=0; i<vars.length; i++) {
     let pair = vars[i].split('=');
     if (pair[0].toLowerCase()=='path') {
-      let relPathParts = decodeURIComponent(pair[1]).split(pathSep);
-      pageName = '';
-      pageType = '';
-      for (let i=0; i<relPathParts.length; i++) {
-        if (i<relPathParts.length-1) {
-          pageType += (pageType=='' || i==relPathParts.length-1 ? '' : pathSep) + relPathParts[i];
-        }
-        else {
-          pageName = relPathParts[i];
-        }
-      }
-      pageType = pageType.replace(pathSep,typeSep);
-      let getPage = window.contextBridge.toMainSync('page', 'GetPagePath', {
-        relPath: (pageType && pageType!='' ? pageType + pathSep : '') + pageName,
-        extension: 'html'
+      let pageData = window.contextBridge.toMainSync('page', 'GetPageData', {
+        worldPath : decodeURIComponent(pair[1])
       });
-      if (getPage.success) {
-        pagePath = getPage.path;
+      if (pageData && pageData.success) {    
+        pagePath = pageData.fullPath;
+        pageName = pageData.rawFileName;
+        pageType = pageData.pageType;
+        worldPath = pageData.worldPath;
         console.log(pagePath);
         let contents = window.contextBridge.toMainSync('page', 'ReadPage', pagePath);
         $('#editor').summernote('code',contents);
         pageDirty = false;
+      }
+      else {
+        showToast((pageData && pageData.message ? pageData.message : 'Unable to load page.'), 'text-danger');
       }
     }
     else if (pair[0].toLowerCase()=='name') {      
@@ -146,7 +151,7 @@ $(document).ready(function() {
     }
   }
 
-  $('#editor').trigger('focus');
+  $('#editor').summernote('focus');
 
   //var converter = new showdown.Converter({ tables: true, strikethrough: true });
 
@@ -254,7 +259,7 @@ $(document).ready(function() {
           break;
         }
         else {        
-          navigate('preview_htmlToMd.html','path=' + pageType + pathSep + pageName + '&name=' + pageNameDisambiguation);
+          navigate('preview_htmlToMd.html','path=' + worldPath + '&name=' + pageNameDisambiguation);
         }
         break;
       default:
@@ -308,11 +313,8 @@ $(document).ready(function() {
       let pageHTML = $('#editor').summernote('code');
       //let pageContents = converter.makeMarkdown(pageHTML);
       let saveResult = window.contextBridge.toMainSync('page', 'SavePage', {
-        'pageName': pageName,
-        'pageType' : pageType,
+        'fullPath': pagePath,
         'pageContents': pageHTML,
-        'pageHTML': pageHTML,
-        'fileType': 'html'
         });
       if (saveResult.success)
       {
@@ -353,11 +355,23 @@ $(document).ready(function() {
     if (data.success) {
       pageDirty=false;
       pagePath = data.path;
-      window.contextBridge.toMain('config', 'WriteKey', ['CurrentPage', 'edit.html?path=' + encodeURIComponent(data.path)]);
-      pageName = pagePath.split('\\').pop();
-      modalLock(false);
-      hideModal();
-      SavePage();
+      let pageData = window.contextBridge.toMainSync('page', 'GetPageData', {
+        fullPath : data.path
+      });
+      if (pageData && pageData.success) {
+        pagePath = pageData.fullPath;
+        pageType = pageData.pageType;
+        pageName = pageData.rawFileName;
+        worldPath = pageData.worldPath;
+        document.title += ' ' + pageName;
+        window.contextBridge.toMain('config', 'WriteKey', ['CurrentPage', 'edit.html?path=' + encodeURIComponent(pageData.worldPath)]);
+        modalLock(false);
+        hideModal();
+        SavePage();
+      }
+      else {
+        showToast((pageData && pageData.message ? pageData.message : 'Unable to get new page data'), 'text-danger');
+      }
     }
     else {
       if (data.message!='') {

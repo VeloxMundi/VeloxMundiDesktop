@@ -1,5 +1,8 @@
 setPageInConfig=false;
-
+let pageName = '';
+let pageType = '';
+let pagePath = '';
+let worldPath = '';
 
 
 $(function(e) {
@@ -8,29 +11,18 @@ $(function(e) {
   for (var i=0; i<vars.length; i++) {
     let pair = vars[i].split('=');
     if (pair[0].toLowerCase()=='path') {
-      let relPathParts = decodeURIComponent(pair[1]).split(pathSep);
-      pageName = '';
-      pageType = '';
-      for (let i=0; i<relPathParts.length; i++) {
-        if (i<relPathParts.length-1) {
-          pageType += (pageType=='' || i==relPathParts.length-1 ? '' : pathSep) + relPathParts[i];
-        }
-        else {
-          pageName = relPathParts[i];
-        }
-      }
-      pageType = pageType.replace(pathSep,typeSep);
-      let getPage = window.contextBridge.toMainSync('page', 'GetPagePath', {
-        relPath: (pageType && pageType!='' ? pageType + pathSep : '') + pageName,
-        extension: 'html'
+      let pageData = window.contextBridge.toMainSync('page', 'GetPageData', {
+        worldPath : decodeURIComponent(pair[1])
       });
-      if (getPage.success) {
-        pagePath = getPage.path;
+      if (pageData.success) {
+        pageName = pageData.rawPageName;
+        pageType = pageData.pageType;
+        pagePath = pageData.fullPath;
+        worldPath = pageData.worldPath;
         console.log(pagePath);
         let contents = window.contextBridge.toMainSync('page', 'ReadPage', pagePath);
-        $('#editor').val(converter.makeMarkdown(contents));
+        $('#editor').val(converter.makeMarkdown(contents.replace(/_/g,'\\_')));
         updateResult();
-        //$('#viewer').html(contents);
         pageDirty = false;
       }
     }
@@ -84,14 +76,13 @@ $(function(e) {
   $('#AcceptConversion').on('click', function(e) {
     e.preventDefault();
     let res = window.contextBridge.toMainSync('page', 'Convert', {
-      name : pageName,
-      type : pageType,
+      fullPath : pagePath,
       oldFileType : 'html',
       newFileType : 'md',
       mdContent : $('#editor').val()
     });
     if (res.success) {
-      navigate('edit_md.html', 'path=' + pageType + pathSep + pageName + '&name=' + pageName);
+      navigate('edit_md.html', 'path=' + worldPath + '&name=' + pageName);
       window.contextBridge.toMain('closeWindow', 'Preview');
     }
     else {

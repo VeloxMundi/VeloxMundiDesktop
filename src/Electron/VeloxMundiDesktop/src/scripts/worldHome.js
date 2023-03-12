@@ -26,7 +26,7 @@ $(document).ready(function() {
               )
         ));
         for (let j=0; j<typePages.length; j++) {
-          $('#PageList').append('<li><a class="navLink" href="#" data-page="' + (typePages[j].fileType=='md' ? 'edit_md.html' : 'edit_html.html') + '" data-query="path='+encodeURIComponent(typePages[j].relPath)+'&name=' + typePages[j].nameDisambiguation + '">' + typePages[j].name + '</a></li>');
+          $('#PageList').append('<li><a class="navLink" href="#" data-page="' + (typePages[j].fileType=='md' ? 'edit_md.html' : 'edit_html.html') + '" data-query="path='+encodeURIComponent(typePages[j].worldPath)+'&name=' + typePages[j].nameDisambiguation + '"><span class="bi bi-' + (typePages[j].fileType=='md' ? 'card-text' : 'globe') + '">&nbsp;</span>' + typePages[j].name + '</a></li>');
         }
         
         $('#PageList').append('</ul>');

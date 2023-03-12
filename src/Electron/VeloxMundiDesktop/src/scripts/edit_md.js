@@ -2,7 +2,7 @@ let mdFileName = '';
 let docBaseTitle = '';
 let editorIndex = 0;
 let pagePath = '';
-let pageRelPath = '';
+let worldPath = '';
 let worldDir = window.contextBridge.toMainSync('world', 'GetWorldDir');
 
 
@@ -15,28 +15,21 @@ $(document).ready(function() {
     for (var i=0; i<vars.length; i++) {
       let pair = vars[i].split('=');
       if (pair[0].toLowerCase()=='path') {
-        pageRelPath = decodeURIComponent(pair[1]);
-        let relPathParts = pageRelPath.split(pathSep);
-        pageName = '';
-        pageType = '';
-        for (let i=0; i<relPathParts.length; i++) {
-          if (i<relPathParts.length-1) {
-            pageType += (pageType=='' || i==relPathParts.length-1 ? '' : pathSep) + relPathParts[i];
-          }
-          else {
-            pageName = relPathParts[i];
-          }
-        }
-        let getPage = window.contextBridge.toMainSync('page', 'GetPagePath', {
-          relPath: (pageType && pageType!='' ? pageType + pathSep : '') + pageName,
-          extension: 'md'
-        });
-        if (getPage.success) {
-          pagePath = getPage.path;
+        let pageData = window.contextBridge.toMainSync('page', 'GetPageData', {
+          worldPath : decodeURIComponent(pair[1])
+          });
+        if (pageData && pageData.success) {
+          pagePath = pageData.fullPath;
+          pageName = pageData.rawFileName;
+          pageType = pageData.pageType;
+          worldPath = pageData.worldPath;
           console.log(pagePath);
           let contents = window.contextBridge.toMainSync('page', 'ReadPage', pagePath);
           $('#editor').text(contents.replace('/r/n','<br/>').replace('/r','<br/>'));
           pageDirty = false;
+        }
+        else {
+          showToast((pageData && pageData.message ? pageData.message : 'Unable to load page'), 'text-danger');
         }
       }
       else if (pair[0].toLowerCase()=='name') {
@@ -175,14 +168,13 @@ $(document).ready(function() {
           }
           else {   
             let res = window.contextBridge.toMainSync('page', 'Convert', {
-              type : pageType,
-              name : pageName,
+              fullPath : pagePath,
               oldFileType : 'md',
               newFileType : 'html',
               htmlContent : $('#viewer').html()
             });
             if (res.success) {
-              navigate('edit_html.html', 'path=' + pageRelPath + '&name=' + pageName);
+              navigate('edit_html.html', 'path=' + worldPath + '&name=' + pageName);
             }
             else {
               showToast(res.message, 'text-danger');
@@ -222,12 +214,9 @@ $(document).ready(function() {
       const pageContents = $('#editor').val();
       const pageHTML = $('#viewer').html();
       let saveResult = window.contextBridge.toMainSync('page', 'SavePage', {
-        'pagePath': pagePath,
+        'fullPath': pagePath,
         'pageContents': pageContents,
-        'pageHTML': pageHTML,
-        'pageType': pageType,
-        'pageName': pageName,
-        'fileType': pagePath.split('.').pop()
+        'pageHTML' : pageHTML
         });
       if (saveResult.success)
       {
@@ -268,11 +257,23 @@ $(document).ready(function() {
     if (data.success) {
       pageDirty=false;
       pagePath = data.path;
-      window.contextBridge.toMain('config', 'WriteKey', ['CurrentPage', 'edit.html?path=' + encodeURIComponent(data.path)]);
-      pageName = pagePath.split('\\').pop().replace('.md','');
-      modalLock(false);
-      hideModal();
-      SavePage();
+      let pageData = window.contextBridge.toMainSync('page', 'GetPageData', {
+        fullPath : data.path
+      });
+      if (pageData && pageData.success) {
+        pagePath = pageData.fullPath;
+        pageType = pageData.pageType;
+        pageName = pageData.rawFileName;
+        worldPath = pageData.worldPath;
+        document.title += ' ' + pageName;
+        window.contextBridge.toMain('config', 'WriteKey', ['CurrentPage', 'edit.html?path=' + encodeURIComponent(pageData.worldPath)]);
+        modalLock(false);
+        hideModal();
+        SavePage();
+      }
+      else {
+        showToast((pageData && pageData.message ? pageData.message : 'Unable to get new page data'), 'text-danger');
+      }
     }
     else {
       if (data.message!='') {
@@ -397,17 +398,30 @@ $(document).ready(function() {
 
   $('#pageLinkModal').on('hidden.bs.modal', function() {
     let link = $('#pageLinkHref').val();
+    let newCurPos = 0;
     if (link && link!='') {
       let pageData = window.contextBridge.toMainSync('page', 'GetPageDataFromNameDisambiguation',link);
       if (pageData && pageData.success) {
-        //TODO: Get RelPath from this page to the linked page!!
-        let linkText = '[' + $('#pageLinkText').val() + '](<' + pageData.data.relPath + '>)';
-        var txtarea = document.getElementById("editor");
-        var start = txtarea.selectionStart;
-        var finish = txtarea.selectionEnd;
-        var allText = txtarea.value;
-        var newText=allText.substring(0, start)+linkText+allText.substring(finish, allText.length);
-        txtarea.value=newText;
+        let relPathData = window.contextBridge.toMainSync('world', 'GetRelPath', {
+          isRelPath : false,
+          fromPath : pagePath,
+          toPath : pageData.pageFullPath
+        });
+        if (relPathData.success) {
+          let relPathParts = relPathData.relPath.split('.');
+          relPathParts.pop();
+          let linkText = '[' + $('#pageLinkText').val() + '](<page:' + relPathParts.join('.') + '>)';
+          var txtarea = document.getElementById("editor");
+          var start = txtarea.selectionStart;
+          var finish = txtarea.selectionEnd;
+          var allText = txtarea.value;
+          var newText=allText.substring(0, start)+linkText+allText.substring(finish, allText.length);
+          txtarea.value=newText;
+          newCurPos = start + linkText.length;
+        }
+        else {
+          showToast((relPathData && relPathData.message ? relPathData.message : 'Unable to find path to "' + link + '".'), 'text-danger');
+        }
       }
       else {
         showToast((pageData && pageData.message ? pageData.message : 'Unable to find page data for ' + link + '.'),'text-danger');
@@ -417,6 +431,8 @@ $(document).ready(function() {
     $('#pageLinkHref').val('');
     $('#pageLinkText').val('');
     $('#editor').removeAttr('disabled');  
+    $('#editor').trigger('focus');
+    $('#editor').prop('selectionEnd', newCurPos);
   });
 
 

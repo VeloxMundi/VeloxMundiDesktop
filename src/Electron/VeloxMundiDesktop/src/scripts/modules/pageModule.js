@@ -89,29 +89,28 @@ module.exports = class ConfigManager {
   
   static SavePage(pageInfo) {
     /* pageInfo contains:
-     fileType,
-     pageContents,
-     pageName,
-     pageType,
+     fullPath (string) (optional) must have fullPath OR relPath
+     relPath (string) (optional) must have fullPath OR relPath
+     pageContents (string) MD or HTML contents of the page
+     pageHTML (string) HTML contents of the page (for publishing)
     */
     try {
-      let basePath = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld'));
-      let pageDir = path.join(basePath, 'pages', pageInfo.pageType);
-      if (!fs.existsSync(pageDir)) {
-        fs.mkdirSync(pageDir);
-      }
-      let pagePath = path.join(pageDir, pageInfo.pageName + '.' + pageInfo.fileType);
-      let contents = (pageInfo.fileType=='md' ? this.tweakMD('save', pageInfo.pageContents, pagePath) : this.tweakHTML('save', pageInfo.pageContents, pagePath));
-      fs.writeFileSync(pagePath, contents);   
+      let pageData = this.GetPageData({
+        fullPath : pageInfo.fullPath,
+        relPath : pageInfo.relPath 
+      });
+
+      let contents = (pageData.fileExt=='md' 
+            ? this.tweakMD('save', pageInfo.pageContents, pageData.fullPath) 
+            : this.tweakHTML('save', pageInfo.pageContents, pageData.fullPath));
+      fs.writeFileSync(pageData.fullPath, contents);   
 
       // publish page in HTML output directory
-      let pubDir = path.join(basePath, pubDirName, pageInfo.pageType, pageInfo.pageName);
-      fse.ensureDirSync(pubDir);
-      let pubPath = path.join(pubDir, 'index.html');
-      fs.writeFileSync(pubPath, this.publishHTML('save',pageInfo.pageHTML));
+      fse.ensureDirSync(pageData.previewDir);
+      fs.writeFileSync(pageData.previewPath, this.publishHTML((pageData.fileExt=='md' ? pageInfo.pageHTML : pageInfo.pageContents), pageData.previewPath));
       
       try {
-        this.AddPageToIndex(pagePath, true);
+        this.AddPageToIndex(pageData.fullPath, true);
         //this.BuildWebIndex();
         return {
           'success': true, 
@@ -143,11 +142,11 @@ module.exports = class ConfigManager {
     // Read world index
     let worldData = worldManager.GetWorldData();
     let thisPage = {
-      name : pageData.relFileName,
-      nameDisambiguation : pageData.relFileName + (pageData.pageType=='' ? '' : ' (' + pageData.pageType + ')'),
+      name : pageData.rawFileName,
+      nameDisambiguation : pageData.rawFileName + (pageData.pageType=='' ? '' : ' (' + pageData.pageType + ')'),
       type : pageData.pageType,
       fileType : pageData.fileExt,
-      relPath : pageData.relPath
+      worldPath : pageData.worldPath
     }
     if (SaveNow) {
       thisPage.saved = new Date(Date.now()).toLocaleString();
@@ -163,7 +162,7 @@ module.exports = class ConfigManager {
             try {
               let ths = $(this);
               let href = decodeURIComponent(ths.attr('href'));
-              let baseHref = decodeURIComponent('file:///' + basePath);
+              let baseHref = decodeURIComponent('file:///' + pageData.basePath);
               if (href.indexOf(baseHref)!=-1) {
                 href = href.replace(baseHref,'');
                 let existingO = olinks.indexOf(href);
@@ -194,12 +193,12 @@ module.exports = class ConfigManager {
     
     for (let i=0; i<worldData.pages.length; i++) {
       let dataPageNameLower = worldData.pages[i].name;
-      if (worldData.pages[i].relPath==pageData.relPath) {
+      if (worldData.pages[i].worldPath==pageData.worldPath) {
         worldData.pages[i] = thisPage;
       }
     }
     let dataThisPage = worldData.pages.filter(function(p) {
-      return p.relPath==pageData.relPath
+      return p.worldPath==pageData.worldPath
     });
     if (!dataThisPage || dataThisPage.length==0) {
       worldData.pages.push(thisPage);
@@ -242,7 +241,7 @@ module.exports = class ConfigManager {
       });
       let worldData = worldManager.GetWorldData();
       worldData.pages = worldData.pages.filter(function(p) {
-        return p.relPath!=pageData.relPath
+        return p.worldPath!=pageData.worldPath
       });
       worldManager.SaveWorldData(worldData);
     }
@@ -256,19 +255,67 @@ module.exports = class ConfigManager {
   }
 
 
-  static publishHTML(pageInfo, html) {
+  static publishHTML(html, pagePath) {
     //TODO: Tweak HTML to fit with publish strategy
+    
+    let dom = new jsdom.JSDOM(html);
+    let jquery = require('jquery')(dom.window);
+    let imgs = jquery('img');
+    for (let i=0; i<imgs.length; i++) {
+      let oldSrc = jquery(imgs[i]).attr('src');
+      if (oldSrc.startsWith('file:///')) {
+        let relData = worldManager.GetRelPath({
+          isRelPath: false,
+          fromPath: pagePath,
+          toPath: oldSrc.replace('file:///','').replace(/%20/g, ' ')
+        });
+        if (relData.success) {
+          jquery(imgs[i]).attr('src',relData.relPath);
+          jquery(imgs[i]).addClass('image-local');
+        }
+      }
+    }
+    let lnks = jquery('a');
+    for (let i=0; i<lnks.length; i++) {
+      let oldSrc = jquery(lnks[i]).attr('href');
+      if (oldSrc.startsWith('file:///')) {
+        let linkPageData = this.GetPageData({
+          fullPath : oldSrc.replace('file:///','').replace(/%20/g, ' ')
+        });
+        if (linkPageData.success) {
+          let relData = worldManager.GetRelPath({
+            isRelPath: false,
+            fromPath: pagePath,
+            toPath: linkPageData.previewPath
+          });
+          if (relData.success) {
+            jquery(lnks[i]).attr('href',relData.relPath);
+            jquery(lnks[i]).addClass('page-local');
+          }
+        }
+      }
+    }
+    let pathToWeb = path.join(configManager.ReadKey('WorldDirectory'), configManager.ReadKey('CurrentWorld'),'_web');
+    let relPathToWeb = worldManager.GetRelPath({
+      isRelPath: false,
+      fromPath: pagePath,
+      toPath: path.join(pathToWeb,'index.html')
+    });
+    let relBase = (relPathToWeb.success
+      ? relPathToWeb.relPath.replace('index.html','')
+      : '../');
     html = '<!DOCTYPE html>\r\n<html>\r\n'
           + '  <head>\r\n'
-          + `  <link rel="stylesheet" href="_assets/css/default.css">\r\n`
-          + `  <link rel="stylesheet" href="_assets/css/user.css">\r\n`
-          + `  <link rel="stylesheet" href="_assets/css/global.css">\r\n`
+          + `  <link rel="stylesheet" href="${relBase}_assets/css/default.css">\r\n`
+          + `  <link rel="stylesheet" href="${relBase}_assets/css/user.css">\r\n`
+          + `  <link rel="stylesheet" href="${relBase}_assets/css/global.css">\r\n`
           + '  </head>\r\n'
           + '  <body>\r\n' 
-          + html 
+          + jquery('body').html()
           + '\r\n  '
           + '  </body>\r\n'
           + '</html>'
+    
     return html;
   }
 
@@ -292,6 +339,9 @@ module.exports = class ConfigManager {
         break;
       case 'save':
         // match is the whole matching string, p1 is capture group 1, and p2 is capture group 2, etc.
+        let pageData = this.GetPageData({
+          fullPath: pagePath
+        });
         md = md.replace(/(!\[.*?\]\(<)(file:\/\/\/)(.*?)(>\))/g,function(match, p1,p2,p3,p4) {
           let relPathData = worldManager.GetRelPath({
             isRelPath: false,
@@ -305,6 +355,17 @@ module.exports = class ConfigManager {
             return match;
           }
         });
+        /*
+        md = md.replace(/(\[.*?\]\(<)(page:)(.*?)(>\))/g,function(match, p1,p2,p3,p4) {
+          let relPageData = callLocal(null, 'GetPageData', { worldPath: p3.replace(/%20/g, ' ').replace(/\\\\_/g,'\\_')});
+          if (relPageData.success) {
+            return p1 + p2 + relPageData.worldPath.replace(/ /g,'%20') + p4;
+          }
+          else {
+            return match;
+          }
+        });
+        */
         break;
     }
     
@@ -372,9 +433,8 @@ module.exports = class ConfigManager {
 
   static GetPagePath(pathInfo) {
     /* pathInfo:
-      type
-      name
-      extension
+      worldPath (string)
+      fileExt (string)
     */
     /*
     let baseDir = configManager.ReadKey('WorldDirectory');
@@ -383,7 +443,7 @@ module.exports = class ConfigManager {
     pagePath = path.join(worldDir,'pages',pathInfo.type, pathInfo.name + '.' + pathInfo.extension);
     */
     let pageData = this.GetPageData({
-      relPath: pathInfo.relPath,
+      worldPath: pathInfo.worldPath,
       fileExt: pathInfo.extension
     });
     if (fs.existsSync(pageData.fullPath)) {
@@ -407,7 +467,7 @@ module.exports = class ConfigManager {
         return p.nameDisambiguation==nameDisambiguation;
       });
       let pagePath = this.GetPagePath({
-        relPath: thisPage[0].relPath,
+        worldPath: thisPage[0].worldPath,
         extension: thisPage[0].fileType
       });
       if (thisPage.length==1) {
@@ -527,7 +587,7 @@ module.exports = class ConfigManager {
       let pageData = this.GetPageData({
         fullPath : pagePath
       });
-      let webDir = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld'),'_web',pageData.relPath);
+      let webDir = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld'),'_web',pageData.worldPath);
       if (fs.existsSync(webDir)) {
         try {
           fs.rmdirSync(webDir, {recursive: true});
@@ -626,36 +686,44 @@ module.exports = class ConfigManager {
     switch(configManager.ReadUserPref('editorStyle'))
     {
       case 'MD':
-        event.sender.send('navigate',path.join(app.getAppPath(), 'src','edit.html'));
+        event.sender.send('navigate',path.join(app.getAppPath(), 'src','edit_md.html'));
         break;
       default: //RTE
-        event.sender.send('navigate',path.join(app.getAppPath(), 'src','rtedit.html'));
+        event.sender.send('navigate',path.join(app.getAppPath(), 'src','edit_html.html'));
         break;
     }
   }
-  static Convert(event, pageData) {
-    if (pageData && pageData.oldFileType=='md' && pageData.newFileType=='html') {
-      let getPagePath = this.GetPagePath({
-        relPath : path.join(pageData.type, pageData.name),
-        extension : pageData.oldFileType
+  static Convert(event, pageInfo) {
+    /*pageInfo:
+    fullPath (string) (optional) (required if no worldPath)
+    worldPath (string) (optional) (required if no fullPath)
+    newFileType (string) extension of new file type without "."
+    oldFileType (string) extension of old file type without "."
+    htmlContent (string) (optional) (required if converting to html)
+    mdContent (string) (optional) (required if converting to md)
+    */
+    if (pageInfo && pageInfo.oldFileType=='md' && pageInfo.newFileType=='html') {
+      let pageData = this.GetPageData({
+        fullPath : pageInfo.fullPath,
+        worldPath : pageInfo.worldPath
       });
-      if (getPagePath.success) {
-        let pagePathParts = getPagePath.path.split('.');
-        let oldExt = pagePathParts.pop();
-        let newPagePath = pagePathParts.join('.') + '.html';
+      if (pageData.success) {
+        let oldPathParts = pageData.fullPath.split('.');
+        oldPathParts.pop();
+        let newPagePath = oldPathParts.join('.') + '.html';
         try {
-          fs.renameSync(getPagePath.path, newPagePath, function(err) {
+          fs.renameSync(pageData.fullPath, newPagePath, function(err) {
             if (err) {
               retVal.success = false;
               retVal.message = 'Unable to convert ' + getPagePath.path + '.<br/>' + err;
               return retVal;
             }
           });
-          fs.writeFileSync(newPagePath, this.tweakHTML('save', pageData.htmlContent, newPagePath));
+          fs.writeFileSync(newPagePath, this.tweakHTML('save', pageInfo.htmlContent, newPagePath));
           this.AddPageToIndex(newPagePath, true);
           return {
             success: true,
-            newPath: newPagePath
+            newPath: pageData.worldPath
           };
         }
         catch(e) {
@@ -666,24 +734,24 @@ module.exports = class ConfigManager {
         }
       }
     }
-    else if (pageData && pageData.oldFileType=='html' && pageData.newFileType=='md') {
-      let getPagePath = this.GetPagePath({
-        relPath : path.join(pageData.type, pageData.name),
-        extension : pageData.oldFileType
+    else if (pageInfo && pageInfo.oldFileType=='html' && pageInfo.newFileType=='md') {
+      let pageData = this.GetPageData({
+        worldPath : pageInfo.worldPath,
+        fullPath : pageInfo.fullPath
       });
-      if (getPagePath.success) {
-        let pagePathParts = getPagePath.path.split('.');
-        let oldExt = pagePathParts.pop();
+      if (pageData.success) {
+        let pagePathParts = pageData.fullPath.split('.');
+        pagePathParts.pop();
         let newPagePath = pagePathParts.join('.') + '.md';
         try {
-          fs.renameSync(getPagePath.path, newPagePath, function(err) {
+          fs.renameSync(pageData.fullPath, newPagePath, function(err) {
             if (err) {
               retVal.success = false;
               retVal.message = 'Unable to convert ' + getPagePath.path + '.<br/>' + err;
               return retVal;
             }
           });
-          fs.writeFileSync(newPagePath, this.tweakMD('save',pageData.mdContent,newPagePath));
+          fs.writeFileSync(newPagePath, this.tweakMD('save',pageInfo.mdContent,newPagePath));
           this.AddPageToIndex(newPagePath, true);
           return {
             success: true,
@@ -708,41 +776,68 @@ module.exports = class ConfigManager {
 
   static GetPageData(pathInfo) {
     /* pathInfo:
-      fullPath (string) (optional)
-      relPath (string) (optional)
+      fullPath (string) (optional) //Full path to the source file
+      worldPath (string) (optional) //Relative path to the source file from the "/pages" directory (used only to generate fullPath if mising)
     */
     let pathData = {
       success : false,
-      fullPath : '',
-      relPath : '',
-      fileExt : '',
-      fileName : '',
-      relFileName : '',
-      pageType : '',
-      basePath : '',
-      previewDir : '',
-      previewPath : ''
+      fullPath : '', //Full path to source file on this computer
+      fileDir : '', //Full path to directory containing the source file on this computer
+      worldPath : '', //Partial path from the current world's "/pages" directory
+      fileExt : '', //The file extension, without the "."
+      fileName : '', //The full filename (with extension)
+      rawFileName : '',//The base filename (without extension)
+      pageType : '',//The comma-separated subdirectory tree of the file starting at basePath
+      basePath : '',//The full path to the world's "/pages" directory
+      previewDir : '',//The full path to the file's location in the "/_web" directory
+      previewPath : ''//The full path to the final HTML output of the file
     };
-    if ((!pathInfo.fullPath || pathInfo.fullPath=='') && (pathInfo.relPath && pathInfo.relPath!='')) {
-      pathInfo.fullPath = path.join(configManager.ReadKey('WorldDirectory'), configManager.ReadKey('CurrentWorld'),'pages',pathInfo.relPath + '.' + pathInfo.fileExt);
-    }
-    if (pathInfo.fullPath && pathInfo.fullPath!='') {
+    try {
+      if ((!pathInfo.fullPath || pathInfo.fullPath=='') && (pathInfo.worldPath && pathInfo.worldPath!='')) {
+        let filePathNoExt = path.join(configManager.ReadKey('WorldDirectory'), configManager.ReadKey('CurrentWorld'),'pages',pathInfo.worldPath);
+        if (fs.existsSync(filePathNoExt + '.html')) {
+          pathInfo.fullPath = filePathNoExt + '.html';
+        }
+        else if (fs.existsSync(filePathNoExt + '.md')) {
+          pathInfo.fullPath = filePathNoExt + '.md';
+        }
+        else {
+          pathInfo.fullPath = filePathNoExt;
+        }
+      }
       pathData.fullPath = pathInfo.fullPath;
-      let worldPath = configManager.ReadKey('WorldDirectory');
-      let currentWorld = configManager.ReadKey('CurrentWorld');
-      pathData.basePath = path.join(worldPath,currentWorld,'pages');
+      let worldDir = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld'));
+      pathData.basePath = path.join(worldDir, 'pages');
       let basePathParts = pathData.basePath.split(path.sep);
-      let fullPathParts = pathInfo.fullPath.split(path.sep);
-      let relPathParts = [];
+      let splitPathParts = pathInfo.fullPath.split(path.sep);
+      pathData.fileName = splitPathParts.pop();
+      pathData.fileDir = splitPathParts.join(path.sep);
+      let fileNameParts = pathData.fileName.split('.');
+      pathData.fileExt = fileNameParts.pop().toLowerCase();
+      pathData.rawFileName = fileNameParts.join('.');
+      for (let i=basePathParts.length; i<splitPathParts.length; i++) {
+        pathData.worldPath = path.join(pathData.worldPath, splitPathParts[i]);
+      }
+      let pageTypeParts = pathData.worldPath.split(path.sep);
+      pathData.pageType = pageTypeParts.join(', ');
+      pathData.worldPath = path.join(pathData.worldPath, pathData.rawFileName);
+
+
+      pathData.previewDir = path.join(worldDir, '_web',pathData.worldPath);
+      pathData.previewPath = path.join(pathData.previewDir, 'index.html');
+
+      
+
+      pathData.success = true;
+      return pathData;
+
+      /*
       for (let i=basePathParts.length; i<fullPathParts.length; i++) {
         if (i==fullPathParts.length-1) {
           pathData.fileName = fullPathParts[i];
           let fileNameParts = pathData.fileName.split('.');
           pathData.fileExt = fileNameParts.pop();
-          pathData.relFileName = '';
-          for (let j=0; j<fileNameParts.length; j++) {
-            pathData.relFileName += fileNameParts[j] + (j==fileNameParts.length-1 ? '' : '.');
-          }
+          pathData.relFileName = fileNameParts.join('.');
           pathData.relPath = path.join(pathData.relPath, pathData.relFileName);
           relPathParts.push(pathData.relFileName);
         }
@@ -758,20 +853,21 @@ module.exports = class ConfigManager {
         pathData.pageType = path.join(pathData.pageType,relPathParts[i]);
       }
 
-      pathData.previewDir = path.join(worldPath, currentWorld, '_web',pathData.relPath);
-      pathData.previewPath = path.join(pathData.previewDir, 'index.html');
-
-      pathData.success = true;
+      */
+    
     }
-    else {
+    catch(e) {
       pathData.success = false;
-      pathData.message = 'Please specify either a relPath or a fullPath.';
+      pathData.message = e;
+      return pathData;
     }
   
-    return pathData;
-  
+  }
+
+
+
 }
 
-
-
+function callLocal(event, method, data) {
+  return module.exports.Invoke(event, method, data);
 }

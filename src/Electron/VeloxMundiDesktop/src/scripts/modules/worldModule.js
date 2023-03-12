@@ -15,7 +15,7 @@ const jsdom = require('jsdom');
 const configManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'configModule.js'));
 //configManager.InitPath(path.join(app.getAppPath(), 'user', 'config.json'), path.join(app.getAppPath(), 'data'));
 const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'fileManagerModule.js'));
-const pageManager = require(path.join(app.getAppPath(), 'src','scripts','modules', 'pageModule.js'));
+// because the pageModule references the worldModule, we can't create a reference back to the pageModule from here.
 let modal = null;
 let saveAsEvent = null;
 
@@ -117,11 +117,12 @@ module.exports = class ConfigManager {
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
         fs.mkdirSync(path.join(dir, 'pages'));
-        fs.mkdirSync(path.join(dir, 'assets'));        
-        fs.mkdirSync(path.join(dir, 'styles'));
+        fs.mkdirSync(path.join(dir, '_web'));
+        fs.mkdirSync(path.join(dir, '_web', '_assets'));        
+        fs.mkdirSync(path.join(dir, '_web', '_assets', 'styles'));
         fs.copyFileSync(path.join(appPath, 'src', 'styles', 'default.css'), path.join(dir, 'styles', 'default.css'));
-        if (fs.existsSync(path.join(appPath, 'user', 'global.css'))) {
-          fs.copyFileSync(path.join(appPath, 'user', 'global.css'), path.join(dir, 'styles', 'global.css'));
+        if (fs.existsSync(path.join(appPath, 'src', 'styles', 'default.css'))) {
+          fs.copyFileSync(path.join(appPath, 'src', 'styles', 'default.css'), path.join(dir, '_web', '_assets', 'styles', 'global.css'));
         }
         configManager.WriteKey('CurrentWorld', worldName);
         let data={
@@ -168,7 +169,7 @@ module.exports = class ConfigManager {
       return {
         success: true,
         path: destPath,
-        relPath: path.join('_web','_assets',fileName)
+        relPath: path.join('_web','_assets', 'images', fileName)
       };
     }
     catch(e) {
@@ -232,7 +233,7 @@ module.exports = class ConfigManager {
       }
       let fromPathParts = pathInfo.fromPath.split(path.sep);
       let toPathParts = pathInfo.toPath.split(path.sep);
-      let divergeIndex = 0;
+      let divergeIndex = (pathInfo.fromPath==pathInfo.toPath ? toPathParts.length-1 : 0);
       for (let i=0; i<toPathParts.length; i++) {
         if (fromPathParts[i]!=toPathParts[i]) {
           divergeIndex = i;
