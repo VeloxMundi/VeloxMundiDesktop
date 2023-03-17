@@ -90,25 +90,15 @@ $(document).ready(function() {
     $('#editor').summernote('editor.setLastRange', snRange);
     $('#editor').summernote('restoreRange');
     let link = $('#pageLinkHref').val();
-    let pageData = window.contextBridge.toMainSync('page', 'GetPageDataFromNameDisambiguation',link);
-    if (pageData && pageData.success) {
-      let relPathData = window.contextBridge.toMainSync('world', 'GetRelPath', {
-            isRelPath : false,
-            fromPath : pagePath,
-            toPath : pageData.pageFullPath
-      });
-      if (relPathData.success) {
-        let relPathParts = relPathData.relPath.split('.');
-        relPathParts.pop();
-        let linkHtml = '<a href="page:' + relPathParts.join('.') + '" class="internalLink">' + $('#pageLinkText').val() + '</a>';
+    if (link && link!='') {
+      let pageData = window.contextBridge.toMainSync('page', 'GetPageDataFromNameDisambiguation',link);
+      if (pageData && pageData.success) {
+        let linkHtml = '<a href="page:' + pageData.data.worldPath + '" class="internalLink">' + $('#pageLinkText').val() + '</a>';
         $('#editor').summernote('pasteHTML', linkHtml);
       }
       else {
-        showToast((relPathData && relPathData.message ? relPathData.message : 'Unable to find path to "' + relPathParts.join('.') + '."'), 'text-danger');
-      }      
-    }
-    else {
-      showToast((pageData && pageData.message ? pageData.message : 'Unable to find page data for ' + link + '.'),'text-danger');
+        showToast((pageData && pageData.message ? pageData.message : 'Unable to find page data for ' + link + '.'),'text-danger');
+      }
     }
     
     $('#pageLinkHref').val('');

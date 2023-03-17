@@ -402,26 +402,14 @@ $(document).ready(function() {
     if (link && link!='') {
       let pageData = window.contextBridge.toMainSync('page', 'GetPageDataFromNameDisambiguation',link);
       if (pageData && pageData.success) {
-        let relPathData = window.contextBridge.toMainSync('world', 'GetRelPath', {
-          isRelPath : false,
-          fromPath : pagePath,
-          toPath : pageData.pageFullPath
-        });
-        if (relPathData.success) {
-          let relPathParts = relPathData.relPath.split('.');
-          relPathParts.pop();
-          let linkText = '[' + $('#pageLinkText').val() + '](<page:' + relPathParts.join('.') + '>)';
-          var txtarea = document.getElementById("editor");
-          var start = txtarea.selectionStart;
-          var finish = txtarea.selectionEnd;
-          var allText = txtarea.value;
-          var newText=allText.substring(0, start)+linkText+allText.substring(finish, allText.length);
-          txtarea.value=newText;
-          newCurPos = start + linkText.length;
-        }
-        else {
-          showToast((relPathData && relPathData.message ? relPathData.message : 'Unable to find path to "' + link + '".'), 'text-danger');
-        }
+        let linkText = '[' + $('#pageLinkText').val() + '](<page:' + pageData.data.worldPath.replace(/ /g, '%20').replace(/_/g, '\\_') + '>)';
+        var txtarea = document.getElementById("editor");
+        var start = txtarea.selectionStart;
+        var finish = txtarea.selectionEnd;
+        var allText = txtarea.value;
+        var newText=allText.substring(0, start)+linkText+allText.substring(finish, allText.length);
+        txtarea.value=newText;
+        newCurPos = start + linkText.length;
       }
       else {
         showToast((pageData && pageData.message ? pageData.message : 'Unable to find page data for ' + link + '.'),'text-danger');

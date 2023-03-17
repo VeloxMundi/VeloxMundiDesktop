@@ -19,4 +19,10 @@ $(document).ready(function() {
     }
   }
   
+  window.contextBridge.fromMain('menu', (event, action, data) =>  {
+    switch(action) {
+      case 'closeWindow':
+        window.contextBridge.toMain('closeWindow', data);
+    }
+  });
 });

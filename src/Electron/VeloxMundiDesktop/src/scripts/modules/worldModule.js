@@ -181,6 +181,7 @@ module.exports = class ConfigManager {
   }
 
   static GetFullPathFromRelPath(relPathInfo) {
+
     /* relPathInfo:
     fromFullPath (string)
     relPath (string)

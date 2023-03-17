@@ -55,6 +55,17 @@ const createWindow = () => {
     let openPage = config.GetPage();
     console.log(openPage);
     mainWindow.loadFile(path.join(pagePath, openPage[0]), {query: openPage[1]});
+
+    // prevent window closing with [Ctrl]+W
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+      if (
+        (input.control && input.key.toLowerCase() === 'w') ||
+        (input.meta && input.key.toLowerCase() === 'w')
+        ) {
+        event.preventDefault();
+        loadPage('worldHome.html');
+      }
+    });
 }
 
 app.whenReady().then(() => {

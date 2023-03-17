@@ -275,6 +275,7 @@ module.exports = class UIManager {
             'options_'
           ],
           label: 'Exit',
+          accelerator: '',
           click: async() => {
             win.webContents.send('menu', 'ExitApp');
           }
@@ -374,6 +375,19 @@ module.exports = class UIManager {
         {
           showOn: ['-all-'],
           role: 'togglefullscreen'
+        },
+        {
+          showOn: ['preview_'],
+          type: 'separator'
+        },
+        {
+          id: 'View-ClosePreview',
+          showOn: ['preview_'],
+          label: 'Close Preview',
+          accelerator: 'CommandOrControl+W',
+          click: async() => {
+            win.close();
+          }
         }
       ]
     },  
@@ -418,6 +432,7 @@ module.exports = class UIManager {
           id: 'World-Home',
           showOn: ['-all-'],
           label: 'World Home',
+          accelerator: 'CommandOrControl+W',
           click: async () => {
             win.webContents.send('menu', 'Navigate', 'worldHome.html');
           }
