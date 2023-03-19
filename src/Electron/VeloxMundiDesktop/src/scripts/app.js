@@ -1,13 +1,45 @@
 //const { nodeName } = require("jquery");
 
-const prefs = window.contextBridge.toMainSync('config', 'ReadKey', 'prefs');
-const world = window.contextBridge.toMainSync('config', 'ReadKey', 'CurrentWorld');
 let pageDirty = false;
 let modalLocked = false;
 let modalVisible = false;
 let setPageInConfig = true;
 let pathSep = window.contextBridge.toMainSync('file', 'GetPathSep');
 let typeSep = ' / ';
+let loadToast = false;
+
+// Bounce messages to Main
+window.contextBridge.fromMain('bounceToMain', (event, module, method, data) => {
+  window.contextBridge.toMain(module, method, data);
+});
+
+// Handle app messages
+window.contextBridge.fromMain('appMessage', (event, action, data) => {
+  switch(action) {
+    case 'Error':
+      $(document).ready(function() {
+        if (data && data.errorTitle && typeof hideErrors!=='undefined' && hideErrors.includes(data.errorTitle)) {
+            return;
+        }
+        let html = '<div><b>' + data.errorTitle + '</b></div>';
+        if (data && data.messages) {
+          for (let i=0; i<data.messages.length; i++) {
+            html += '<div>' + data.messages[i].message + '</div>';
+          }
+        }
+        showToast(html, 'text-danger', true);
+      });
+      break;
+    default:
+      break;
+  }
+});
+
+
+
+const prefs = window.contextBridge.toMainSync('config', 'ReadKey', 'prefs');
+const world = window.contextBridge.toMainSync('config', 'ReadKey', 'CurrentWorld');
+
 
 function hideToast() {
   $('#closeToast').off();
@@ -15,13 +47,15 @@ function hideToast() {
   $('#toast').html('');
 }
 
-function showToast(msg, clss) {
+function showToast(msg, clss, keepOpen) {
   $('#toast').show();
   $('#toast').html('<div class="' + clss + '"><div class="float-right bi-x-circle-fill" id="closeToast">&nbsp</div>' + msg + '</div>');
   $('#closeToast').on('click', function() {
     hideToast();
   });
-  setTimeout(hideToast, prefs.toastTimeout);
+  if (!keepOpen) {
+    setTimeout(hideToast, prefs.toastTimeout);
+  }
 }
 
 function setPageDirty(isDirty) {
@@ -256,6 +290,7 @@ $(document).ready(function() {
 
   });
   */
+  
 
   // Handle menu actions
   window.contextBridge.fromMain('menu', (event, action, data) => {
@@ -307,3 +342,8 @@ $(document).ready(function() {
     showToast(message, 'text-danger');
   })
 });
+
+
+
+
+

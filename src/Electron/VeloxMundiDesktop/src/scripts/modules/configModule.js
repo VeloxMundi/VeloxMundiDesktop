@@ -2,6 +2,8 @@ const {app, dialog} = require('electron');
 var fs = require('fs-extra');
 let path = require('path');
 let mv = require('mv');
+const { config } = require('process');
+let sqlite3 = require('sqlite3').verbose();
 
 // Custom Modules
 const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'fileManagerModule.js'));
@@ -9,6 +11,7 @@ const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modul
 // Custom Variables
 let windowState;
 let configPath = path.join(app.getAppPath(), 'user', 'config.json');
+let configDbPath = path.join(app.getAppPath(), 'user', 'config.db');
 let dataPath = path.join(app.getAppPath(), 'data');
 
 // Default Preferences (So they will never be returned blank)
@@ -28,7 +31,7 @@ module.exports = class ConfigManager {
         this.SetPage(data);
         break;
       case 'ReadKey':
-        return this.ReadKey(data);
+        return this.ReadKey(data, event);
         break;
       case 'WriteKey':
         this.WriteKey(data[0], data[1]);
@@ -86,6 +89,10 @@ module.exports = class ConfigManager {
   }
 
   static GetPage() {
+    if (!fs.existsSync(configDbPath)) {
+      return ['appSetup.html', {}];
+    }
+
     let page = this.ReadKey('CurrentPage');
     if (page && page!='') {
       let pieces = page.split('?');
@@ -113,7 +120,58 @@ module.exports = class ConfigManager {
   }
 
 
-  static ReadKey(key) { 
+  static ReadKey(key, event) { 
+    // sqlite3
+    let redirectToSetup = false;
+    let messages = [];
+    let keyValue = '';
+
+    let configDb = new sqlite3.Database(configDbPath, (err) => {
+      if (err) {
+        redirectToSetup = true;
+        messages.push({
+          message : 'Unable to connect to configuration database.',
+          type : 'error'
+        });
+      }
+    });
+    try {
+      configDb.get('SELECT * FROM configKeys WHERE keyName= ? ' ,[key], (err, row) => {
+        if (row) {
+          keyValue = row.keyValue;
+        }
+        else if (!err) {
+          messages.push({
+            message : `There were no configuration keys named "${key}."`,
+            type : 'error'
+          });
+        }
+        if (err) {
+          redirectToSetup = true;
+          messages.push({
+            message : err.message,
+            type : 'error'
+          });
+        }
+        if (event && redirectToSetup) {
+          messages.push({
+            message : '<a class="btn btn-danger" id="GoToConfig" href="appSetup.html">Go to setup</button>',
+            type : 'html'
+          });
+          event.sender.send('appMessage', 'Error', {
+            errorTitle : 'Application Requires Configuration',
+            messages : messages            
+          });
+        }
+      });
+    }
+    catch(e) {
+      redirectToSetup = true;
+      redirectMessages.push('Unable to connect to configuration table: ' + e);
+    }
+
+
+
     let rawdata = fs.readFileSync(configPath);
     if (rawdata!='') {
       let data = JSON.parse(rawdata);
