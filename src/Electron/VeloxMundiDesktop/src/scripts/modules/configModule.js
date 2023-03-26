@@ -198,6 +198,9 @@ module.exports = class ConfigManager {
           }
         }
       }
+      if (keyValue && keyValue!='') {
+        require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'runData.js')).setRunData(key, keyValue);
+      }
       if (data[key] && data[key].length==1) {
         return data[key].toString();
       }
@@ -213,6 +216,8 @@ module.exports = class ConfigManager {
   }
 
   static WriteKey(key, value) {
+    require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'runData.js')).setRunData(key, value);
+
     let data = {};
     if (fs.existsSync(configPath)) {
       let rawdata = fs.readFileSync(configPath);
@@ -386,6 +391,7 @@ module.exports = class ConfigManager {
     var directory = dialog.showOpenDialogSync({ properties: ['openDirectory']});
     if (directory) {
         this.WriteKey('WorldDirectory',directory[0]);
+        this.WriteKey('CurrentWorld', '');
         return directory[0];
     }
     else {

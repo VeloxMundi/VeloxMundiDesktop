@@ -340,7 +340,13 @@ $(document).ready(function() {
   // Handle errors
   window.contextBridge.fromMain('error', (event, message) => {
     showToast(message, 'text-danger');
-  })
+  });
+
+
+
+
+  // testing
+  console.log('CurrentWorldDirectory: ' + window.contextBridge.toMainSync('test'));
 });
 
 

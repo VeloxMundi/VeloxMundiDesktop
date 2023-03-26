@@ -1,6 +1,7 @@
 var fs = require('fs');
 const fse = require('fs-extra');
 const path = require('path');
+const { spawn } = require('child_process');
 
 
 module.exports = class fileManager {
@@ -26,6 +27,9 @@ module.exports = class fileManager {
         break;
       case 'CreateDirectory':
         this.CreateDirectory(data);
+        break;
+      case 'ZipDirectory':
+        this.ZipDirectory(data);
         break;
       default:
         event.sender.send('Invalid');
@@ -76,6 +80,40 @@ module.exports = class fileManager {
     }
     catch(e) {
       return '';
+    }
+  }
+
+  static ZipDirectory(directoryPath) {
+    let platform = process.platform;
+    if (platform=='darwin' || platform=='linux') {
+      const path = require('path');
+
+      const zipFilePath = path.join();
+
+      // Use the 'zip' command to create a compressed folder
+      const zip = spawn('zip', ['-r', zipFilePath, path.basename(directoryPath)], {
+        cwd: path.dirname(directoryPath)
+      });
+
+      zip.stdout.on('data', (data) => {
+        console.log(`stdout: ${data}`);
+      });
+
+      zip.stderr.on('data', (data) => {
+        console.error(`stderr: ${data}`);
+      });
+
+      zip.on('close', (code) => {
+        if (code === 0) {
+          console.log('Folder compressed successfully.');
+        } else {
+          console.error(`Failed to compress folder. Exit code: ${code}`);
+        }
+      });
+
+    }
+    else {
+
     }
   }
 

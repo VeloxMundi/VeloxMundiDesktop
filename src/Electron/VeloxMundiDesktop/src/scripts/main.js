@@ -255,6 +255,8 @@ function CallModuleMethod(event, module, method, data)
         event.sender.send('return', method, data);
       case 'getVersion':
         event.returnValue = app.getVersion();
+      case 'test':
+        event.returnValue = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'runData.js')).getRunData('CurrentWorldDirectory');
       default:
         break;
     }
