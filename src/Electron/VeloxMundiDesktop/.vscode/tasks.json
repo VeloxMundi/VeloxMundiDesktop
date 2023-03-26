@@ -1,0 +1,9 @@
+{
+  "tasks" : [
+    {
+      "label" : "start",
+      "type" : "shell",
+      "command" : "set NODE_ENV=vmDev"
+    }
+  ]
+}

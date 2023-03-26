@@ -461,6 +461,21 @@ module.exports = class UIManager {
       ]
     },
     {
+      id: 'Developer',
+      showOn: (app.isPackaged ? [] : ['-all-']),
+      label: 'Dev',
+      submenu: [
+        {
+          id: 'Dev-Test',
+          showOn: ['-all-'],
+          label: 'Test',
+          click: async () => {
+            win.webContents.send('menu', 'Navigate', 'devtest.html')
+          }
+        }
+      ]
+    },
+    {
       id: 'Help',
       showOn: ['-all-'],
       hideOn: [

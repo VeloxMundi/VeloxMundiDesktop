@@ -1,20 +1,21 @@
 // Import required modules
-const {app, BrowserWindow, ipcMain, dialog, Menu, MenuItem, shell} = require('electron');
+const {app, BrowserWindow, ipcMain, protocol, dialog, Menu, MenuItem, shell} = require('electron');
 const fs = require('fs');
 const path = require('path');
-
-// register modules
 const appConfig = require('electron-settings');
-const fileManager = require('./modules/fileManagerModule');
-const uiManager = require('./modules/uiModule');
-const pageManager = require('./modules/pageModule');
+
 
 // Set default global variables
 const appPath = app.getAppPath();
+console.log('NODE_ENV=' + process.env.NODE_ENV);
+const userData = (app.isPackaged ? path.join(app.getPath('userData')) : path.join(appPath, 'user'));
 const pagePath = path.join(appPath, 'src', 'pages');
 const modalPath = path.join(pagePath, 'modals');
 const scriptPath = path.join(appPath, 'src', 'scripts');
-const configPath = path.join(appPath, 'user', 'config.json');
+const configPath = path.join(userData, 'config.json');
+if (!fs.existsSync(configPath)) {
+  fs.copyFileSync(path.join(appPath, 'user', 'config.json'),configPath);
+}
 const dataPath = path.join(appPath, 'data');
 const isMac = process.platform === 'darwin'
 
@@ -26,6 +27,9 @@ let menu = null;
 const config = require(path.join(scriptPath, 'modules', 'configModule.js'));
 config.InitPath(configPath, dataPath);
 const world = require(path.join(scriptPath, 'modules', 'worldModule.js'));
+const fileManager = require('./modules/fileManagerModule');
+const uiManager = require('./modules/uiModule');
+const pageManager = require('./modules/pageModule')
 
 
 
@@ -35,6 +39,10 @@ let previewWindow = null;
 let mainWindowStateKeeper = null;
 let optionsWindowStateKeeper = null;
 let previewWindowStateKeeper = null;
+
+// intercept requests for files in asar
+
+
 
 const createWindow = () => {
     mainWindowStateKeeper = windowStateKeeper('main');
@@ -63,7 +71,6 @@ const createWindow = () => {
         (input.meta && input.key.toLowerCase() === 'w')
         ) {
         event.preventDefault();
-        loadPage('worldHome.html');
       }
     });
 }

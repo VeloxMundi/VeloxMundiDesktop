@@ -10,12 +10,31 @@ const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modul
 
 // Custom Variables
 let windowState;
-let configPath = path.join(app.getAppPath(), 'user', 'config.json');
-let configDbPath = path.join(app.getAppPath(), 'user', 'config.db');
+const userData = (app.isPackaged ? path.join(app.getPath('userData')) : path.join(app.getAppPath(), 'user'));
+let configPath = path.join(userData, 'config.json');
+let configDbPath = path.join(app.getPath('userData'), 'config.db');
 let dataPath = path.join(app.getAppPath(), 'data');
 
 // Default Preferences (So they will never be returned blank)
 let dPrefs = {};
+
+// Initial setup
+let configDb = new sqlite3.Database(configDbPath, (err) => {
+  if (err) {
+    messages.push({
+      message : 'Unable to connect to configuration database.',
+      type : 'error'
+    });
+    messages.push({
+      message : '<a class="btn btn-danger" id="GoToConfig" href="appSetup.html">Go to setup</button>',
+      type : 'html'
+    });
+    event.sender.send('appMessage', 'Error', {
+      errorTitle : 'Application Requires Configuration',
+      messages : messages            
+    });
+  }
+});
 
 
 module.exports = class ConfigManager {
@@ -89,7 +108,7 @@ module.exports = class ConfigManager {
   }
 
   static GetPage() {
-    if (!fs.existsSync(configDbPath)) {
+    if (!fs.existsSync(configPath)) {
       return ['appSetup.html', {}];
     }
 
@@ -108,7 +127,9 @@ module.exports = class ConfigManager {
       return [pieces[0], query];
     }
     else {
-      return 'index.html';
+      return [
+        'index.html',
+        {}];
     }
   }
 
@@ -126,15 +147,7 @@ module.exports = class ConfigManager {
     let messages = [];
     let keyValue = '';
 
-    let configDb = new sqlite3.Database(configDbPath, (err) => {
-      if (err) {
-        redirectToSetup = true;
-        messages.push({
-          message : 'Unable to connect to configuration database.',
-          type : 'error'
-        });
-      }
-    });
+    
     try {
       configDb.get('SELECT * FROM configKeys WHERE keyName= ? ' ,[key], (err, row) => {
         if (row) {
@@ -169,7 +182,6 @@ module.exports = class ConfigManager {
       redirectToSetup = true;
       redirectMessages.push('Unable to connect to configuration table: ' + e);
     }
-
 
 
     let rawdata = fs.readFileSync(configPath);

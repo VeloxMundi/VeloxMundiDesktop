@@ -6,13 +6,50 @@
   "productName": "Velox Mundi Desktop",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder --dir",
+    "package" : "electron-builder --prepackaged ../../../localReleases/v0.0.4/win-unpacked -w"
   },
   "keywords": [
-    "tutorial"
+    "worldbuilding"
   ],
   "author": "Doug Lockwood",
   "license": "GPL-3.0",
+  "build" : {
+    "appId": "com.veloxmundi.desktop",
+    "productName" : "Velox Mundi Desktop",
+    "directories" : {
+      "output" : "../../../localReleases/v0.0.4"
+    },
+    "files" : [
+      {
+        "from" : "",
+        "to" : "",
+        "filter" : ["**/*", "!user/**/*", "!default/**/*"]
+      },
+      {
+        "from" : "default",
+        "to" : "user",
+        "filter" : ["**/*"]
+      }
+    ],
+    "asarUnpack" : [
+      "user/",
+      "default/"
+    ],
+    "win" : {
+      "target" : "nsis",
+      "publisherName" : "Velox Mundi"
+    },
+    "nsis" : {      
+      "oneClick" : false,
+      "perMachine" : true,
+      "allowElevation" : true,
+      "allowToChangeInstallationDirectory" : true,
+      "deleteAppDataOnUninstall" : true
+    }
+  
+  },
   "devDependencies": {
     "electron": "^22.0.2",
     "electron-builder": "^23.6.0",
