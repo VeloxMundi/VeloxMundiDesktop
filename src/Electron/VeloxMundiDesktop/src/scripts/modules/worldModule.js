@@ -18,6 +18,7 @@ const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modul
 // because the pageModule references the worldModule, we can't create a reference back to the pageModule from here.
 let modal = null;
 let saveAsEvent = null;
+let settingsModulePath = path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'settingsModule.js');
 
 
 module.exports = class ConfigManager {
@@ -28,7 +29,7 @@ module.exports = class ConfigManager {
   static Invoke(event, method, data) {
     switch(method) {
       case 'GetWorldLinks':
-        return this.GetWorldLinks();
+        return this.GetWorldLinks(event);
         break;
       case 'GetWorldData':
         return this.GetWorldData();
@@ -58,8 +59,24 @@ module.exports = class ConfigManager {
     return null;
   }
 
-  static GetWorldLinks() {
-    let worldPath = configManager.ReadKey('WorldDirectory');
+  static GetWorldLinks(event) {
+    let worldPath = require(settingsModulePath).Read('worldDirectory');
+    if (!worldPath) {
+      //event.sender.send('navigate','appSetup.html');
+      event.sender.send('appMessage', 'Error', {
+        errorTitle : 'Application Requires Configuration',
+        messages : [
+          {
+            message : 'Unable to find world directory. You may need to configure <i>Velox Mundi.</i>',
+              type : 'html'
+          },
+          {
+            message : '<a class="btn btn-danger" id="GoToConfig" href="appSetup.html">Go to setup</button>',
+              type : 'html'
+          }
+        ]
+      });
+    }
     let worldList = fileManager.ReadSubdirectories(worldPath);
     let worldLinks = '';
     for (let i=0; i<worldList.length; i++)
@@ -72,12 +89,12 @@ module.exports = class ConfigManager {
   static GetWorldData() {
     let fileArray = [];
     let data={
-      worldName : configManager.ReadKey('CurrentWorld'),
-      worldDirName : configManager.ReadKey('CurrentWorld'),
+      worldName : require(settingsModulePath).Read('currentWorld'),
+      worldDirName : require(settingsModulePath).Read('currentWorld'),
       pages : []
     };
-    let currentWorld=configManager.ReadKey('CurrentWorld');
-    let worldDir = configManager.ReadKey('WorldDirectory');
+    let currentWorld=require(settingsModulePath).Read('currentWorld');
+    let worldDir = require(settingsModulePath).Read('worldDirectory');
     let worldPath = path.join(worldDir,currentWorld);
     let worldDataPath = path.join(worldPath,"_world.json");
     if (!fs.existsSync(worldDataPath)) {
@@ -112,7 +129,7 @@ module.exports = class ConfigManager {
   static CreateWorld(worldName) {
     try {
       let appPath = app.getAppPath();
-      let worldPath = configManager.ReadKey('WorldDirectory');
+      let worldPath = require(settingsModulePath).Read('worldDirectory');
       let dir = path.join(worldPath, worldName);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
@@ -124,7 +141,7 @@ module.exports = class ConfigManager {
         if (fs.existsSync(path.join(appPath, 'src', 'styles', 'default.css'))) {
           fs.copyFileSync(path.join(appPath, 'src', 'styles', 'default.css'), path.join(dir, '_web', '_assets', 'styles', 'global.css'));
         }
-        configManager.WriteKey('CurrentWorld', worldName);
+        require(settingsModulePath).Write('currentWorld', worldName);
         let data={
           worldName : worldName,
           worldDirName : worldName, //TODO: Make filesystem friendly
@@ -159,8 +176,8 @@ module.exports = class ConfigManager {
   static SaveAsset(newAssetPath, assetType) {
     try {
       assetType = (!assetType || assetType=='' ? 'image' : assetType);
-      let worldDir = configManager.ReadKey('WorldDirectory');
-      let currentWorld = configManager.ReadKey('CurrentWorld');
+      let worldDir = require(settingsModulePath).Read('worldDirectory');
+      let currentWorld = reqire(settingsModulePath).Read('currentWorld');
       let imgPath = path.join(worldDir, currentWorld, '_web', '_assets', 'images');
       fse.ensureDirSync(imgPath);
       let fileName = newAssetPath.split(path.sep).pop();
@@ -228,7 +245,7 @@ module.exports = class ConfigManager {
     try {
       let relPath = '';
       if (pathInfo.isRelPath) {
-        let basePath = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld'));
+        let basePath = path.join(require(settingsModulePath).Read('worldDirectory'),require(settingsModulePath).Read('currentWorld'));
         pathInfo.fromPath = path.join(basePath, pathInfo.fromPath);
         pathInfo.toPath = path.join(basePath, pathInfo.toPath);
       }

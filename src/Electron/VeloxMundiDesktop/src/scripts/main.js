@@ -5,9 +5,9 @@ const path = require('path');
 const appConfig = require('electron-settings');
 
 
+
 // Set default global variables
 const appPath = app.getAppPath();
-console.log('NODE_ENV=' + process.env.NODE_ENV);
 const userData = (app.isPackaged ? path.join(app.getPath('userData')) : path.join(appPath, 'user'));
 const pagePath = path.join(appPath, 'src', 'pages');
 const modalPath = path.join(pagePath, 'modals');
@@ -17,7 +17,11 @@ if (!fs.existsSync(configPath)) {
   fs.copyFileSync(path.join(appPath, 'user', 'config.json'),configPath);
 }
 const dataPath = path.join(appPath, 'data');
-const isMac = process.platform === 'darwin'
+const isMac = process.platform === 'darwin';
+
+
+
+
 
 let modal = null;
 let menu = null;
@@ -25,12 +29,19 @@ let menu = null;
 
 // load custom modules
 const config = require(path.join(scriptPath, 'modules', 'configModule.js'));
-config.InitPath(configPath, dataPath);
+config.InitPath(configPath, dataPath); //Is this needed anymore?
 const world = require(path.join(scriptPath, 'modules', 'worldModule.js'));
 const fileManager = require('./modules/fileManagerModule');
 const uiManager = require('./modules/uiModule');
-const pageManager = require('./modules/pageModule')
-
+const pageManager = require('./modules/pageModule');
+const settingsModule = require('./modules/settingsModule');
+if (!app.isPackaged) {
+  settingsModule.Configure({
+    dir: userData,
+    prettify: true
+  });
+}
+settingsModule.LoadAppData();
 
 
 let mainWindow = null;
@@ -45,7 +56,7 @@ let previewWindowStateKeeper = null;
 
 
 const createWindow = () => {
-    mainWindowStateKeeper = windowStateKeeper('main');
+    mainWindowStateKeeper = settingsModule.WindowStateKeeper('main');
     const windowOptions = {
       x: mainWindowStateKeeper.x,
       y: mainWindowStateKeeper.y,
@@ -138,7 +149,7 @@ ipcMain.on('toMainSync', (event, module, method, data) => {
 function CreateOptionsWindow(page, query) {
   qry = GetQueryObjFromString(query);
   if (!optionsWindow) {
-    optionsWindowStateKeeper = windowStateKeeper('options');
+    optionsWindowStateKeeper = settingsModule.WindowStateKeeper('options');
     const windowOptions = {
       x: optionsWindowStateKeeper.x,
       y: optionsWindowStateKeeper.y,
@@ -169,7 +180,7 @@ function CreateOptionsWindow(page, query) {
 function CreatePreviewWindow(page, query) {
   let qry = GetQueryObjFromString(query);
   if (!previewWindow) {
-    previewWindowStateKeeper = windowStateKeeper('preview');
+    previewWindowStateKeeper = settingsModule.WindowStateKeeper('preview');
     const windowOptions = {
       x: previewWindowStateKeeper.x,
       y: previewWindowStateKeeper.y,
@@ -240,6 +251,17 @@ function CallModuleMethod(event, module, method, data)
       case 'quit':
         mainWindow.close();
         break;
+      case 'settings':
+        switch(method) {
+          case 'Read':
+            return settingsModule.Read(data);
+            break;
+          case 'Write':
+            settingsModule.Write(data[0],data[1]);
+            break;
+          default:
+            break;
+        }
       case 'closeWindow':
         switch(method) {
           case 'Options':
@@ -253,10 +275,12 @@ function CallModuleMethod(event, module, method, data)
         break;
       case 'return':
         event.sender.send('return', method, data);
+        break;
       case 'getVersion':
         event.returnValue = app.getVersion();
+        break;
       case 'test':
-        event.returnValue = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'runData.js')).getRunData('CurrentWorldDirectory');
+        break;
       default:
         break;
     }
@@ -349,6 +373,7 @@ function focusedWindow() {
 
 
 // Window manager
+/*
 function windowStateKeeper(windowName) {
     let window, windowState;
     function setBounds() {
@@ -362,8 +387,8 @@ function windowStateKeeper(windowName) {
       windowState = {
         x: undefined,
         y: undefined,
-        width: 1000,
-        height: 800,
+        width: 950,
+        height: 720,
       };
     }
     function saveState() {
@@ -389,3 +414,4 @@ function windowStateKeeper(windowName) {
       track,
     });
   }
+  */

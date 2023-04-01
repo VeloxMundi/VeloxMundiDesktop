@@ -18,6 +18,7 @@ const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modul
 const worldManager = require(path.join(app.getAppPath(), 'src','scripts', 'modules', 'worldModule.js'));
 let modal = null;
 let saveAsEvent = null;
+let settingsModulePath = path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'settingsModule.js');
 
 
 module.exports = class ConfigManager {
@@ -337,7 +338,7 @@ module.exports = class ConfigManager {
         jquery(lnks[i]).addClass('page-local');
       }
     }
-    let pathToWeb = path.join(configManager.ReadKey('WorldDirectory'), configManager.ReadKey('CurrentWorld'),'_web');
+    let pathToWeb = path.join(require(settingsModulePath).Read('worldDirectory'), require(settingsModulePath).Read('currentWorld'),'_web');
     let relPathToWeb = worldManager.GetRelPath({
       isRelPath: false,
       fromPath: previewPagePath,
@@ -415,7 +416,7 @@ module.exports = class ConfigManager {
     return md;
   }
   static tweakHTML(action, html, pagePath) {
-    let basePath = path.join(configManager.ReadKey('WorldDirectory'), configManager.ReadKey('CurrentWorld'));
+    let basePath = path.join(require(settingsModulePath).Read('worldDirectory'), require(settingsModulePath).Read('currentWorld'));
     let baseImgPath = path.join(basePath, '_web','_assets','images');
     let dom = new jsdom.JSDOM(`<!DOCTYPE html><html><body>${html}</body></html>`);
     let jquery = require('jquery')(dom.window);
@@ -542,7 +543,7 @@ module.exports = class ConfigManager {
   }
 
   static NewPageType(typeName) {
-    let baseDir = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld'));
+    let baseDir = path.join(require(settingsModulePath).Read('worldDirectory'),require(settingsModulePath).Read('currentWorld'));
     let templateDir = path.join(basDir,'templates');
     let typeTemplatePathNoExt = path.join(templateDir,typeName);
     if (fs.existsSync(templateDir)) {
@@ -581,8 +582,8 @@ module.exports = class ConfigManager {
 
   static SetSaveAsName(event, data) {
     //TODO: Check if file name is acceptable before saving
-    let worldPath = configManager.ReadKey('WorldDirectory');
-    let currentWorld = configManager.ReadKey('CurrentWorld');
+    let worldPath = require(settingsModulePath).Read('worldDirectory');
+    let currentWorld = require(settingsModulePath).Read('currentWorld');
     let savePath = path.join(worldPath, currentWorld, 'pages', data.fileName);
     let saveAs = '';
     if (data.action=='Save') {
@@ -630,7 +631,7 @@ module.exports = class ConfigManager {
       let pageData = this.GetPageData({
         fullPath : pagePath
       });
-      let webDir = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld'),'_web',pageData.worldPath);
+      let webDir = path.join(require(settingsModulePath).Read('worldDirectory'),require(settingsModulePath).Read('currentWorld'),'_web',pageData.worldPath);
       if (fs.existsSync(webDir)) {
         try {
           fs.rmdirSync(webDir, {recursive: true});
@@ -839,7 +840,7 @@ module.exports = class ConfigManager {
     try {
       if ((!pathInfo.fullPath || pathInfo.fullPath=='') && (pathInfo.worldPath && pathInfo.worldPath!='')) {
         pathInfo.worldPath = pathInfo.worldPath.split('/').join(path.sep); // Replace web path separators with filesystem path separators...
-        let filePathNoExt = path.join(configManager.ReadKey('WorldDirectory'), configManager.ReadKey('CurrentWorld'),'pages',pathInfo.worldPath);
+        let filePathNoExt = path.join(require(settingsModulePath).Read('worldDirectory'), require(settingsModulePath).Read('currentWorld'),'pages',pathInfo.worldPath);
         if (fs.existsSync(filePathNoExt + '.html')) {
           pathInfo.fullPath = filePathNoExt + '.html';
         }
@@ -851,7 +852,7 @@ module.exports = class ConfigManager {
         }
       }
       pathData.fullPath = pathInfo.fullPath;
-      let worldDir = path.join(configManager.ReadKey('WorldDirectory'),configManager.ReadKey('CurrentWorld'));
+      let worldDir = path.join(require(settingsModulePath).Read('worldDirectory'),require(settingsModulePath).Read('currentWorld'));
       pathData.basePath = path.join(worldDir, 'pages');
       let basePathParts = pathData.basePath.split(path.sep);
       let splitPathParts = pathInfo.fullPath.split(path.sep);

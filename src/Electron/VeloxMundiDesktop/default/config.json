@@ -3,5 +3,7 @@
   "prefs": {
     "editorStyle": "RTE",
     "toastTimeout": 8000
-  }
+  },
+  "WorldDirectory" : "",
+  "CurrentWorld" : ""
 }

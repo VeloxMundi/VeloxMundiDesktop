@@ -11,7 +11,7 @@ $(document).ready(function() {
   $('#SaveAndClose').on('click', function() {
     let path = $('#WorldPath').val();
     if (path && path!='' && path!='Not Set') {
-      window.contextBridge.toMainSync('config', 'WriteKey', ['WorldDirectory', path]);
+      window.contextBridge.toMainSync('settings', 'Write', ('worldDirectory', path));
       navigate('worldHome.html');
     }
     else {

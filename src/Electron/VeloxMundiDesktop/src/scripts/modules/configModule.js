@@ -12,30 +12,10 @@ const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modul
 let windowState;
 const userData = (app.isPackaged ? path.join(app.getPath('userData')) : path.join(app.getAppPath(), 'user'));
 let configPath = path.join(userData, 'config.json');
-let configDbPath = path.join(app.getPath('userData'), 'config.db');
-let dataPath = path.join(app.getAppPath(), 'data');
+let settingsModulePath = path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'settingsModule.js');
 
 // Default Preferences (So they will never be returned blank)
 let dPrefs = {};
-
-// Initial setup
-let configDb = new sqlite3.Database(configDbPath, (err) => {
-  if (err) {
-    messages.push({
-      message : 'Unable to connect to configuration database.',
-      type : 'error'
-    });
-    messages.push({
-      message : '<a class="btn btn-danger" id="GoToConfig" href="appSetup.html">Go to setup</button>',
-      type : 'html'
-    });
-    event.sender.send('appMessage', 'Error', {
-      errorTitle : 'Application Requires Configuration',
-      messages : messages            
-    });
-  }
-});
-
 
 module.exports = class ConfigManager {
   constructor() {
@@ -90,6 +70,7 @@ module.exports = class ConfigManager {
     }
     if (!fs.existsSync(configPath))
     {
+      /*
       let date = Date.now();
       let data = {
         "AppName" : "Velox Mundi",
@@ -99,6 +80,7 @@ module.exports = class ConfigManager {
         "CurrentPage" : "index.html"
       };
       let config = fileManager.WriteFile(configPath, JSON.stringify(data));
+      */
     }
   }
 
@@ -108,6 +90,26 @@ module.exports = class ConfigManager {
   }
 
   static GetPage() {
+    let currentPage = require(settingsModulePath).Read('currentPage');
+    if (!currentPage) {
+      return ['appSetup.html',{}];
+    }
+    else {
+      let pieces = currentPage.split('?');
+      let query = {};
+      if (pieces.length>1)
+      {
+        let params = (decodeURIComponent(pieces[1]).split('&'));
+        for (let i=0; i<params.length; i++) {
+          let param = params[i].split('=');
+          query[param[0]] = param[1];
+        }
+      }
+      return [pieces[0], query];
+    }
+
+
+
     if (!fs.existsSync(configPath)) {
       return ['appSetup.html', {}];
     }
@@ -137,53 +139,17 @@ module.exports = class ConfigManager {
     if (page.toLowerCase()=='XXedit.html') {
       page='worldHome.html';
     }
-    this.WriteKey('CurrentPage', page);
+    require(settingsModulePath).Write('currentPage', page);
   }
 
 
   static ReadKey(key, event) { 
-    // sqlite3
-    let redirectToSetup = false;
-    let messages = [];
-    let keyValue = '';
-
     
-    try {
-      configDb.get('SELECT * FROM configKeys WHERE keyName= ? ' ,[key], (err, row) => {
-        if (row) {
-          keyValue = row.keyValue;
-        }
-        else if (!err) {
-          messages.push({
-            message : `There were no configuration keys named "${key}."`,
-            type : 'error'
-          });
-        }
-        if (err) {
-          redirectToSetup = true;
-          messages.push({
-            message : err.message,
-            type : 'error'
-          });
-        }
-        if (event && redirectToSetup) {
-          messages.push({
-            message : '<a class="btn btn-danger" id="GoToConfig" href="appSetup.html">Go to setup</button>',
-            type : 'html'
-          });
-          event.sender.send('appMessage', 'Error', {
-            errorTitle : 'Application Requires Configuration',
-            messages : messages            
-          });
-        }
-      });
+    let keyval = require(settingsModulePath).Read(key);
+    return keyval;
+    if (keyval) {
+      let x = keyval;
     }
-    catch(e) {
-      redirectToSetup = true;
-      redirectMessages.push('Unable to connect to configuration table: ' + e);
-    }
-
-
     let rawdata = fs.readFileSync(configPath);
     if (rawdata!='') {
       let data = JSON.parse(rawdata);
@@ -197,9 +163,6 @@ module.exports = class ConfigManager {
             data[key][prefKey]=dPrefs[prefKey];
           }
         }
-      }
-      if (keyValue && keyValue!='') {
-        require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'runData.js')).setRunData(key, keyValue);
       }
       if (data[key] && data[key].length==1) {
         return data[key].toString();
@@ -216,8 +179,8 @@ module.exports = class ConfigManager {
   }
 
   static WriteKey(key, value) {
-    require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'runData.js')).setRunData(key, value);
-
+    require(settingsModulePath).Write(key, value);
+    return;
     let data = {};
     if (fs.existsSync(configPath)) {
       let rawdata = fs.readFileSync(configPath);
@@ -231,6 +194,8 @@ module.exports = class ConfigManager {
   }
 
   static WriteUserPref(key, value) {
+    require(settingsModulePath).Write('prefs.' + key, value);
+    /*
     try {
       let data = {};
       if (fs.existsSync(this.dataPath)) {
@@ -259,6 +224,7 @@ module.exports = class ConfigManager {
         message: 'Unable to save preference.<br/>' + e
       };
     }
+    */
   }
 
   static WriteAllUserPrefs(newPrefs) {
@@ -280,6 +246,9 @@ module.exports = class ConfigManager {
         for (let i=0; i<Object.keys(newPrefs).length; i++) {
           let prefKey = Object.keys(newPrefs)[i];
           data.prefs[prefKey]=newPrefs[prefKey];
+
+          
+          require(settingsModulePath).Write('prefs.' + prefKey, newPrefs[prefKey]);
         }
         data['ConfigUpdated'] = new Date(Date.now()).toLocaleString();
         fileManager.WriteFile(configPath, JSON.stringify(data, null, 2));
@@ -390,9 +359,14 @@ module.exports = class ConfigManager {
   static SelectWorldDirectory() {
     var directory = dialog.showOpenDialogSync({ properties: ['openDirectory']});
     if (directory) {
+      require(settingsModulePath).Write('worldDirectory', directory[0]);
+      require(settingsModulePath).Write('currentWorld','');
+      return directory[0];
+      /*
         this.WriteKey('WorldDirectory',directory[0]);
         this.WriteKey('CurrentWorld', '');
         return directory[0];
+      */
     }
     else {
         return '';
@@ -413,7 +387,7 @@ module.exports = class ConfigManager {
               fs.rmSync(newDirectory[0], {recursive: true, force: true});
               return [false, 'ERROR ' + e];
             }
-            this.WriteKey('WorldDirectory',newDirectory[0]);
+            require(settingsModulePath).Write('worldDirectory',newDirectory[0]);
             fs.rmSync(oldDirectory, {recursive: true, force: true});
             return [true, newDirectory[0]];
           }

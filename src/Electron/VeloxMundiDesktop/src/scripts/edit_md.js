@@ -266,7 +266,7 @@ $(document).ready(function() {
         pageName = pageData.rawFileName;
         worldPath = pageData.worldPath;
         document.title += ' ' + pageName;
-        window.contextBridge.toMain('config', 'WriteKey', ['CurrentPage', 'edit.html?path=' + encodeURIComponent(pageData.worldPath)]);
+        window.contextBridge.toMain('settings', 'Write', ['currentPage', 'edit.html?path=' + encodeURIComponent(pageData.worldPath)]);
         modalLock(false);
         hideModal();
         SavePage();

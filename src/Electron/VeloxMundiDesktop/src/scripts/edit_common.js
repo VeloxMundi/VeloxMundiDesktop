@@ -52,7 +52,7 @@ window.processMenuItem = function(menuItem, data) {
                     pagePath = result.newPagePath;  
                     pageName = result.newPageName;
                     pageType = result.newPageType;                  
-                    window.contextBridge.toMain('config', 'WriteKey', ['CurrentPage', 'edit' + (fileExt=='.md' ? '_md' : '_html') + '.html?path=' + encodeURIComponent(pagePath)]);
+                    window.contextBridge.toMain('settings', 'Write', ['currentPage', 'edit' + (fileExt=='.md' ? '_md' : '_html') + '.html?path=' + encodeURIComponent(pagePath)]);
                     SavePage();
                     hideModal();
                     showToast('File renamed successfully!', 'text-success');

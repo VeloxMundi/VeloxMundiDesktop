@@ -3,7 +3,7 @@ let userPrefs = '';
 
 $(document).ready(function() {
   // Load default pref values
-  let prefs = window.contextBridge.toMainSync('config', 'ReadAllUserPrefs');
+  let prefs = window.contextBridge.toMainSync('settings', 'Read', 'prefs');
   if (prefs.success) {
     userPrefs = prefs.prefs;
     $('#EditorStyle').val(userPrefs.editorStyle);

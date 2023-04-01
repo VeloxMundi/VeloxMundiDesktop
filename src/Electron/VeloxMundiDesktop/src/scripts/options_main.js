@@ -4,7 +4,7 @@ $(document).ready(function() {
   ('#SelectWorldPath').off;  
   ('#MoveAllWorlds').off;
 
-  $('#WorldPath').text(window.contextBridge.toMainSync('config', 'ReadKey', 'WorldDirectory'));
+  $('#WorldPath').text(window.contextBridge.toMainSync('settings', 'Read', 'worldDirectory'));
 
   $('#SelectWorldPath').on('click', function(e) {
     e.preventDefault();

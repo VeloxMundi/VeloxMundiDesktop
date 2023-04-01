@@ -37,8 +37,8 @@ window.contextBridge.fromMain('appMessage', (event, action, data) => {
 
 
 
-const prefs = window.contextBridge.toMainSync('config', 'ReadKey', 'prefs');
-const world = window.contextBridge.toMainSync('config', 'ReadKey', 'CurrentWorld');
+const prefs = window.contextBridge.toMainSync('settings', 'Read', 'prefs');
+const world = window.contextBridge.toMainSync('settings', 'Read', 'currentWorld');
 
 
 function hideToast() {
@@ -307,7 +307,7 @@ $(document).ready(function() {
         navigate(data);
         break;
       case 'CloseWorld':
-        window.contextBridge.toMainSync('config', 'WriteKey', ['CurrentWorld', '']);
+        window.contextBridge.toMainSync('settings', 'Write', ['currentWorld', '']);
         navigate('selectWorld.html');
         break;
       case 'PageBack':
@@ -346,7 +346,7 @@ $(document).ready(function() {
 
 
   // testing
-  console.log('CurrentWorldDirectory: ' + window.contextBridge.toMainSync('test'));
+  //console.log('CurrentWorldDirectory: ' + window.contextBridge.toMainSync('test'));
 });
 
 

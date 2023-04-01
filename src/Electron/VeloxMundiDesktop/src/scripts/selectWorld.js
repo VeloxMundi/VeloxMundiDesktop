@@ -4,7 +4,7 @@
     $('#WorldList').prepend(worldList);
 
     $('.worldLink').on('click', function() {
-      window.contextBridge.toMain('config', 'WriteKey', ['CurrentWorld', $(this).text()]);
+      window.contextBridge.toMain('settings', 'Write', ['currentWorld', $(this).text()]);
       showToast('Set world to "' + $(this).text() + '." Navigating to world home...');
       window.contextBridge.navigate('worldHome.html');
     });
@@ -33,7 +33,7 @@
             else {
               let retVal = window.contextBridge.toMainSync('world', 'CreateWorld', worldName);
               if (retVal.success) {
-                let x = window.contextBridge.toMainSync('config', 'WriteKey', ['CurrentWorld',worldName]);
+                let x = window.contextBridge.toMainSync('settings', 'Write', ['currentWorld',worldName]);
                 hideModal();
                 navigate('worldHome.html');
               }
