@@ -5,6 +5,7 @@
 
     $('.worldLink').on('click', function() {
       window.contextBridge.toMain('settings', 'Write', ['currentWorld', $(this).text()]);
+      let x = window.contextBridge.toMainSync('data', 'CheckWorldDb');
       showToast('Set world to "' + $(this).text() + '." Navigating to world home...');
       window.contextBridge.navigate('worldHome.html');
     });

@@ -4,7 +4,7 @@ const fs = require('fs');
 const fse = require('fs-extra');
 let path = require('path');
 const { config } = require('process');
-const jsdom = require('jsdom');
+//const jsdom = require('jsdom');
 const { triggerAsyncId } = require('async_hooks');
 
 // variables

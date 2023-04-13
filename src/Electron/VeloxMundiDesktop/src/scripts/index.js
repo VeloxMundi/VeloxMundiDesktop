@@ -1,7 +1,9 @@
 $(document).ready(function() {
-  let ver = window.contextBridge.toMainSync('getVersion');
+  let name = window.contextBridge.toMainSync('settings', 'Read', 'appName');
+  let ver = window.contextBridge.toMainSync('settings', 'Read', 'appVersion');
   if (ver) {
+    $('.appName').text(name);
     $('.version').html('<b>Version:</b> ' + ver);
-    document.title += ' v' + ver;
+    document.title = name + ' v' + ver;
   }
 });

@@ -2,6 +2,7 @@ $(document).ready(function() {
   /***********
    * TESTING
   ************/
+  let x = window.contextBridge.toMainSync('data', 'checkWorldDb');
   $('#testRelPath').on('click', function() {
     modalLock(false);
     showModal({

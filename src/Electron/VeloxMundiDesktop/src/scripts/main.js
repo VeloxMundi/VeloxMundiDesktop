@@ -43,6 +43,9 @@ if (!app.isPackaged) {
 }
 settingsModule.LoadAppData();
 
+const dataModulePath = path.join(scriptPath, 'modules', 'dataModule.js');
+
+
 
 let mainWindow = null;
 let optionsWindow = null;
@@ -87,7 +90,7 @@ const createWindow = () => {
 }
 
 app.whenReady().then(() => {
-  
+  let x = 1;
 
     //menu = Menu.buildFromTemplate(menuTemplate)
     //Menu.setApplicationMenu(menu)
@@ -142,8 +145,8 @@ ipcMain.on('toMain', (event, module, method, data) => {
     CallModuleMethod(event, module, method, data);
 });
 
-ipcMain.on('toMainSync', (event, module, method, data) => {
-    event.returnValue = CallModuleMethod(event, module, method, data);
+ipcMain.on('toMainSync', async (event, module, method, data) => {
+    event.returnValue = await CallModuleMethod(event, module, method, data);
 });
 
 function CreateOptionsWindow(page, query) {
@@ -220,7 +223,7 @@ function GetQueryObjFromString(query) {
   return obj;
 }
 
-function CallModuleMethod(event, module, method, data)
+async function CallModuleMethod(event, module, method, data)
 {
   try {
     let windows = {
@@ -235,6 +238,10 @@ function CallModuleMethod(event, module, method, data)
         break;
       case 'config':
         return config.Invoke(event, method, data);
+        break;
+      case 'data':
+        let y = await require(dataModulePath).Invoke(event, method, data);
+        return y;
         break;
       case 'world':
         return world.Invoke(event, method, data);

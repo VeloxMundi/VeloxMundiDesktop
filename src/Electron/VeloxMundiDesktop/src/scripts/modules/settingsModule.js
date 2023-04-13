@@ -1,3 +1,4 @@
+
 const { remote, app } = require('electron');
 const path = require('path');
 const appConfig = require('electron-settings');
@@ -16,6 +17,13 @@ module.exports = {
     appData = appConfig.getSync('appData');
     if (!appData.prefs) {
       appData.prefs = defaultPrefs;
+      appConfig.setSync('appData', appData);
+    }
+    let appV = app.getVersion();
+    if (!appData.appVersion || appData.appVersion!=appV) {
+      appData.appName = require('../../../package.json').productName;
+      appData.appVersion = app.getVersion();
+      appConfig.setSync('appData', appData);
     }
   },
   Read : (key) => {
@@ -53,6 +61,13 @@ module.exports = {
     }
     obj[keySplit[keySplit.length-1]] = value;
     appData.modified = new Date(Date.now()).toLocaleString();
+    if (key=='worldDirectory') {
+      appData.currentWorld = '';
+      appData.worldPath = '';
+    }
+    if (key=='currentWorld') {
+      appData.worldPath = path.join(appData.worldDirectory, appData.currentWorld);
+    }
     appConfig.setSync('appData', appData);
     
   },

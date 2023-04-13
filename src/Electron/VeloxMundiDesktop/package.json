@@ -1,58 +1,64 @@
 {
   "name": "velox-mundi-desktop",
   "version": "0.0.4",
-  "description": "Velox Mundi Factory: A Quick World Maker. This is a fast and easy way to build a world for any type of creacive content.",
+  "description": "Velox Mundi Factory: A Quick World Maker. This is a fast and easy way to build a world for any type of creative content.",
   "main": "./src/scripts/main.js",
-  "productName": "Velox Mundi Desktop",
+  "productName": "Velox Mundi Factori",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron .",
     "build": "electron-builder --dir",
-    "package" : "electron-builder --prepackaged ../../../localReleases/v0.0.4/win-unpacked -w"
+    "package": "electron-builder --prepackaged ../../../localReleases/v0.0.4/win-unpacked -w"
   },
   "keywords": [
     "worldbuilding"
   ],
   "author": "Doug Lockwood",
   "license": "GPL-3.0",
-  "build" : {
+  "build": {
     "appId": "com.veloxmundi.desktop",
-    "productName" : "Velox Mundi Desktop",
-    "directories" : {
-      "output" : "../../../localReleases/v0.0.4"
+    "productName": "Velox Mundi Desktop",
+    "directories": {
+      "output": "../../../localReleases/v0.0.4"
     },
-    "files" : [
+    "files": [
       {
-        "from" : "",
-        "to" : "",
-        "filter" : ["**/*", "!user/**/*", "!default/**/*"]
+        "from": "",
+        "to": "",
+        "filter": [
+          "**/*",
+          "!user/**/*",
+          "!default/**/*"
+        ]
       },
       {
-        "from" : "default",
-        "to" : "user",
-        "filter" : ["**/*"]
+        "from": "default",
+        "to": "user",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
-    "asarUnpack" : [
+    "asarUnpack": [
       "user/",
       "default/"
     ],
-    "win" : {
-      "target" : "nsis",
-      "publisherName" : "Velox Mundi"
+    "win": {
+      "target": "nsis",
+      "publisherName": "Velox Mundi"
     },
-    "nsis" : {      
-      "oneClick" : false,
-      "perMachine" : true,
-      "allowElevation" : true,
-      "allowToChangeInstallationDirectory" : true,
-      "deleteAppDataOnUninstall" : true
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": true
     }
-  
   },
   "devDependencies": {
     "electron": "^22.0.2",
     "electron-builder": "^23.6.0",
+    "electron-rebuild": "^3.2.9",
     "path": "^0.12.7"
   },
   "dependencies": {
@@ -63,6 +69,7 @@
     "jquery": "^3.6.1",
     "jsdom": "^21.1.0",
     "mv": "^2.1.1",
+    "sql.js": "^1.8.0",
     "sqlite3": "^5.1.6"
   }
 }

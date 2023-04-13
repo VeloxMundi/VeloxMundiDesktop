@@ -3,7 +3,7 @@ var fs = require('fs-extra');
 let path = require('path');
 let mv = require('mv');
 const { config } = require('process');
-let sqlite3 = require('sqlite3').verbose();
+
 
 // Custom Modules
 const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'fileManagerModule.js'));
