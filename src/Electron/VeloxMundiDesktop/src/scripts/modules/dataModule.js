@@ -14,106 +14,250 @@ module.exports = {
   Invoke: async (event, method, data) => {
     switch(method) {
       case 'CheckWorldDb':
-        let x = await CheckWorldDb();
-        /*
-        .then((ver) => {
-          return ver;
-        });
-        */
-        return x;
+        let ret = await CheckWorldDb();
+        return ret;
         break;
       default:
         break;
     }
   },
+  WorldDbRun: async(event, method, data) => {
+
+  }
   
 };
 
+function getDb(dbName) {
+  let dbPath = '';
+  switch (dbName.toLowerCase()) {
+    case 'world':
+      let worldPath = require(settingsModulePath).Read('worldPath');
+      if (!worldPath || worldPath=='') {
+        throw new Error('Please select a valid world.');
+      }
+      dbPath = path.join(worldPath, '_world.db');
+      break;
+    case 'config': // Not sure if we will use this...
+      dbPath = path.join(
+        (app.isPackaged ? path.join(app.getPath('userData')) : path.join(appPath, 'user'))
+        ,'config.db'
+      );
+      break;
+    default:
+      throw new Error('Database name was not supplied.')
+  }
+  return new sqlite3.Database(dbPath);
+}
 
 function setErr(ret, err) {  
   ret.success = false;
   ret.message = err.message;
-  ret.error.push (err);
+  ret.errors.push(err);
 }
 
 async function CheckWorldDb() { 
-  let ret = {};
-  let val = await new Promise(async (resolve, reject) => {
-    // Used when switching world to verify db exists and contains all tables. In the future may be used to upgrade database when the application is updated.
+  let ret = {
+    success : true,
+    errors : []
+  };
+  let db = getDb('world');
 
-    let worldPath = require(settingsModulePath).Read('worldPath');
-    if (!worldPath || worldPath=='') {
-      ret.success = false;
-      ret.message = 'Please select a valid world.';
-    }
-    try {
-      let dbPath = path.join(worldPath, '_world.db');  
-      let db = new sqlite3.Database(dbPath);
-
-      let ver = '';
-      
-      await new Promise((resolve2, reject2) => {
-        db.run('CREATE TABLE IF NOT EXISTS app (key TEXT, value TEXT, PRIMARY KEY (key, value));', function(err2) {
-          if (err2) {
-            reject(err2); // reject the entire function
+  // Used when switching world to verify db exists and contains all tables. In the future may be used to upgrade database when the application is updated.
+  try {      
+    // Create world table if needed
+    if (ret.success) {
+      await new Promise((resolve, reject) => {
+        db.run('CREATE TABLE IF NOT EXISTS world (key TEXT, value TEXT, PRIMARY KEY (key, value));', function(err) {
+          if (err) {
+            setErr(ret, err);
+            reject();
           }
-          else {
-            resolve2();
-          }
+          resolve();
         });
       })
-      .then(async () => {
-        await new Promise(async (resolve3, reject3) => {
-        db.get('SELECT value FROM app WHERE key=?', ['version'], async function(err3, retrow) {
-              if (err3) {
-                reject(err3); // reject the entire function
-              }
-              else {
-                if (retrow && retrow.value) {
-                  ver = retrow.value;
-                  db.close();
-                  resolve(retrow.value);
-                }
-                else {
-                  db.run('INSERT INTO app (key, value) VALUES (?,?)', ['version',app.getVersion()], function(err4) {
-                    if (err4) {
-                      reject(err4);
-                    }
-                    else {
-                      db.close();
-                      resolve(app.getVersion());
-                    }
-                  });
-                }
-              }
-          });
-        });
-      })
-      .finally(() => {
-        db.close(); // catchall
+      .catch((e) => {
+        setErr(ret, e);
       });
     }
-    catch(e) {
-      //ret.success = false;
-      //ret.message = e.message;
-      //ret.error.push(e);
-      reject(e);
-      if (db) {
-        db.close();
-      }
+
+    // Check DB version
+    let appVer = app.getVersion();
+    let dbVer=undefined;
+    if (ret.success) {
+      dbVer = await new Promise((resolve, reject) => {
+        db.get('SELECT value FROM world WHERE key=?', ['appVersion'], async function(err, row) {
+          if (err) {
+            setErr(ret, err);
+            reject(err);
+          }
+          else {
+            if (row && row.value) {
+              resolve(row.value);
+            }
+            else {
+              db.run('INSERT INTO world (key, value) VALUES (?,?)', ['appVersion',app.getVersion()], function(err2) {
+                if (err2) {
+                  setErr(ret, err2);
+                  reject(err2);
+                }
+                else {
+                  resolve(appVer);
+                }
+              });
+            }
+          }
+        });
+      })
+      .catch((e) => {
+        setErr(ret, e);
+      });
     }
-  });
-  return val;
+
+    // Placeholder for db updates
+    if (ret.success && dbVer && dbVer!=appVer) {
+      // upgrade
+      let upg = true;
+    }
+
+    // Check that directory name matches current directory
+    let curDir = require(settingsModulePath).Read('worldPath').split(path.sep).pop();
+    if (ret.success) {
+      await new Promise((resolve, reject) => {
+        db.get(`SELECT value from world WHERE key=?`
+          , ['worldDirName']
+          , async function(err, row) {
+            if (err) {
+              setErr(ret, err);
+              reject(err);
+            }
+
+            if (row && row.value && row.value!='') {
+              if (row.value!=curDir) {
+                await new Promise((resolve2, reject2) => {
+                  db.run(`UPDATE world
+                    SET value=?
+                    WHERE key=?  
+                  `
+                  ,[curDir, 'worldDirName']
+                  ,function(err2) {
+                    if (err2) {
+                      setErr(ret, err2);
+                      reject2(err2); // reject parent promise
+                    }
+                    resolve2();
+                  });
+                })
+                .catch((e) => {
+                  setErr(ret, e);
+                });
+              }
+              else {
+                resolve();
+              }
+            }
+            else {
+              db.run(`INSERT INTO world
+                (key, value)
+                VALUES
+                (?,?)
+              `
+              ,['worldDirName',curDir]
+              ,function(err2) {
+                if (err2) {
+                  setErr(ret, err2);
+                  reject(err2);
+                }
+                resolve();
+              })
+            }
+        });
+      })
+      .catch((e) => {
+        setErr(ret, e);
+      });
+    }
+
+    // Check worldName and set if missing
+    if (ret.success) {
+      await new Promise((resolve, reject) => {
+        db.get(`SELECT value FROM world
+          WHERE key=?
+        `
+        ,['worldName']
+        ,function(err, row) {
+          if (err) {
+            setErr(ret, err);
+            reject(err);
+          }
+
+          if (!row || !row.value || row.value=='') {
+            db.run(`INSERT INTO world
+              (key, value)
+              VALUES
+              (?,?)
+            `,
+            ['worldName', curDir],
+            function(err2) {
+              if (err2) {
+                setErr(ret, err2);
+                reject(err2);
+              }
+              resolve();
+            })
+          }
+          else {
+            resolve();
+          }
+        });
+      })
+      .catch((e) => {
+        setErr(ret, e);
+      });
+    }
+
+    // Create pages table if not exists
+    if (ret.success) {
+      await new Promise((resolve, reject) => {
+        db.run(`CREATE TABLE IF NOT EXISTS pages
+          (
+            ID INTEGER,
+            Name TEXT,
+            nameDisambiguation TEXT,
+            fileType TEXT,
+            worldPath TEXT UNIQUE,
+            saved TEXT,
+            PRIMARY KEY ("ID" AUTOINCREMENT)
+          )
+        `
+        ,[]
+        ,function(err) {
+          if (err) {
+            setErr(ret, err);
+            reject(err);
+          }
+          resolve();
+        });
+      })
+      .catch((e) => {
+        setErr(ret, e);
+      });
+    }
+  }
+  catch(e) {
+    setErr(ret, e);
+  }
+  db.close();
+  return ret;
 }
 
 function dbRun(db, command) {
-  return new Promise(() => {
+  return new Promise((resolve, reject) => {
     db.run(command, function (err) {
       if (err) {
         reject(err);
       }
       else {
-        relolve();
+        resolve();
       }
     });
   });

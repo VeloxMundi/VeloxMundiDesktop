@@ -240,8 +240,11 @@ async function CallModuleMethod(event, module, method, data)
         return config.Invoke(event, method, data);
         break;
       case 'data':
-        let y = await require(dataModulePath).Invoke(event, method, data);
-        return y;
+        let d = await require(dataModulePath).Invoke(event, method, data);
+        if (!d.success) {
+          windows.main.webContents.send('error', 'An error occurred while accessing the database. ' + y.message);
+        }
+        return d;
         break;
       case 'world':
         return world.Invoke(event, method, data);
