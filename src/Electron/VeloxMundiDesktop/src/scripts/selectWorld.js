@@ -1,13 +1,23 @@
 
+  
+
+
   $(document).ready(function() {
     let worldList = window.contextBridge.toMainSync('world', 'GetWorldLinks');
     $('#WorldList').prepend(worldList);
 
     $('.worldLink').on('click', function() {
       window.contextBridge.toMain('settings', 'Write', ['currentWorld', $(this).text()]);
-      let x = window.contextBridge.toMainSync('data', 'CheckWorldDb');
-      showToast('Set world to "' + $(this).text() + '." Navigating to world home...');
-      window.contextBridge.navigate('worldHome.html');
+
+      //let y = window.contextBridge.toMainSync('data', 'Test');
+      let checkResult = window.contextBridge.toMainSync('world', 'CheckWorldDb');
+      if (checkResult.success) {
+        showToast('Set world to "' + $(this).text() + '." Navigating to world home...');
+        window.contextBridge.navigate('worldHome.html');
+      }
+      else {
+        showToast('There was a problem checking the database: ' + checkResult.message + '<div><a href="worldHome.html">Continue</a>', 'text-danger', true);
+      }
     });
 
     $('#createWorld').on('click', function() {

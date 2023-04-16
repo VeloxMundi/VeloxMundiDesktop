@@ -8,27 +8,163 @@ const path = require('path');
 let settingsModulePath = path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'settingsModule.js');
 let functionsModulePath = path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'functionsModule.js');
 
-
-
 module.exports = {
   Invoke: async (event, method, data) => {
     switch(method) {
       case 'CheckWorldDb':
         let ret = await CheckWorldDb();
         return ret;
-        break;
+      /*
+      case 'DbRunSync':
+        return dbRunSync(data);
+      case 'DbGetSync':
+        return dbGetSync(data);
+      case 'DbAllSync':
+        return dbAllSync(data);
+      */
       default:
         break;
     }
   },
-  WorldDbRun: async(event, method, data) => {
-
+  DbCustomSync: async(data) => {
+    return await dbCustomSync(
+      {
+        callFunction : data
+      }
+    );
+  },
+  DbRun: async(data) => {
+    let ret = {
+      success : true,
+      errors : []
+    }
+    let db = getDb(data.dbName);
+    try {
+      let x = 1;
+      await new Promise((resolve, reject) => {
+        db.run(data.query, data.params, function(err) {
+          if (err) {
+            reject(err);
+          }
+          else {
+            resolve();
+          }
+        });
+      })
+      .catch((e) => {
+        setErr(ret, e);
+      });
+      let y = 0;
+    }
+    catch(e) {
+      setErr(ret, e);
+    }
+    finally {
+      db.close();
+    }
+    if (ret.success) {
+      return;
+    }
+    else {
+      throw ret.errors.pop(); // Let caller handle errors
+    }
+  },
+  DbGet: async(data) => {
+    let ret = {
+      success : true,
+      errors : []
+    }
+    let db = getDb(data.dbName);
+    try {
+      ret.result = await new Promise((resolve, reject) => {
+        db.get(data.query, data.params, function(err, row) {
+          if (err) {
+            reject(err);
+          }
+          if (row) {
+            resolve(row);
+          }
+          else {
+            resolve({});
+          }
+        });
+      })
+      .catch((e) => {
+        setErr(ret, e);
+      });
+    }
+    catch(e) {
+      setErr(ret, e);
+    }
+    finally {
+      db.close();
+    }
+    if (ret.success) {
+      return ret.result;
+    }
+    else {
+      throw ret.errors.pop(); // Let caller handle errors
+    }
+  },
+  DbAll : async(data) => {
+    let ret = {
+      success : true,
+      errors : []
+    }
+    let db = getDb(data.dbName);
+    try {
+      ret.result = await new Promise((resolve, reject) => {
+        db.all(data.query, data.params, function(err, rows) {
+          if (err) {
+            reject(err);
+          }
+          resolve(rows);
+        });
+      })
+      .catch((e) => {
+        setErr(ret, e);
+      });
+    }
+    catch(e) {
+      setErr(ret, e);
+    }
+    finally {
+      db.close();
+    }
+    if (ret.success) {
+      return ret.result;
+    }
+    else {
+      throw ret.errors.pop(); // Let caller handle errors
+    }
+  },
+  CreateTable : async(dbName, tableName) => {
+    await createTables(dbName, [tableName]);
+    return;
+  },
+  CreateTables : async(dbName, tableNameArray) => {
+    await createTables(dbName, tableNameArray);
+    return;
   }
-  
 };
+
+async function myTest(res) {
+  await new Promise((resolve, reject) => {
+    let i=0;
+    while (i<10000) {
+      i++;
+    }
+    res = 'Hello, World';
+    resolve();
+  });
+  return 1;
+}
 
 function getDb(dbName) {
   let dbPath = '';
+  if (!dbName || dbName=='') {
+    dbName = 'world';
+  }
   switch (dbName.toLowerCase()) {
     case 'world':
       let worldPath = require(settingsModulePath).Read('worldPath');
@@ -49,13 +185,90 @@ function getDb(dbName) {
   return new sqlite3.Database(dbPath);
 }
 
-function setErr(ret, err) {  
+function setErr(ret, err) {
   ret.success = false;
   ret.message = err.message;
   ret.errors.push(err);
 }
 
-async function CheckWorldDb() { 
+async function createTables(dbName, tableNameArray) {
+  for (let i=0; i<tableNameArray.length; i++) {
+    let success = true;
+    let query = '';
+    let db = getDb(dbName);
+    switch(tableNameArray[i]) {
+      case 'world':
+        query = 'CREATE TABLE IF NOT EXISTS world (key TEXT, value TEXT, PRIMARY KEY (key, value));';
+        break;
+      case 'pages':
+        query = `
+          CREATE TABLE IF NOT EXISTS pages
+          (
+            ID INTEGER,
+            Name TEXT,
+            nameDisambiguation TEXT,
+            fileType TEXT,
+            worldPath TEXT UNIQUE,
+            saved TEXT,
+            PRIMARY KEY ("ID" AUTOINCREMENT)
+          )
+        `
+        break;
+    }
+    if (query!='') {
+      await new Promise((resolve, reject) => {
+        db.run(query, [], function(err) {
+          if (err) {
+            reject(err);
+          }
+          else {
+            resolve();
+          }
+        });
+      })
+      .catch((e) => {
+        success = false;
+      })
+      .finally(() => {
+        db.close();
+      });
+    }
+    else {
+      db.close();
+      throw new Error('Invalid table name');
+    }
+  }
+}
+
+async function dbCustomSync(data) {
+  let ret = {
+    success : true,
+    errors : []
+  }
+  let db = getDb(data.dbName);
+  try {
+    await data.callFunction(db, ret);
+  }
+  catch(e) {
+    setErr(ret, e);
+  }
+  finally {
+    db.close();
+  }
+  if (ret.success) {
+    return ret.result;
+  }
+  else {
+    throw ret.errors.pop(); // Let caller handle errors
+  }
+}
+
+
+
+
+
+/*
+async function CheckWorldDb() {
   let ret = {
     success : true,
     errors : []
@@ -63,7 +276,7 @@ async function CheckWorldDb() {
   let db = getDb('world');
 
   // Used when switching world to verify db exists and contains all tables. In the future may be used to upgrade database when the application is updated.
-  try {      
+  try {
     // Create world table if needed
     if (ret.success) {
       await new Promise((resolve, reject) => {
@@ -136,7 +349,7 @@ async function CheckWorldDb() {
                 await new Promise((resolve2, reject2) => {
                   db.run(`UPDATE world
                     SET value=?
-                    WHERE key=?  
+                    WHERE key=?
                   `
                   ,[curDir, 'worldDirName']
                   ,function(err2) {
@@ -250,33 +463,9 @@ async function CheckWorldDb() {
   return ret;
 }
 
-function dbRun(db, command) {
-  return new Promise((resolve, reject) => {
-    db.run(command, function (err) {
-      if (err) {
-        reject(err);
-      }
-      else {
-        resolve();
-      }
-    });
-  });
-}
-
-function dbGet(db, command, row) {
-  return new Promise(() => {
-    db.get(command, function(err, row) {
-      if (err) {
-        reject(err);
-      }
-      else {
-        resolve(row);
-      }
-    });
-  });
-}
-
 function updateDb(db, ret) {
   // TODO: Write update scripts here to allow db to be upgraded from any version to any higher version
   // NOTE: Think about what happens if two people share a world (OneDrive or Google Drive or DropBox, etc.) and use a different version of the app...this should be as compatible as possible
 }
+
+*/
