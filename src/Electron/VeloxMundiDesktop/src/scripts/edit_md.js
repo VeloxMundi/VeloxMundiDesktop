@@ -52,13 +52,13 @@ $(document).ready(function() {
 
   function OnWindowResize() {
     // Run this function any time the application window is resized
-    $('body').height($('body').height()-30);
+    $('body').height($('body').height());
     let bdh = $('body').height();
     let tbh = $('#md-edit-toolbar').height();
     if (!tbh) {
       tbh=0;
     }
-    let newH = bdh-tbh-15;
+    let newH = bdh-tbh-25; //leave 25px for the statusbar
     $('#editor').css({height:(newH)+'px'});
     $('#viewer').css({height:(newH)+'px'});
     $('#phantom').css({height:(newH)+'px'});

@@ -10,12 +10,15 @@
       window.contextBridge.toMain('settings', 'Write', ['currentWorld', $(this).text()]);
 
       //let y = window.contextBridge.toMainSync('data', 'Test');
-      let checkResult = window.contextBridge.toMainSync('world', 'CheckWorldDb');
+      setStatus('Checking world database...');
+      let checkResult = window.contextBridge.toMainSync('worldDb', 'CheckWorldDb');
       if (checkResult.success) {
+        setStatus('Ready');
         showToast('Set world to "' + $(this).text() + '." Navigating to world home...');
         window.contextBridge.navigate('worldHome.html');
       }
       else {
+        setStatus('Ready');
         showToast('There was a problem checking the database: ' + checkResult.message + '<div><a href="worldHome.html">Continue</a>', 'text-danger', true);
       }
     });

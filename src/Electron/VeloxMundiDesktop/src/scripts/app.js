@@ -7,6 +7,7 @@ let setPageInConfig = true;
 let pathSep = window.contextBridge.toMainSync('file', 'GetPathSep');
 let typeSep = ' / ';
 let loadToast = false;
+let pageStatus = window.contextBridge.toMainSync('config', 'ReadKey', 'Status') ?? 'Ready';
 
 // Bounce messages to Main
 window.contextBridge.fromMain('bounceToMain', (event, module, method, data) => {
@@ -203,6 +204,22 @@ function modalOnEnter(elementToMonitor,defaultButton) {
   
 }
 
+function setStatus(status, persist) {
+  if (status && status!='') {
+    $('#statusbar').text(status);
+    if (persist) {
+      window.contextBridge.toMainSync('config', 'WriteKey', ['status',status]);
+    }
+  }
+  else {
+    let status = window.contextBridge.toMainSync('config', 'ReadKey', 'Status');
+    if (!status || status=='') {
+      status = 'Ready';
+    }
+    $('#statusbar').text(status);
+  }
+}
+
 function HandleNavLinks() {
   $('a.navLink').on('click', function() {
     let page = $(this).data('page');
@@ -232,10 +249,14 @@ $(document).ready(function() {
   HandleNavLinks();
   
   // Add modal div to every page
-  $('body').prepend('<div class="modal fade" id="appModal" tabindex="-1" role="dialog" aria-labelledby="appModalTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false"><div class="modal-dialog modal-dialog modal-sm" role="document"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="appModalTitle"></h5><button id="appModalClose" type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body"><div id="appModalError" class="text-danger"></div><div id="appModalBody">' + '' + '</div></div><div class="modal-footer" id="appModalFooter"></div></div></div></div><button id="appModalShow" data-toggle="modal" data-target="#appModal" style="display:none"></button>');
+  $('.page-content').prepend('<div class="modal fade" id="appModal" tabindex="-1" role="dialog" aria-labelledby="appModalTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false"><div class="modal-dialog modal-dialog modal-sm" role="document"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="appModalTitle"></h5><button id="appModalClose" type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body"><div id="appModalError" class="text-danger"></div><div id="appModalBody">' + '' + '</div></div><div class="modal-footer" id="appModalFooter"></div></div></div></div><button id="appModalShow" data-toggle="modal" data-target="#appModal" style="display:none"></button>');
   // Add "toast" div to every page
   $('body').prepend('<div id="toast" style="z-index:1000"></div>\r\n');
+  setStatus();
 
+  // Add status bar to every page
+  $('#page-content').after('<div id="statusbar"><div>');
+  setStatus();
 
   // Monitor modal status
   /*
@@ -293,6 +314,9 @@ $(document).ready(function() {
   
 
   // Handle menu actions
+  window.contextBridge.fromMain('status', (status) => {
+    setStatus(status);
+  });
   window.contextBridge.fromMain('menu', (event, action, data) => {
     switch(action) {
       case 'Home':

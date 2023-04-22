@@ -15,16 +15,18 @@
     <title>Velox Mundi: Conversion Preview (HTML to Markdown)</title>
   </head>
   <body>
-    <div class="text-right" id="preview_htmlToMd-toolbar">
-      <button id="AcceptConversion" class="btn btn-success" title="Accept"><span class="bi-check-circle"></span> Convert</button>
-      <button id="CancelConversion" class="btn btn-danger" title="Cancel"><span class="bi-x-circle"></span> Cancel</button>
-    </div>
-    <div class="row" id="editorViewer">
-      <div class="col-6">
-        <div id="phantom"></div>
-        <textarea id="editor" class=""></textarea>
+    <div id="page-content">
+      <div class="text-right" id="preview_htmlToMd-toolbar">
+        <button id="AcceptConversion" class="btn btn-success" title="Accept"><span class="bi-check-circle"></span> Convert</button>
+        <button id="CancelConversion" class="btn btn-danger" title="Cancel"><span class="bi-x-circle"></span> Cancel</button>
       </div>
-      <div id="viewer" class="col-6 full-height"></div>
+      <div class="row" id="editorViewer">
+        <div class="col-6">
+          <div id="phantom"></div>
+          <textarea id="editor" class=""></textarea>
+        </div>
+        <div id="viewer" class="col-6 full-height"></div>
+      </div>
     </div>
   </body>
   <script src="../scripts/resources/jquery-3.6.1.min.js"></script>  

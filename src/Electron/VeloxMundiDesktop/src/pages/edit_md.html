@@ -14,27 +14,29 @@
     <title>Velox Mundi: Edit</title>
   </head>
   <body>
-    <div class="row" id="md-edit-toolbar">
-      <div class="col-6">
-        <button id="InsertImage" class="btn btn-default" title="Insert image"><span class="bi-image"></span></button>
+    <div id="page-content">
+      <div class="row" id="md-edit-toolbar">
+        <div class="col-6">
+          <button id="InsertImage" class="btn btn-default" title="Insert image"><span class="bi-image"></span></button>
+        </div>
       </div>
-    </div>
-    <div class="row" id="editorViewer">
-      <div class="col-6">
-        <div id="phantom"></div>
-        <textarea id="editor" class=""></textarea>
-          </div>
-          <div id="viewer" class="col-6 full-height"></div>
-    </div>
-    <div class="modal fade" id="pageLinkModal" tabindex="-1" role="dialog" aria-labelledby="pageLinkModalTitle" aria-hidden="true" data-backdrop="static" data-keyboard="true">
-      <div class="modal-dialog modal-dialog modal-sm" role="document" style="margin:0px;">
-        <div class="modal-content" id="pageLinkModalContent">
-          <div class="modal-body" id="pageLinkModalBody">
-            <button id="pageLinkModalClose" type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-            <div>
-              <input type="text" placeholder="Page" size="9" id="pageLinkHref"/>&nbsp;&nbsp;<input type="text" placeholder="Link Text" size="12" id="pageLinkText"/>
+      <div class="row" id="editorViewer">
+        <div class="col-6">
+          <div id="phantom"></div>
+          <textarea id="editor" class=""></textarea>
+            </div>
+            <div id="viewer" class="col-6 full-height"></div>
+      </div>
+      <div class="modal fade" id="pageLinkModal" tabindex="-1" role="dialog" aria-labelledby="pageLinkModalTitle" aria-hidden="true" data-backdrop="static" data-keyboard="true">
+        <div class="modal-dialog modal-dialog modal-sm" role="document" style="margin:0px;">
+          <div class="modal-content" id="pageLinkModalContent">
+            <div class="modal-body" id="pageLinkModalBody">
+              <button id="pageLinkModalClose" type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+              <div>
+                <input type="text" placeholder="Page" size="9" id="pageLinkHref"/>&nbsp;&nbsp;<input type="text" placeholder="Link Text" size="12" id="pageLinkText"/>
+              </div>
             </div>
           </div>
         </div>

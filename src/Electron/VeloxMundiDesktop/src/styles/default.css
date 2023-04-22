@@ -49,3 +49,27 @@ h5, h6, h7 {
 h1, h2, h3, h4, h5, h6, h7 {
   border-bottom: 1px solid #000000;
 }
+
+
+/*Add status bar to each page*/
+body, html {
+  height: 100%;
+}
+body {
+  margin: 0px 15px;
+}
+#page-content {
+  min-height:100%;
+  margin-bottom:-24px;
+}
+#statusbar {
+  height: 24px;
+  overflow:hidden;
+  background-color:#DEDEDE;
+  border-top: #bdbaba 1px solid;
+  margin: 0 -15px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  font-size: 12px;
+  padding-left: 5px;
+}

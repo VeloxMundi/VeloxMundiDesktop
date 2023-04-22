@@ -14,62 +14,63 @@
     <title>User Preferences</title>
   </head>
   <body>
-    <!--
-    <button class="btn btn-danger windowCloser bi-x" id="CloseOptions" title="Close">&nbsp;</button>
-    <div class="titlebar">
-      <h3><span class="bi-person-circle">&nbsp;</span>User Preferences</h3>
-    </div><br/>
-    -->
-    <h4 class="row" style="margin-left:0px; margin-right:0px; width:auto;">
-      <div class="col-10">
-        <a class="btn btn-info navLink" href="#" data-page="options_main.html"><span class="bi-arrow-left-circle"></span>&nbsp;Back to Options</a>
-      </div>
-      <div class="col-2 text-right" style="padding-right:0px;">
-        <button id="SavePrefs" class="btn btn-success"><span class="bi-save">&nbsp;</span>Save</button>
-      </div>      
-    </h4>
-    <table width="100%" class="configTable">
-      <tr valign="top">
-        <th style="width:20%;max-width:250px;">
-          
-        </th>
-        <td style="width:60%;max-width:100%;">
-          
-        </td>
-        <td style="width:20%;max-width:250px;text-align:right;">
-          
-        </td>
-      </tr>
-      <tr valign="top">
-        <th>
-          Editor Style
-        </th>
-        <td>
-          Choose whether to use a rich-text editor or markdown
-        </td>
-        <td>
-          <select id="EditorStyle" class="form-control">
-            <option value="RTE">Rich Text</option>
-            <option value="MD">Markdown</option>
-          </select>
-        </td>
-      </tr>
-      <tr>
-        <th>
-          Message Display
-        </th>
-        <td>
-          How many seconds should a message display on the page?
-        </td>
-        <td>
-          <input id="ToastTimeout" type="number" length="10" class="form-control"/>
-        </td>
-      </tr>
-    </table>
+    <div id="page-content">
+      <!--
+      <button class="btn btn-danger windowCloser bi-x" id="CloseOptions" title="Close">&nbsp;</button>
+      <div class="titlebar">
+        <h3><span class="bi-person-circle">&nbsp;</span>User Preferences</h3>
+      </div><br/>
+      -->
+      <h4 class="row" style="margin-left:0px; margin-right:0px; width:auto;">
+        <div class="col-10">
+          <a class="btn btn-info navLink" href="#" data-page="options_main.html"><span class="bi-arrow-left-circle"></span>&nbsp;Back to Options</a>
+        </div>
+        <div class="col-2 text-right" style="padding-right:0px;">
+          <button id="SavePrefs" class="btn btn-success"><span class="bi-save">&nbsp;</span>Save</button>
+        </div>      
+      </h4>
+      <table width="100%" class="configTable">
+        <tr valign="top">
+          <th style="width:20%;max-width:250px;">
+            
+          </th>
+          <td style="width:60%;max-width:100%;">
+            
+          </td>
+          <td style="width:20%;max-width:250px;text-align:right;">
+            
+          </td>
+        </tr>
+        <tr valign="top">
+          <th>
+            Editor Style
+          </th>
+          <td>
+            Choose whether to use a rich-text editor or markdown
+          </td>
+          <td>
+            <select id="EditorStyle" class="form-control">
+              <option value="RTE">Rich Text</option>
+              <option value="MD">Markdown</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <th>
+            Message Display
+          </th>
+          <td>
+            How many seconds should a message display on the page?
+          </td>
+          <td>
+            <input id="ToastTimeout" type="number" length="10" class="form-control"/>
+          </td>
+        </tr>
+      </table>
 
-<!--TODO: Set up page to configue all settings in config.json['prefs'], default to data/defaultConfig.json-->
+  <!--TODO: Set up page to configue all settings in config.json['prefs'], default to data/defaultConfig.json-->
 
-
+    </div>
   </body>
   <script src="../scripts/resources/jquery-3.6.1.min.js"></script>  
   <script src="../scripts/resources/bootstrap-4.3.1/js/bootstrap.bundle.js" ></script>

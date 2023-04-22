@@ -31,6 +31,7 @@ let menu = null;
 const config = require(path.join(scriptPath, 'modules', 'configModule.js'));
 config.InitPath(configPath, dataPath); //Is this needed anymore?
 const world = require(path.join(scriptPath, 'modules', 'worldModule.js'));
+const worldDb = require(path.join(scriptPath, 'modules', 'worldDbModule.js'));
 const fileManager = require('./modules/fileManagerModule');
 const uiManager = require('./modules/uiModule');
 const pageManager = require('./modules/pageModule');
@@ -248,6 +249,9 @@ async function CallModuleMethod(event, module, method, data)
         break;
       case 'world':
         return world.Invoke(event, method, data);
+        break;
+      case 'worldDb':
+        return worldDb.Invoke(event, method, data);
         break;
       case 'page':
         return pageManager.Invoke(event, method, data);
