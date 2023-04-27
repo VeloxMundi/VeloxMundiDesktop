@@ -7,6 +7,8 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 let settingsModulePath = path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'settingsModule.js');
 let functionsModulePath = path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'functionsModule.js');
+let worldDbModule = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'worldDbModule.js'));
+        
 
 module.exports = {
   Invoke: async (event, method, data) => {
@@ -38,7 +40,7 @@ module.exports = {
       success : true,
       errors : []
     }
-    let db = getDb(data.dbName);
+    let db = await getDb(data.dbName);
     try {
       let x = 1;
       await new Promise((resolve, reject) => {
@@ -74,7 +76,7 @@ module.exports = {
       success : true,
       errors : []
     }
-    let db = getDb(data.dbName);
+    let db = await getDb(data.dbName);
     try {
       ret.result = await new Promise((resolve, reject) => {
         db.get(data.query, data.params, function(err, row) {
@@ -111,7 +113,7 @@ module.exports = {
       success : true,
       errors : []
     }
-    let db = getDb(data.dbName);
+    let db = await getDb(data.dbName);
     try {
       ret.result = await new Promise((resolve, reject) => {
         db.all(data.query, data.params, function(err, rows) {
@@ -160,7 +162,7 @@ async function myTest(res) {
   return 1;
 }
 
-function getDb(dbName) {
+async function getDb(dbName) {
   let dbPath = '';
   if (!dbName || dbName=='') {
     dbName = 'world';
@@ -172,6 +174,16 @@ function getDb(dbName) {
         throw new Error('Please select a valid world.');
       }
       dbPath = path.join(worldPath, '_world.db');
+      // Check DB if not exists...      
+      if (!fs.existsSync(dbPath)) {
+        let temp = new sqlite3.Database(dbPath); // create DB or CheckWorldDb will create a permanent loop...
+        try {
+          await worldDbModule.Invoke(null, 'CheckWorldDb');
+        }
+        finally {
+          temp.close(); // close temp DB
+        }
+      }
       break;
     case 'config': // Not sure if we will use this...
       dbPath = path.join(
@@ -195,7 +207,7 @@ async function createTables(dbName, tableNameArray) {
   for (let i=0; i<tableNameArray.length; i++) {
     let success = true;
     let query = '';
-    let db = getDb(dbName);
+    let db = await getDb(dbName);
     switch(tableNameArray[i]) {
       case 'world':
         query = 'CREATE TABLE IF NOT EXISTS world (key TEXT, value TEXT, PRIMARY KEY (key, value));';
@@ -204,11 +216,12 @@ async function createTables(dbName, tableNameArray) {
         query = `
           CREATE TABLE IF NOT EXISTS pages
           (
-            ID INTEGER,
-            Name TEXT,
+            id INTEGER,
+            name TEXT,
             nameDisambiguation TEXT,
             fileType TEXT,
             worldPath TEXT UNIQUE,
+            created TEXT,
             saved TEXT,
             PRIMARY KEY ("ID" AUTOINCREMENT)
           )
@@ -245,7 +258,7 @@ async function dbCustomSync(data) {
     success : true,
     errors : []
   }
-  let db = getDb(data.dbName);
+  let db = await getDb(data.dbName);
   try {
     await data.callFunction(db, ret);
   }

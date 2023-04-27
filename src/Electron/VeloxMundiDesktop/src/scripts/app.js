@@ -1,5 +1,7 @@
 //const { nodeName } = require("jquery");
 
+//const { isNumeric } = require("jquery");
+
 let pageDirty = false;
 let modalLocked = false;
 let modalVisible = false;
@@ -204,9 +206,20 @@ function modalOnEnter(elementToMonitor,defaultButton) {
   
 }
 
-function setStatus(status, persist) {
+function setStatus(status, duration, persist) {
   if (status && status!='') {
     $('#statusbar').text(status);
+    if (duration) {
+      if (duration==0) {
+        duration=3000;
+      }
+      try {
+        setTimeout(() => {
+          setStatus('Ready');
+        }, duration);
+      }
+      catch {}
+    }
     if (persist) {
       window.contextBridge.toMainSync('config', 'WriteKey', ['status',status]);
     }
@@ -314,8 +327,8 @@ $(document).ready(function() {
   
 
   // Handle menu actions
-  window.contextBridge.fromMain('status', (status) => {
-    setStatus(status);
+  window.contextBridge.fromMain('status', (event, status, duration, persist) => {
+    setStatus(status, duration, persist);
   });
   window.contextBridge.fromMain('menu', (event, action, data) => {
     switch(action) {

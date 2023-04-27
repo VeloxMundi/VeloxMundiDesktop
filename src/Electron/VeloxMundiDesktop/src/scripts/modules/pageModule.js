@@ -4,8 +4,9 @@ const fs = require('fs');
 const fse = require('fs-extra');
 let path = require('path');
 const { config } = require('process');
-//const jsdom = require('jsdom');
+const jsdom = require('jsdom');
 const { triggerAsyncId } = require('async_hooks');
+const worldDbModule = require('./worldDbModule');
 
 // variables
 const pubDirName = '_web';
@@ -26,13 +27,13 @@ module.exports = class ConfigManager {
     this.configpath = "";
   }
 
-  static Invoke(event, method, data) {
+  static async Invoke(event, method, data, window) {
     switch(method) {      
       case 'ReadPage':
         return this.ReadPage(data);
         break;
       case 'SavePage':
-        return this.SavePage(data);
+        return await this.SavePage(data, event, window);
         break;
       case 'GetPagePath':
         return this.GetPagePath(data);
@@ -88,7 +89,9 @@ module.exports = class ConfigManager {
     return pageContents;
   }
   
-  static SavePage(pageInfo) {
+  static async SavePage(pageInfo, event, window) {
+    // Consider making this asynchronous (Promise) so we can update statusbar as progress is being made...not sure if this is necessary, but saving can take a while since we are saving, indexing, setting incoming/outgoing links, etc.
+    
     /* pageInfo contains:
      fullPath (string) (optional) must have fullPath OR relPath
      relPath (string) (optional) must have fullPath OR relPath
@@ -104,14 +107,15 @@ module.exports = class ConfigManager {
       let contents = (pageData.fileExt=='md' 
             ? this.tweakMD('save', pageInfo.pageContents, pageData.fullPath) 
             : this.tweakHTML('save', pageInfo.pageContents, pageData.fullPath));
+      window.webContents.send('status', 'Writing page to file...');
       fs.writeFileSync(pageData.fullPath, contents);   
 
       // publish page in HTML output directory
       fse.ensureDirSync(pageData.previewDir);
       fs.writeFileSync(pageData.previewPath, this.publishHTML((pageData.fileExt=='md' ? pageInfo.pageHTML : pageInfo.pageContents), pageData.previewPath, pageData.nameDisambiguation));
-      
+
       try {
-        this.AddPageToIndex(pageData.fullPath, true);
+        await this.AddPageToIndex(pageData.fullPath, true);
         //this.BuildWebIndex();
         return {
           'success': true, 
@@ -124,8 +128,12 @@ module.exports = class ConfigManager {
           'message': 'Page was saved, but page info was not added to index: ' + e
         };
       }
+      finally {
+        window.webContents.send('status', 'Saved successfully', require(settingsModulePath).Read('prefs.toastTimeout'));
+      }
     }
     catch(e) {
+      window.webContents.send('status', e.message);
       return {
         'success': false, 
         'message': 'Unable to save file: ' + e
@@ -133,7 +141,7 @@ module.exports = class ConfigManager {
     }
   }
 
-  static AddPageToIndex(pagePath, SaveNow) {
+  static async AddPageToIndex(pagePath, SaveNow) {
     // Set up variables
     let pageData = this.GetPageData({
       fullPath: pagePath
@@ -141,8 +149,10 @@ module.exports = class ConfigManager {
     let olinks = [];    
 
     // Read world index
-    let worldData = worldManager.GetWorldData();
+    //let worldData = worldManager.GetWorldData();
+    let wd = await worldDbModule.GetPageData(pageData.worldPath);
     let thisPage = {
+      id : wd.id,
       name : pageData.rawFileName,
       nameDisambiguation : pageData.rawFileName + (pageData.pageType=='' ? '' : ' (' + pageData.pageType + ')'),
       type : pageData.pageType,
@@ -188,6 +198,9 @@ module.exports = class ConfigManager {
       thisPage.outgoingLinks = olinks;
     }
     
+    await worldDbModule.SavePageData(thisPage);
+
+    /*
     if (!worldData.pages || worldData.pages.length==0) {
       worldData.pages = [thisPage];
     }
@@ -225,7 +238,7 @@ module.exports = class ConfigManager {
       }
       });
     worldManager.SaveWorldData(worldData);
-
+    */
   }
 
   static RemovePageFromIndex(pageInfo) {

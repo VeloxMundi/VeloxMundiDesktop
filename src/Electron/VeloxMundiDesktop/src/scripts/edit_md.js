@@ -225,10 +225,12 @@ $(document).ready(function() {
         $('#CancelButton').removeClass('btn-danger');
         $('#CancelButton').addClass('btn-default');
         pageDirty = false;
+        setStatus('Ready');
       }
       else
       {
         showToast('There was an error saving changes:\r\n' + saveResult.message, 'text-danger');
+        // status will be set by pageModule...
       }
     }
     catch (e) {

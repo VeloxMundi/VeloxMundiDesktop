@@ -11,6 +11,7 @@ let worldPages = null;
 window.processMenuItem = function(menuItem, data) {
   switch (menuItem) {
     case 'SavePage':
+      setStatus('Saving...');
       closeAfterSave = false;
       CheckPathAndSave();
       break;
@@ -19,6 +20,7 @@ window.processMenuItem = function(menuItem, data) {
       navigate('worldHome.html');
       break;
     case 'SaveAndClose':      
+      setStatus('Saving...');
       closeAfterSave=true;
       CheckPathAndSave();
     break;
@@ -28,6 +30,7 @@ window.processMenuItem = function(menuItem, data) {
         hideModal();
       }
       else {
+        setStatus('Waiting for page name...');
         showModal(
           {
             title: 'Rename ' + pageName, 
@@ -38,6 +41,7 @@ window.processMenuItem = function(menuItem, data) {
             callback: function() {
               $('#CancelRename').on('click', function() {
                 hideModal();
+                setStatus('Ready');
               });
               $('#RenamePage').on('click', function() {
                 SavePage();
@@ -56,6 +60,7 @@ window.processMenuItem = function(menuItem, data) {
                     SavePage();
                     hideModal();
                     showToast('File renamed successfully!', 'text-success');
+                    setStatus('Ready');
                   }
                   else if (result.message && result.message!='') {
                     $('#RenameError').text('There was a problem renaming the file.<br/>' + result.message);
@@ -74,8 +79,11 @@ window.processMenuItem = function(menuItem, data) {
       }
       break;
     case 'Preview':
+      setStatus('Saving...');
       CheckPathAndSave();
+      setStatus('Generating preview');
       navigate('preview_page.html','path=' + pagePath);
+      setStatus('Ready');
       break;
     default:
       break;

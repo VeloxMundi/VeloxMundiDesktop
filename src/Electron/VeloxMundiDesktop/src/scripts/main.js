@@ -254,7 +254,7 @@ async function CallModuleMethod(event, module, method, data)
         return worldDb.Invoke(event, method, data);
         break;
       case 'page':
-        return pageManager.Invoke(event, method, data);
+        return await pageManager.Invoke(event, method, data, windows.main);
         break;
       case 'file':
         return fileManager.Invoke(event, method, data);

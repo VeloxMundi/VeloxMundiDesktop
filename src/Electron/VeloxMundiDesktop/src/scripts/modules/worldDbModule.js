@@ -14,10 +14,43 @@ module.exports = {
     switch(method) {      
       case 'CheckWorldDb':
         return CheckWorldDb();
+      case 'GetPageData':
+        return GetPageData(data);
+      case 'SavePageData':
+        return SavePageData(data);
       default:
         event.sender.send('Invalid method call: "' + method + '"');
         break;
     }
+  },
+
+
+  GetPageData: async(worldPath) => {
+    return pageData = await require(dataModulePath).DbGet({
+      query: `SELECT * FROM pages WHERE worldPath=$path`,
+      params: {
+        $path: worldPath
+      }
+    });
+  },
+  
+  SavePageData: async(pageData) => {
+    let x = 1;
+    let paramData = {};
+    paramData.$id = pageData.id;
+    paramData.$name = pageData.name;
+    paramData.$nameDisambiguation = pageData.nameDisambiguation;
+    paramData.$fileType = pageData.fileType;
+    paramData.$worldPath = pageData.worldPath;
+    paramData.$created = pageData.created;
+    await require(dataModulePath).DbRun({
+      query: `INSERT OR REPLACE INTO pages 
+              (id, name, nameDisambiguation, fileType, worldPath, created, saved)
+              VALUES
+              ($id, $name, $nameDisambiguation, $fileType, $worldPath, COALESCE($created, datetime('now')), datetime('now'))
+              `,
+      params: paramData
+    });
   }
   
 }
@@ -152,3 +185,4 @@ async function CheckWorldDb() {
   }
   return ret;
 }
+
