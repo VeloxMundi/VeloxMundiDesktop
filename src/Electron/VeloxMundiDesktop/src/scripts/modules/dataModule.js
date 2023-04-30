@@ -225,7 +225,17 @@ async function createTables(dbName, tableNameArray) {
             saved TEXT,
             PRIMARY KEY ("ID" AUTOINCREMENT)
           )
-        `
+        `;
+        break;
+      case 'links':
+        query = `
+            CREATE TABLE IF NOT EXISTS links
+            (
+              fromPageId INTEGER,
+              toPageId INTEGER,
+              PRIMARY KEY (fromPageId, toPageId)
+            )
+          `;
         break;
     }
     if (query!='') {

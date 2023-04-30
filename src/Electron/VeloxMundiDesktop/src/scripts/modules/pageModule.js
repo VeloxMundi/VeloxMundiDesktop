@@ -173,9 +173,9 @@ module.exports = class ConfigManager {
             try {
               let ths = $(this);
               let href = decodeURIComponent(ths.attr('href'));
-              let baseHref = decodeURIComponent('file:///' + pageData.basePath);
-              if (href.indexOf(baseHref)!=-1) {
-                href = href.replace(baseHref,'');
+              let tmp = href.indexOf('page:');
+              if (href.indexOf('page:')===0) {
+                href = href.replace('page:','');
                 let existingO = olinks.indexOf(href);
                 if (existingO==-1) {
                   olinks.push(href);

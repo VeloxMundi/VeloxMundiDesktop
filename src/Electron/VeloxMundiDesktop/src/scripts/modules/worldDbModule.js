@@ -51,8 +51,32 @@ module.exports = {
               `,
       params: paramData
     });
-  }
-  
+
+    for (let i=0; i< pageData.outgoingLinks.length; i++) {
+      let toPage = await require(dataModulePath).DbGet({
+        query : `
+          SELECT id FROM pages WHERE worldPath = $name
+          `,
+        params: {
+          $name : pageData.outgoingLinks[i]
+        }
+      });
+      if (toPage && toPage.id && toPage.id>0) {
+        await require(dataModulePath).DbRun({
+          query: `
+            INSERT OR REPLACE INTO links
+            (fromPageId, toPageId)
+            VALUES
+            ($fromId, $toId)
+            `,
+          params: {
+            $fromId : pageData.id,
+            $toId : toPage.id
+          }
+        });
+      }
+    }
+  }  
 }
 
 async function CheckWorldDb() {
@@ -175,6 +199,7 @@ async function CheckWorldDb() {
 
     // Create pages table if needed
     await require(dataModulePath).CreateTable('world','pages');
+    await require(dataModulePath).CreateTable('world', 'links');
     
 
   }

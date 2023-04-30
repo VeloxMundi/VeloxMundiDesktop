@@ -45,6 +45,10 @@ if (!app.isPackaged) {
 settingsModule.LoadAppData();
 
 const dataModulePath = path.join(scriptPath, 'modules', 'dataModule.js');
+let cworld = settingsModule.Read('currentWorld');
+if (cworld && cworld!='') {
+  worldDb.Invoke(null, 'CheckWorldDb');
+}
 
 
 

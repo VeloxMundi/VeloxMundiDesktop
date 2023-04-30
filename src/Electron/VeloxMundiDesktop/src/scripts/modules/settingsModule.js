@@ -27,7 +27,9 @@ module.exports = {
     }
   },
   Read : (key) => {
-    console.log('Reading ' + key);
+    if (!app.isPackaged) {
+      console.log('Reading ' + key);
+    }
     if (appData==undefined) {
       this.loadAppData();
     }
