@@ -6,8 +6,14 @@ $(document).ready(function() {
   else {
     console.log('if there is a world, it is ' + world);
     try {
-      let worldData = window.contextBridge.toMainSync('world','GetWorldData');
-
+      //let worldData = window.contextBridge.toMainSync('world','GetWorldData');
+      let pageList = window.contextBridge.toMainSync('page', 'GetPageList');
+      $('#PageList').append('<ul>');
+      for (let i=0; i<pageList.length; i++) {
+        $('#PageList').append('<li><a class="navLink" href="#" data-page="' + (pageList[i].fileType=='md' ? 'edit_md.html' : 'edit_html.html') + '" data-query="path='+encodeURIComponent(pageList[i].worldPath)+'&name=' + pageList[i].nameDisambiguation + '"><span class="bi bi-' + (pageList[i].fileType=='md' ? 'filetype-md' : 'filetype-html') + '">&nbsp;</span>' + pageList[i].nameDisambiguation + '</a></li>');
+      }
+      $('#PageList').append('</ul>');
+      /*
       let types = Array.from(new Set(worldData.pages.map((item) => item.type))).sort();
       for (let i=0; i<types.length; i++) {
         if (types[i]!='') {
@@ -32,6 +38,7 @@ $(document).ready(function() {
         $('#PageList').append('</ul>');
       }
       
+      */
 
       document.title = world + ': ' + document.title;
     }

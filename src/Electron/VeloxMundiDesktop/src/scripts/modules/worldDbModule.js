@@ -27,9 +27,9 @@ module.exports = {
 
   GetPageData: async(worldPath) => {
     return pageData = await require(dataModulePath).DbGet({
-      query: `SELECT * FROM pages WHERE worldPath=$path`,
+      query: `SELECT * FROM pages WHERE worldPath=$worldPath`,
       params: {
-        $path: worldPath
+        $worldPath: worldPath
       }
     });
   },
@@ -52,6 +52,9 @@ module.exports = {
       params: paramData
     });
 
+    if (!pageData.outgoingLinks) {
+      pageData.outgoingLinks = [];
+    }
     for (let i=0; i< pageData.outgoingLinks.length; i++) {
       let toPage = await require(dataModulePath).DbGet({
         query : `

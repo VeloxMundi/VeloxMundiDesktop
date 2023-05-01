@@ -20,6 +20,7 @@ const worldManager = require(path.join(app.getAppPath(), 'src','scripts', 'modul
 let modal = null;
 let saveAsEvent = null;
 let settingsModulePath = path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'settingsModule.js');
+let dataModulePath = path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'dataModule.js');
 
 
 module.exports = class ConfigManager {
@@ -51,7 +52,7 @@ module.exports = class ConfigManager {
         return this.DeletePage(data);
         break;
       case 'RenamePage':
-        return this.RenamePage(data);
+        return await this.RenamePage(data);
         break;        
       case 'NewPage':
         this.NewPage(event);
@@ -60,6 +61,9 @@ module.exports = class ConfigManager {
         return this.Convert(event, data);
       case 'GetPageData':
         return this.GetPageData(data);
+        break;
+      case 'GetPageList':
+        return await this.GetPageList();
         break;
       default:
         return null;
@@ -157,7 +161,8 @@ module.exports = class ConfigManager {
       nameDisambiguation : pageData.rawFileName + (pageData.pageType=='' ? '' : ' (' + pageData.pageType + ')'),
       type : pageData.pageType,
       fileType : pageData.fileExt,
-      worldPath : pageData.worldPath
+      worldPath : pageData.worldPath,
+      outgoingLinks : olinks
     }
     if (SaveNow) {
       thisPage.saved = new Date(Date.now()).toLocaleString();
@@ -673,7 +678,7 @@ module.exports = class ConfigManager {
     return delResult;
   }
 
-  static RenamePage(pageData) {
+  static async RenamePage(pageData) {
     /*
     oldPagePath
     newPageName
@@ -713,12 +718,23 @@ module.exports = class ConfigManager {
             retVal.message = 'Unable to rename ' + oldPathData.relPath + '.<br/>' + err;
             return retVal;
           }
+        });        
+        // add page to index if it does not exist
+        await this.AddPageToIndex(oldPathData.fullPath, false);
+        // rename page in index
+        await require(dataModulePath).DbRun({
+          query : `
+            UPDATE pages
+            SET worldPath=$newWorldPath
+            WHERE worldPath=$oldWorldPath
+            `,
+          params : {
+            $oldWorldPath : oldPathData.worldPath,
+            $newWorldPath: newPathData.worldPath
+          }
         });
-        this.AddPageToIndex(newPathData.fullPath, false);
-        this.RemovePageFromIndex({
-          pagePath : oldPathData.fullPath
-        });
-
+        // Add new page to index (to update values)
+        await this.AddPageToIndex(newPathData.fullPath, false);
         // Clean up previews        
         if (fs.existsSync(oldPathData.previewPath)) {
           fs.unlinkSync(oldPathData.previewPath);
@@ -831,6 +847,17 @@ module.exports = class ConfigManager {
     }
   }
 
+  static async GetPageList() {
+    let pages = await require(dataModulePath).DbAll({
+      dbName : 'world',
+      query : `
+        SELECT * FROM pages
+        ORDER BY nameDisambiguation
+        `,
+      params : {}
+    });
+    return pages;
+  }
   static GetPageData(pathInfo) {
     /* pathInfo:
       fullPath (string) (optional) //Full path to the source file

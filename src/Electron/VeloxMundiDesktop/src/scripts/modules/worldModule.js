@@ -90,6 +90,8 @@ module.exports = class ConfigManager {
   }
 
   static GetWorldData() {
+    
+    /*
     let fileArray = [];
     let data={
       worldName : require(settingsModulePath).Read('currentWorld'),
@@ -99,6 +101,7 @@ module.exports = class ConfigManager {
     let currentWorld=require(settingsModulePath).Read('currentWorld');
     let worldDir = require(settingsModulePath).Read('worldDirectory');
     let worldPath = path.join(worldDir,currentWorld);
+
     let worldDataPath = path.join(worldPath,"_world.json");
     if (!fs.existsSync(worldDataPath)) {
       fs.writeFileSync(worldDataPath, JSON.stringify(data, null, 2));
@@ -109,6 +112,7 @@ module.exports = class ConfigManager {
       data = JSON.parse(rawdata);
     }
     data.worldDataPath = worldDataPath;
+    */
     return data;
   }
 
