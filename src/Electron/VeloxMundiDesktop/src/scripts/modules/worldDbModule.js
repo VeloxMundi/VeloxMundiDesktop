@@ -127,7 +127,7 @@ async function CheckWorldDb() {
     }
 
     // Check worldDirName matches selected world directory
-    let curDir = require(settingsModulePath).Read('worldPath').split(path.sep).pop();
+    let curDir = require(settingsModulePath).Read('currentWorldPath').split(path.sep).pop();
     let dbDir = undefined;
     let dirRow = await require(dataModulePath).DbGet({
       dbName : 'world',

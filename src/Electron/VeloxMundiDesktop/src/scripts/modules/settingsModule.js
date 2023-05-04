@@ -14,7 +14,10 @@ module.exports = {
     appConfig.configure(configObj);
   },
   LoadAppData : () => {
-    appData = appConfig.getSync('appData');
+    let readAppData = appConfig.getSync('appData');
+    if (readAppData) {
+      appData = readAppData;
+    }
     if (!appData.prefs) {
       appData.prefs = defaultPrefs;
       appConfig.setSync('appData', appData);
@@ -65,10 +68,15 @@ module.exports = {
     appData.modified = new Date(Date.now()).toLocaleString();
     if (key=='worldDirectory') {
       appData.currentWorld = '';
-      appData.worldPath = '';
+      appData.currentWorldPath = '';
     }
     if (key=='currentWorld') {
-      appData.worldPath = path.join(appData.worldDirectory, appData.currentWorld);
+      if (value=='') {
+        appData.currentWorldPath='';
+      }
+      else {
+        appData.currentWorldPath = path.join(appData.worldDirectory, appData.currentWorld);
+      }
     }
     appConfig.setSync('appData', appData);
     

@@ -45,22 +45,40 @@ if (!app.isPackaged) {
 settingsModule.LoadAppData();
 
 const dataModulePath = path.join(scriptPath, 'modules', 'dataModule.js');
-let cworld = settingsModule.Read('currentWorld');
-if (cworld && cworld!='') {
-  worldDb.Invoke(null, 'CheckWorldDb');
+let goToSetup = false;
+
+// Check user/world settings and update if needed
+let worldDir = settingsModule.Read('worldDirectory');
+if (worldDir && worldDir!='' && fs.existsSync(worldDir)) {
+  let cworld = settingsModule.Read('currentWorld');
+  if (cworld && cworld!='') {
+    let cwpath = settingsModule.Read('currentWorldPath');
+    if (!cwpath || cwpath=='' || !fs.existsSync(cwpath)) {
+      cwpath = path.join(worldDir,cworld);
+    }
+
+    if (fs.existsSync(cwpath)) {
+      settingsModule.Write('currentWorldPath', cwpath);
+    }
+    else {
+      settingsModule.Write('currentWorld','');
+    }
+
+    worldDb.Invoke(null, 'CheckWorldDb');  
+  }
+}
+else {
+  goToSetup=true;
 }
 
 
-
+// Initialize app
 let mainWindow = null;
 let optionsWindow = null;
 let previewWindow = null;
 let mainWindowStateKeeper = null;
 let optionsWindowStateKeeper = null;
 let previewWindowStateKeeper = null;
-
-// intercept requests for files in asar
-
 
 
 const createWindow = () => {
@@ -79,7 +97,13 @@ const createWindow = () => {
     }
     mainWindow = new BrowserWindow(windowOptions);
     mainWindowStateKeeper.track(mainWindow);
-    let openPage = config.GetPage();
+    let openPage = [];
+    if (goToSetup) {
+      openPage = ['appSetup.html'];
+    }
+    else {
+      openPage = config.GetPage();
+    }
     console.log(openPage);
     mainWindow.loadFile(path.join(pagePath, openPage[0]), {query: openPage[1]});
 

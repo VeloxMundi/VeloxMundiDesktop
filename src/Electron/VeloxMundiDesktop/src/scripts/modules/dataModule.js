@@ -169,7 +169,7 @@ async function getDb(dbName) {
   }
   switch (dbName.toLowerCase()) {
     case 'world':
-      let worldPath = require(settingsModulePath).Read('worldPath');
+      let worldPath = require(settingsModulePath).Read('currentWorldPath');
       if (!worldPath || worldPath=='') {
         throw new Error('Please select a valid world.');
       }
@@ -356,7 +356,7 @@ async function CheckWorldDb() {
     }
 
     // Check that directory name matches current directory
-    let curDir = require(settingsModulePath).Read('worldPath').split(path.sep).pop();
+    let curDir = require(settingsModulePath).Read('currentWorldPath').split(path.sep).pop();
     if (ret.success) {
       await new Promise((resolve, reject) => {
         db.get(`SELECT value from world WHERE key=?`
