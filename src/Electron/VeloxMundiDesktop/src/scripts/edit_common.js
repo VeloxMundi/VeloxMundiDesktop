@@ -5,7 +5,7 @@ let pageType = '';
 let closeAfterSave=false;
 let navAfterSave='';
 let fileExt = '';
-let worldData = null;
+//let worldData = null;
 let worldPages = null;
 
 window.processMenuItem = function(menuItem, data) {
@@ -167,8 +167,8 @@ window.CheckPathAndSave = function() {
 
 
 
-worldData = window.contextBridge.toMainSync("world", "GetWorldData");
-worldPages = worldData.pages;
+//worldData = window.contextBridge.toMainSync("world", "GetWorldData");
+worldPages = window.contextBridge.toMainSync("world", "GetWorldPages");
 
 
 /********************************

@@ -40,7 +40,7 @@ module.exports = class ConfigManager {
         return this.GetPagePath(data);
         break;
       case 'GetPageDataFromNameDisambiguation':
-        return this.GetPageDataFromNameDisambiguation(data);
+        return await this.GetPageDataFromNameDisambiguation(data);
         break;
       case 'NewPageType':
         return this.NewPageType(data);
@@ -522,10 +522,10 @@ module.exports = class ConfigManager {
     }
   }
 
-  static GetPageDataFromNameDisambiguation(nameDisambiguation) {
-    let worldData = worldManager.GetWorldData();
+  static async GetPageDataFromNameDisambiguation(nameDisambiguation) {
+    let pages = await worldManager.GetWorldPages();
     try {
-      let thisPage = worldData.pages.filter(function(p) {
+      let thisPage = pages.filter(function(p) {
         return p.nameDisambiguation==nameDisambiguation;
       });
       let pagePath = this.GetPagePath({

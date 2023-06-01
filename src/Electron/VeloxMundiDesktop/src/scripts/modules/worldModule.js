@@ -27,13 +27,16 @@ module.exports = class ConfigManager {
     this.configpath = "";
   }
 
-  static Invoke(event, method, data) {
+  static async Invoke(event, method, data) {
     switch(method) {
       case 'GetWorldLinks':
         return this.GetWorldLinks(event);
         break;
       case 'GetWorldData':
         return this.GetWorldData();
+        break;
+      case 'GetWorldPages':
+        return await this.GetWorldPages();
         break;
       case 'CreateWorld':
         return this.CreateWorld(data);
@@ -114,6 +117,13 @@ module.exports = class ConfigManager {
     data.worldDataPath = worldDataPath;
     */
     return data;
+  }
+
+  static async GetWorldPages() {
+    let pages = await require(dataModulePath).DbAll({
+      query: `SELECT * FROM pages`
+    });
+    return pages;
   }
 
   static SaveWorldData(data) {

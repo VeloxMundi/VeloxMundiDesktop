@@ -78,6 +78,7 @@ module.exports = {
         appData.currentWorldPath = path.join(appData.worldDirectory, appData.currentWorld);
       }
     }
+    //appData.
     appConfig.setSync('appData', appData);
     
   },
