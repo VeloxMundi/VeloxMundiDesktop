@@ -119,7 +119,7 @@ module.exports = class ConfigManager {
       fs.writeFileSync(pageData.previewPath, this.publishHTML((pageData.fileExt=='md' ? pageInfo.pageHTML : pageInfo.pageContents), pageData.previewPath, pageData.nameDisambiguation));
 
       try {
-        await this.AddPageToIndex(pageData.fullPath, true);
+        await this.AddPageToIndex(pageData.fullPath, true, (pageData.fileExt=='md' ? pageInfo.pageHTML : pageInfo.pageContents));
         //this.BuildWebIndex();
         return {
           'success': true, 
@@ -145,7 +145,7 @@ module.exports = class ConfigManager {
     }
   }
 
-  static async AddPageToIndex(pagePath, SaveNow) {
+  static async AddPageToIndex(pagePath, SaveNow, pageHTML) {
     // Set up variables
     let pageData = this.GetPageData({
       fullPath: pagePath
@@ -166,39 +166,37 @@ module.exports = class ConfigManager {
     }
     if (SaveNow) {
       thisPage.saved = new Date(Date.now()).toLocaleString();
-      if (pageData.fileExt=='html') {
-        try {
-          let pageHTML = '';
+      try {
+        if ((!pageHTML || pageHTML=='') && thisPage.fileType=='html')
+        {
           pageHTML = fs.readFileSync(pageData.fullPath).toString();
-          let dom = new jsdom.JSDOM(`<!DOCTYPE html><body>${pageHTML}</body>`);
-          let jquery = require('jquery')(dom.window);
-          let $ = jquery;
-          let lnks = $('a');
-          $('a').each(function() {
-            try {
-              let ths = $(this);
-              let href = decodeURIComponent(ths.attr('href'));
-              let tmp = href.indexOf('page:');
-              if (href.indexOf('page:')===0) {
-                href = href.replace('page:','');
-                let existingO = olinks.indexOf(href);
-                if (existingO==-1) {
-                  olinks.push(href);
-                }
+        }
+        
+        let dom = new jsdom.JSDOM(`<!DOCTYPE html><body>${pageHTML}</body>`);
+        let jquery = require('jquery')(dom.window);
+        let $ = jquery;
+        let lnks = $('a');
+        $('a').each(function() {
+          try {
+            let ths = $(this);
+            let href = decodeURIComponent(ths.attr('href'));
+            let tmp = href.indexOf('page:');
+            if (href.indexOf('page:')===0) {
+              href = href.replace('page:','');
+              let existingO = olinks.indexOf(href);
+              if (existingO==-1) {
+                olinks.push(href);
               }
             }
-            catch(e) {
-              console.log(e);
-            }
-          });
-        } 
-        catch(e) {
-          // Fail silently if links cannot be indexed for some reason.
-          console.log(e);
-        }
-      }
-      else if (pageData.fileExt=='md') {
-        // Use RegEx to parse links in MD files
+          }
+          catch(e) {
+            console.log(e);
+          }
+        });
+      } 
+      catch(e) {
+        // Fail silently if links cannot be indexed for some reason.
+        console.log(e);
       }
       thisPage.outgoingLinks = olinks;
     }

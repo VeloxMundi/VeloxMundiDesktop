@@ -21,6 +21,9 @@ $(function(e) {
         worldPath = pageData.worldPath;
         console.log(pagePath);
         let contents = window.contextBridge.toMainSync('page', 'ReadPage', pagePath);
+        let $contents = $('<div>').html(contents);
+        $contents.find('link').remove();
+        contents = $contents.html();//[0].outerHTML;
         $('#editor').val(converter.makeMarkdown(contents.replace(/_/g,'\\_')));
         updateResult();
         pageDirty = false;

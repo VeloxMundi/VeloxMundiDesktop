@@ -55,6 +55,9 @@ module.exports = {
     if (!pageData.outgoingLinks) {
       pageData.outgoingLinks = [];
     }
+    await require(dataModulePath).DbRun({
+      query: `DELETE FROM links WHERE fromPageId='${pageData.id}'`
+    });
     for (let i=0; i< pageData.outgoingLinks.length; i++) {
       let toPage = await require(dataModulePath).DbGet({
         query : `
