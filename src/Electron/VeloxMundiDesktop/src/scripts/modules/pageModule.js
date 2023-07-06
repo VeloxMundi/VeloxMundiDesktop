@@ -116,7 +116,7 @@ module.exports = class ConfigManager {
 
       // publish page in HTML output directory
       fse.ensureDirSync(pageData.previewDir);
-      fs.writeFileSync(pageData.previewPath, this.publishHTML((pageData.fileExt=='md' ? pageInfo.pageHTML : pageInfo.pageContents), pageData.previewPath, pageData.nameDisambiguation));
+      fs.writeFileSync(pageData.previewPath, await this.publishHTML((pageData.fileExt=='md' ? pageInfo.pageHTML : pageInfo.pageContents), pageData.previewPath, pageData.nameDisambiguation));
 
       try {
         await this.AddPageToIndex(pageData.fullPath, true, (pageData.fileExt=='md' ? pageInfo.pageHTML : pageInfo.pageContents));
@@ -162,6 +162,7 @@ module.exports = class ConfigManager {
       type : pageData.pageType,
       fileType : pageData.fileExt,
       worldPath : pageData.worldPath,
+      webLink : pageData.webLink,
       outgoingLinks : olinks
     }
     if (SaveNow) {
@@ -272,7 +273,7 @@ module.exports = class ConfigManager {
   }
 
 
-  static publishHTML(html, previewPagePath, pageTitle) {
+  static async publishHTML(html, previewPagePath, pageTitle) {
     //TODO: Tweak HTML to fit with publish strategy
     
 
@@ -297,7 +298,25 @@ module.exports = class ConfigManager {
     for (let i=0; i<lnks.length; i++) {
       let oldSrc = jquery(lnks[i]).attr('href');
       if (oldSrc.startsWith('page:')) {
-        let linkPath = oldSrc.replace(/(page:)(.+)/,function(match, p1,p2) {
+        let linkPath = oldSrc.replace(/(page:)(.+)/, function(match, p1, p2) {
+          return p2;
+        });
+        let linkPageData = await callLocal(null, 'GetPageData', {
+          worldPath : linkPath.replace(/%20/g, ' ')
+        });
+        if (linkPageData && linkPageData.success) {
+          let webRelPath = worldManager.GetRelPath({
+            isRelPath : false,
+            fromPath : previewPagePath,
+            toPath : linkPageData.previewPath
+          });
+          if (webRelPath && webRelPath.success) {
+            linkPath = webRelPath.relPath;
+          }
+        }
+        // This whole thing needs to be rewritten due to async/await bs
+        /*
+        let linkPath = oldSrc.replace(/(page:)(.+)/, function(match, p1,p2) {
           let linkPageData = callLocal(null, 'GetPageData', {
             worldPath : p2.replace(/%20/g, ' ')
           });
@@ -318,38 +337,8 @@ module.exports = class ConfigManager {
             return p2;
           }
 
-          /*
-
-          let relPathData = worldManager.GetFullPathFromRelPath({
-            fromFullPath : sourcePagePath,
-            relPath : p2
-          });
-          if (relPathData && relPathData.success) {
-            let toPathData = callLocal(null, 'GetPageData', {
-              fullPath : relPathData.fullPath
-            });
-            if (toPathData && toPathData.success) {                
-              let relPathData = callLocal(null, 'GetRelPath', {
-                fromPath : previewPagePath,
-                toPath : toPathData.previewPath,
-                isRelPath : false
-              });
-              if (relPathData.success) {
-                return relPathData.relPath;
-              }
-              else {
-                return p2;
-              }
-            }
-            else {
-              return p2;
-            }
-          }
-          else {
-            return p2;
-          }
-          */
         });
+        */
         jquery(lnks[i]).attr('href',linkPath);
         jquery(lnks[i]).addClass('page-local');
       }
