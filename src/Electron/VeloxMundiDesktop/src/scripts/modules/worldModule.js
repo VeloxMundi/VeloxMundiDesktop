@@ -16,10 +16,12 @@ const configManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'mod
 //configManager.InitPath(path.join(app.getAppPath(), 'user', 'config.json'), path.join(app.getAppPath(), 'data'));
 const fileManager = require(path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'fileManagerModule.js'));
 // because the pageModule references the worldModule, we can't create a reference back to the pageModule from here.
+let pageModulePath = path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'pageModule.js');
 let modal = null;
 let saveAsEvent = null;
 let settingsModulePath = path.join(app.getAppPath(), 'src', 'scripts', 'modules', 'settingsModule.js');
 let dataModulePath = path.join(app.getAppPath() , 'src', 'scripts', 'modules', 'dataModule.js');
+let worldDbModulePath = path.join(app.getAppPath() , 'src', 'scripts', 'modules', 'worldDbModule.js');
 
 
 module.exports = class ConfigManager {
@@ -58,6 +60,10 @@ module.exports = class ConfigManager {
         break;
       case 'CheckWorldDb':
         return this.CheckWorldDb();
+        break;
+      case 'ScanDir':
+        return await this.ScanDir(event);
+        break;
       default:
         event.sender.send('Invalid method call: "' + method + '"');
         break;
@@ -294,6 +300,64 @@ module.exports = class ConfigManager {
     return relPathInfo;
   }
 
+  static async ScanDir(event)
+  {
+    let scanInfo = {
+      success: true,
+      scannedFiles: [],
+      errors: []
+    };
+    try {
+      let worldPath = path.join(require(settingsModulePath).Read('worldDirectory'), require(settingsModulePath).Read('currentWorld'));
+      let worldPagePath = path.join(worldPath, 'pages');
+      event.sender.send('status', 'Scanning world directory "' + worldPagePath + '"');
+      let fileExtensions = ['.md', '.html'];
+      let fileList = fileManager.Invoke(null, 'GetFileInfoForPath', worldPagePath);
+      fileList = fileList.filter((fileInfo) => {
+        return fileExtensions.includes(fileInfo.extension);
+      });
+      for (let i=0; i<fileList.length; i++) {
+        try {
+          event.sender.send('status', 'Scanning file ' + fileList[i].path);
+          let pageInfo = await require(pageModulePath).GetPageData( {
+            fullPath: fileList[i].path
+          });
+          let pageData = await require(worldDbModulePath).GetPageData(pageInfo.worldPath);
+          if (!pageData || !pageData.worldPath) {
+            pageData.name = pageInfo.rawFileName;
+            pageData.nameDisambiguation = pageInfo.nameDisambiguation;
+            pageData.fileType = pageInfo.fileExt;
+            pageData.worldPath = pageInfo.worldPath;
+          }
+          await require(worldDbModulePath).SavePageData(pageData);
+          
+          //TODO: Remove files from database if not in directory (or mark inactive???)
+          pageData.scanSuccess = true;
+          scanInfo.scannedFiles.push(pageData);
+          event.sender.send('status', 'Page "' + pageData.nameDisambiguation + '" scanned successfully.');
+        }
+        catch (e) {
+          scanInfo.success = false;
+          scanInfo.errors.push(e);
+          let pageData = {
+            fileName: fileList[i].file,
+            fullPath: fileList[i].fullPath,
+            scanSuccess: false
+          };
+          scanInfo.scannedFiles.push(pageData);
+        }
+      }
+    }
+    catch (e) {
+      scanInfo.success = false;
+      errors.push(e);
+      event.sender.send('status', 'Error scanning world directory.');
+    }
+    event.sender.send('status', 'World directory scan completed ' + (new Date().toLocaleString()), 15000);
+    return scanInfo;
+  }
+
   
 
 }
+

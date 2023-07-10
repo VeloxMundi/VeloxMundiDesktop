@@ -31,6 +31,9 @@ module.exports = class fileManager {
       case 'ZipDirectory':
         this.ZipDirectory(data);
         break;
+      case 'GetFileInfoForPath':
+        return this.GetFileInfoForPath(data);
+        break;
       default:
         event.sender.send('Invalid');
         break;
@@ -117,5 +120,33 @@ module.exports = class fileManager {
     }
   }
 
+  static GetFileInfoForPath(directoryPath) {
+    let fileList = [];
+  const files = fs.readdirSync(directoryPath);
+  
+  for (const file of files) {
+    const filePath = path.join(directoryPath, file);
+    const stats = fs.statSync(filePath);
+
+    if (stats.isDirectory()) {
+      const subdirectoryFiles = this.GetFileInfoForPath(filePath);
+      fileList = fileList.concat(subdirectoryFiles);
+    }
+    else {
+      const fileInfo = {
+        path: filePath,
+        name: file,
+        extension: path.extname(filePath),
+        size: stats.size,
+        lastAccessTime: stats.atime,
+        lastModifiedTime: stats.mtime,
+        creationTime: stats.birthtime
+      };
+      fileList.push(fileInfo);
+    }
+  }
+  return fileList;
+  }
 
 }
+

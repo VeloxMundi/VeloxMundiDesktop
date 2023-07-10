@@ -443,6 +443,18 @@ module.exports = class UIManager {
           type: 'separator'
         },
         {
+          id: 'World-Scan',
+          showOn: ['-all-'],
+          label: 'Scan World Directory',
+          click: async () => {
+            win.webContents.send('menu', 'ScanWorld');
+          }
+        },
+        {
+          showOn: ['-all-'],
+          type: 'separator'
+        },
+        {
           id: 'World-Select',
           showOn: ['-all-'],
           label: 'Select a World',

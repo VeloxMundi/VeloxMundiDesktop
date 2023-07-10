@@ -347,6 +347,9 @@ $(document).ready(function() {
         window.contextBridge.toMainSync('settings', 'Write', ['currentWorld', '']);
         navigate('selectWorld.html');
         break;
+      case 'ScanWorld':
+        window.contextBridge.toMain('world', 'ScanDir');
+          break;
       case 'PageBack':
         window.history.go(-1);
         break;
