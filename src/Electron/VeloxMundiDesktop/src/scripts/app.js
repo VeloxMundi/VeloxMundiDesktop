@@ -10,6 +10,7 @@ let pathSep = window.contextBridge.toMainSync('file', 'GetPathSep');
 let typeSep = ' / ';
 let loadToast = false;
 let pageStatus = window.contextBridge.toMainSync('config', 'ReadKey', 'Status') ?? 'Ready';
+let toastTimer = setTimeout(hideToast, 0);
 
 // Bounce messages to Main
 window.contextBridge.fromMain('bounceToMain', (event, module, method, data) => {
@@ -51,13 +52,14 @@ function hideToast() {
 }
 
 function showToast(msg, clss, keepOpen) {
+  clearTimeout(toastTimer);
   $('#toast').show();
   $('#toast').html('<div class="' + clss + '"><div class="float-right bi-x-circle-fill" id="closeToast">&nbsp</div>' + msg + '</div>');
   $('#closeToast').on('click', function() {
     hideToast();
   });
   if (!keepOpen) {
-    setTimeout(hideToast, prefs.toastTimeout);
+    toastTimer = setTimeout(hideToast, prefs.toastTimeout);
   }
 }
 
@@ -367,6 +369,8 @@ $(document).ready(function() {
       case 'NewPage':
         navigate('new');
         break;
+      case 'Wizard':
+        window.contextBridge.toMain('WizardWindow', data);
       default:
         break;
     }

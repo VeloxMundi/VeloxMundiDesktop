@@ -98,8 +98,8 @@ module.exports = {
       windowState = {
         x: undefined,
         y: undefined,
-        width: 950,
-        height: 720,
+        width: (windowName=='wizard' ? 600 : 950),
+        height: (windowName=='wizard' ? 530 : 720),
       };
     }
     function saveState() {

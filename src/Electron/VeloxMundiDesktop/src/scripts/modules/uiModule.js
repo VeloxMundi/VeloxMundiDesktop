@@ -25,6 +25,25 @@ module.exports = class UIManager {
       case 'OpenFileDialog':
         return this.OpenFileDialog();
         break;
+      case 'OpenDirectoryDialog':
+        const options = { properties: ['openDirectory']};
+        const folderPaths = dialog.showOpenDialogSync(options);
+        if (folderPaths && folderPaths.length > 0) {
+          let dirCont = fs.readdirSync(folderPaths[0]);
+          return {
+            success: true,
+            paths: folderPaths,
+            isEmpty: (dirCont.length==0 ? true : false)
+          };
+        }
+        else {
+          event.sender.send('status', 'No directory selected', 5000);
+          return {
+            success: false,
+            message: 'No directory selected'
+          };
+        }
+        break;
       case 'ShowMessage':
         return this.ShowMessage(data);
         break;
@@ -449,6 +468,21 @@ module.exports = class UIManager {
           click: async () => {
             win.webContents.send('menu', 'ScanWorld');
           }
+        },
+        {
+          id: 'World-Publish',
+          showOn: ['-all-'],
+          label: 'Publish',
+          submenu: [
+            {
+              id: 'World-Publish-ToFolder',
+              label: 'To Folder...',
+              showOn: ['-all-'],
+              click: async () => {
+                win.webContents.send('menu', 'Wizard', 'PublishToFolder');
+              }
+            }
+          ]
         },
         {
           showOn: ['-all-'],

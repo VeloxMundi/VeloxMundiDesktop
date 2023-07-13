@@ -64,6 +64,9 @@ module.exports = class ConfigManager {
       case 'ScanDir':
         return await this.ScanDir(event);
         break;
+      case 'PublishWorld':
+        return await this.PublishWorld(event);
+        break;
       default:
         event.sender.send('Invalid method call: "' + method + '"');
         break;
@@ -357,6 +360,9 @@ module.exports = class ConfigManager {
     return scanInfo;
   }
 
+  static PublishWorld(event) {
+
+  }
   
 
 }

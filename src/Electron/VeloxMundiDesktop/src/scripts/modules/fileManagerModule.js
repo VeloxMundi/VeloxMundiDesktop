@@ -34,6 +34,10 @@ module.exports = class fileManager {
       case 'GetFileInfoForPath':
         return this.GetFileInfoForPath(data);
         break;
+      case 'IsDirectoryEmpty':
+        let ret = fs.readdirSync(data);
+        return (ret.length==0 ? true : false);
+        break;
       default:
         event.sender.send('Invalid');
         break;

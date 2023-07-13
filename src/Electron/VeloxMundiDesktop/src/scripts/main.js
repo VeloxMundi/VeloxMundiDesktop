@@ -76,6 +76,7 @@ else {
 let mainWindow = null;
 let optionsWindow = null;
 let previewWindow = null;
+let wizardWindow = null;
 let mainWindowStateKeeper = null;
 let optionsWindowStateKeeper = null;
 let previewWindowStateKeeper = null;
@@ -240,6 +241,37 @@ function CreatePreviewWindow(page, query) {
   }
 }
 
+function CreateWizardWindow(page, query) {
+  let qry = GetQueryObjFromString(query);
+  if (!wizardWindow) {
+    wizardWindowStateKeeper = settingsModule.WindowStateKeeper('wizard');
+    const windowOptions = {
+      x: wizardWindowStateKeeper.x,
+      y: wizardWindowStateKeeper.y,
+      width: wizardWindowStateKeeper.width,
+      height: wizardWindowStateKeeper.height,
+      webPreferences: {
+        preload: path.join(scriptPath, 'preload.js'),
+        nodeIntegration: false, // is default value after Electron v5
+        contextIsolation: true, // protect against prototype pollution
+        enableRemoteModule: false, // turn off remote
+      }
+    }
+    wizardWindow = new BrowserWindow(windowOptions);
+    wizardWindowStateKeeper.track(wizardWindow);
+    wizardWindow.loadFile(path.join(pagePath, page), {query: qry});
+    wizardWindow.on('closed', function() {
+      wizardWindow = null;
+    });
+    wizardWindow.focus();
+    //wizardWindow.removeMenu();
+  }
+  else {
+    wizardWindow.focus();
+    wizardWindow.loadFile(path.join(pagePath, page), {query: qry});
+  }
+}
+
 function GetQueryObjFromString(query) {
   let obj = {};
   if (query) {
@@ -258,7 +290,8 @@ async function CallModuleMethod(event, module, method, data)
     let windows = {
       main : mainWindow,
       preview: previewWindow,
-      options: optionsWindow
+      options: optionsWindow,
+      wizard: wizardWindow
     };
     switch(module)
     {
@@ -320,6 +353,16 @@ async function CallModuleMethod(event, module, method, data)
         break;
       case 'getVersion':
         event.returnValue = app.getVersion();
+        break;
+      case 'WizardWindow':
+        switch(method) {
+          case 'PublishToFolder':
+            CreateWizardWindow(path.join('wizards','publish', 'toFolder.html'));
+            break;
+          default:
+            event.sender.send('status', 'Unable to load "' + method + '" wizard.');
+            break;
+        }
         break;
       case 'test':
         break;
