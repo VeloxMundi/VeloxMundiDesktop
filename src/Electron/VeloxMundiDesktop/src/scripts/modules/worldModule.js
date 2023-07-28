@@ -357,7 +357,8 @@ module.exports = class ConfigManager {
       event.sender.send('status', 'Error scanning world directory.');
     }
     event.sender.send('status', 'World directory scan completed ' + (new Date().toLocaleString()), 15000);
-    return scanInfo;
+    event.sender.send('menu', 'ScanComplete', scanInfo);
+    return;
   }
 
   static PublishWorld(event) {

@@ -26,12 +26,25 @@ module.exports = {
 
 
   GetPageData: async(worldPath) => {
-    return pageData = await require(dataModulePath).DbGet({
+    let pageData = await require(dataModulePath).DbGet({
       query: `SELECT * FROM pages WHERE worldPath=$worldPath`,
       params: {
         $worldPath: worldPath
       }
     });
+    let linkedPages = await require(dataModulePath).DbAll({
+      query: `SELECT worldPath FROM pages
+              INNER JOIN links ON pages.id=links.toPageId
+              WHERE fromPageId=$thisPageId`,
+      params: {
+        $thisPageId: pageData.id
+      }
+    });
+    pageData.outgoingLinks = [];
+    for (let i=0; i<linkedPages.length; i++){
+      pageData.outgoingLinks.push(linkedPages[i].worldPath);
+    }
+    return pageData;
   },
   
   SavePageData: async(pageData) => {
@@ -64,7 +77,7 @@ module.exports = {
           SELECT id FROM pages WHERE worldPath = $name
           `,
         params: {
-          $name : pageData.outgoingLinks[i]
+          $name : pageData.outgoingLinks[i].replace(/%20/g,' ')
         }
       });
       if (toPage && toPage.id && toPage.id>0) {

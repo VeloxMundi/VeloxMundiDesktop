@@ -352,6 +352,24 @@ $(document).ready(function() {
       case 'ScanWorld':
         window.contextBridge.toMain('world', 'ScanDir');
           break;
+      case 'ScanComplete':
+        if (data && data.success) {
+          if (pageName.toLowerCase()=="worldhome.html")
+          {
+            location.reload();
+          }
+        }
+        else {
+          let message = '<div style="text-align: left">There was a problem scanning the world directory.<br/><ul>';
+          if (data && data.errors && data.errors.length>0) {
+            for (let i=0; i<data.errors.length; i++) {
+              message += "<li>" + data.errors[i] + "</li>"
+            }
+          }
+          message += "</ul></div>\r\n";
+          showToast(message, 'text-danger', true);
+        }
+        break;
       case 'PageBack':
         window.history.go(-1);
         break;
