@@ -18,7 +18,7 @@ module.exports = {
         return ret;
       /*
       case 'DbRunSync':
-        return dbRunSync(data);
+        return await this.dbRun(data);
       case 'DbGetSync':
         return dbGetSync(data);
       case 'DbAllSync':
@@ -176,7 +176,7 @@ async function getDb(dbName) {
       dbPath = path.join(worldPath, '_world.db');
       // Check DB if not exists...      
       if (!fs.existsSync(dbPath)) {
-        let temp = new sqlite3.Database(dbPath); // create DB or CheckWorldDb will create a permanent loop...
+        let temp = new sqlite3.Database(dbPath); // create temp DB or CheckWorldDb will create a permanent loop...
         try {
           await worldDbModule.Invoke(null, 'CheckWorldDb');
         }
@@ -185,11 +185,21 @@ async function getDb(dbName) {
         }
       }
       break;
-    case 'config': // Not sure if we will use this...
+    case 'config':
       dbPath = path.join(
-        (app.isPackaged ? path.join(app.getPath('userData')) : path.join(appPath, 'user'))
+        (app.isPackaged ? path.join(app.getPath('userData')) : path.join(app.getAppPath(), 'user'))
         ,'config.db'
       );
+      // Check DB...
+      if (!fs.existsSync(dbPath)) {
+        let temp = new sqlite3.Database(dbPath); // create temp DB or CheckConfigDb will create a permanent loop...
+        try {
+          await worldDbModule.Invoke(null, 'CheckConfigDb');
+        }
+        finally {
+          temp.close(); // close temp DB
+        }
+      }
       break;
     default:
       throw new Error('Database name was not supplied.')
@@ -208,34 +218,55 @@ async function createTables(dbName, tableNameArray) {
     let success = true;
     let query = '';
     let db = await getDb(dbName);
-    switch(tableNameArray[i]) {
+    switch (dbName.toLowerCase()) {
       case 'world':
-        query = 'CREATE TABLE IF NOT EXISTS world (key TEXT, value TEXT, PRIMARY KEY (key, value));';
+        switch(tableNameArray[i]) {
+          case 'world':
+            query = 'CREATE TABLE IF NOT EXISTS world (key TEXT, value TEXT, PRIMARY KEY (key, value));';
+            break;
+          case 'pages':
+            query = `
+              CREATE TABLE IF NOT EXISTS pages
+              (
+                id INTEGER,
+                name TEXT,
+                nameDisambiguation TEXT,
+                fileType TEXT,
+                worldPath TEXT UNIQUE,
+                created TEXT,
+                saved TEXT,
+                PRIMARY KEY ("ID" AUTOINCREMENT)
+              )
+            `;
+            break;
+          case 'links':
+            query = `
+                CREATE TABLE IF NOT EXISTS links
+                (
+                  fromPageId INTEGER,
+                  toPageId INTEGER,
+                  PRIMARY KEY (fromPageId, toPageId)
+                )
+              `;
+            break;
+        }
         break;
-      case 'pages':
-        query = `
-          CREATE TABLE IF NOT EXISTS pages
-          (
-            id INTEGER,
-            name TEXT,
-            nameDisambiguation TEXT,
-            fileType TEXT,
-            worldPath TEXT UNIQUE,
-            created TEXT,
-            saved TEXT,
-            PRIMARY KEY ("ID" AUTOINCREMENT)
-          )
-        `;
-        break;
-      case 'links':
-        query = `
-            CREATE TABLE IF NOT EXISTS links
-            (
-              fromPageId INTEGER,
-              toPageId INTEGER,
-              PRIMARY KEY (fromPageId, toPageId)
-            )
-          `;
+      case 'config':
+        switch(tableNameArray[i].toLowerCase()) {
+          case 'worldconfig':
+            query = `
+                CREATE TABLE IF NOT EXISTS worldConfig
+                (
+                  worldName TEXT,
+                  localPath TEXT,
+                  exportPath TEXT,
+                  PRIMARY KEY (worldName)
+                )
+              `;
+            break;
+          default:
+            break;
+        }
         break;
     }
     if (query!='') {

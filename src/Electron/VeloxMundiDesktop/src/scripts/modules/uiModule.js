@@ -463,7 +463,10 @@ module.exports = class UIManager {
         },
         {
           id: 'World-Scan',
-          showOn: ['-all-'],
+          showOn: [
+            'worldhome.html',
+            'edit_'
+          ],
           label: 'Scan World Directory',
           click: async () => {
             win.webContents.send('menu', 'ScanWorld');
@@ -471,13 +474,19 @@ module.exports = class UIManager {
         },
         {
           id: 'World-Publish',
-          showOn: ['-all-'],
+          showOn: [
+            'worldhome.html',
+            'edit_'
+          ],
           label: 'Publish',
           submenu: [
             {
               id: 'World-Publish-ToFolder',
               label: 'To Folder...',
-              showOn: ['-all-'],
+              showOn: [
+                'worldhome.html',
+                'edit_'
+              ],
               click: async () => {
                 win.webContents.send('menu', 'Wizard', 'PublishToFolder');
               }

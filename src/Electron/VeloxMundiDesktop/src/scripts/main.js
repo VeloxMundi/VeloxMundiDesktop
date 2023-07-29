@@ -35,6 +35,7 @@ const worldDb = require(path.join(scriptPath, 'modules', 'worldDbModule.js'));
 const fileManager = require('./modules/fileManagerModule');
 const uiManager = require('./modules/uiModule');
 const pageManager = require('./modules/pageModule');
+const publishModule = require('./modules/publishModule');
 const settingsModule = require('./modules/settingsModule');
 if (!app.isPackaged) {
   settingsModule.Configure({
@@ -302,11 +303,22 @@ async function CallModuleMethod(event, module, method, data)
         return config.Invoke(event, method, data);
         break;
       case 'data':
+        switch(method) {
+          case 'DbRun':
+            return await require(dataModulePath).DbRun(data);
+          case 'DbGet':
+            return await require(dataModulePath).DbGet(data);
+          case 'DbAll':
+            return await require(dataModulePath).DbAll(data);
+        }
+        /*
         let d = await require(dataModulePath).Invoke(event, method, data);
         if (!d.success) {
           windows.main.webContents.send('error', 'An error occurred while accessing the database. ' + y.message);
         }
         return d;
+        */
+        return true;
         break;
       case 'world':
         return world.Invoke(event, method, data);
@@ -363,6 +375,9 @@ async function CallModuleMethod(event, module, method, data)
             event.sender.send('status', 'Unable to load "' + method + '" wizard.');
             break;
         }
+        break;
+      case 'publish':
+        return await publishModule.Invoke(event, method, data);
         break;
       case 'test':
         break;

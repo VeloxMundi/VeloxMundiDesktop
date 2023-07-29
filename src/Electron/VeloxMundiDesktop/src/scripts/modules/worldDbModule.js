@@ -14,6 +14,8 @@ module.exports = {
     switch(method) {      
       case 'CheckWorldDb':
         return CheckWorldDb();
+      case 'CheckConfigDb':
+        return CheckConfigDb();
       case 'GetPageData':
         return GetPageData(data);
       case 'SavePageData':
@@ -98,6 +100,25 @@ module.exports = {
   }  
 }
 
+
+async function CheckConfigDb() {
+  let ret = {
+    success : true,
+    errors : []
+  };
+  try {
+    // Create worldConfig table if needed      
+    await require(dataModulePath).CreateTable('config','worldConfig');
+  }
+  catch(e) {
+    ret.success = false;
+    ret.message = e.message;
+    ret.errors.push(e);
+  }
+  finally {
+    return ret;
+  }
+}
 async function CheckWorldDb() {
   // Used when switching world to verify db exists and contains all tables. In the future may be used to upgrade database when the application is updated.
   let ret = {
