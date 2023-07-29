@@ -34,9 +34,15 @@ module.exports = class fileManager {
       case 'GetFileInfoForPath':
         return this.GetFileInfoForPath(data);
         break;
+      case 'DoesPathExist':
+        return fs.existsSync(data);
+        break;
       case 'IsDirectoryEmpty':
         let ret = fs.readdirSync(data);
         return (ret.length==0 ? true : false);
+        break;
+      case 'GetVeloxMundiDirData':
+        return this.GetVeloxMundiDirData(data);
         break;
       default:
         event.sender.send('Invalid');
@@ -150,6 +156,22 @@ module.exports = class fileManager {
     }
   }
   return fileList;
+  }
+
+  static GetVeloxMundiDirData(dirPath) {
+    try {
+      let vmData = fs.readFileSync(path.join(dirPath, 'veloxmundi.json'));
+      if (vmData!='') {
+        let ret = JSON.parse(vmData);
+        return ret;
+      }
+      else {
+        return false;
+      }
+    }
+    catch(e) {
+      return false;
+    }
   }
 
 }

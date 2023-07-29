@@ -170,3 +170,7 @@ textarea {
     background-color: whitesmoke;
     padding: 0.5rem 0.5rem;
   }
+
+  #appModal h1, #appModal h2, #appModal h3, #appModal h4, #appModal h5, #appModal h6, #appModal h7 {
+    border-bottom: none !important;
+  }
